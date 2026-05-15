@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Reisekostenabrechnung</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Password overlay -->
+<div id="pw-overlay" class="overlay">
+  <div class="overlay-card">
+    <h2>🔒 Admin-Bereich</h2>
+    <div class="form-group">
+      <label for="pw-input">Passwort</label>
+      <input type="password" id="pw-input" placeholder="Passwort eingeben …" autocomplete="current-password">
+    </div>
+    <p id="pw-error" style="font-size:0.85rem; margin-bottom:12px; min-height:1.2em"></p>
+    <button id="pw-btn" class="btn btn-primary btn-block">Anmelden</button>
+    <div style="margin-top:16px">
+      <a href="index.html" class="text-muted" style="font-size:0.85rem">← Zurück zum Formular</a>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="header-inner">
+    <h1>
+      🚗 Reisekostenabrechnung
+      <span class="subtitle">Sozialhummel gGmbH</span>
+    </h1>
+    <nav>
+      <a href="index.html">Neue Abrechnung</a>
+      <a href="drafts.html">Entwürfe</a>
+      <a href="admin.html" class="active">Admin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- Arbeitgeberdaten -->
+  <div class="card">
+    <h2>🏢 Arbeitgeberdaten</h2>
+    <div class="form-row">
+      <div class="form-group" style="grid-column:1/-1">
+        <label for="agName">Name des Arbeitgebers</label>
+        <input type="text" id="agName" placeholder="Musterfirma GmbH">
+      </div>
+    </div>
+    <div class="form-row three">
+      <div class="form-group">
+        <label for="agStreet">Straße &amp; Hausnummer</label>
+        <input type="text" id="agStreet" placeholder="Musterstraße 1">
+      </div>
+      <div class="form-group">
+        <label for="agZip">PLZ</label>
+        <input type="text" id="agZip" placeholder="12345" maxlength="5">
+      </div>
+      <div class="form-group">
+        <label for="agCity">Ort</label>
+        <input type="text" id="agCity" placeholder="Musterstadt">
+      </div>
+    </div>
+    <div class="action-bar">
+      <button class="btn btn-primary" onclick="saveEmployer()">💾 Speichern</button>
+    </div>
+  </div>
+
+  <!-- Teams -->
+  <div class="card">
+    <h2>👥 Teams / Bereiche</h2>
+    <div id="team-list" class="team-list"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="newTeam">Neues Team hinzufügen</label>
+        <input type="text" id="newTeam" placeholder="z.B. Tagespflege"
+               onkeydown="if(event.key==='Enter') addTeam()">
+      </div>
+    </div>
+    <div class="action-bar">
+      <button class="btn btn-outline" onclick="addTeam()">+ Team hinzufügen</button>
+    </div>
+  </div>
+
+  <!-- Google Maps API -->
+  <div class="card">
+    <h2>🗺️ Google Maps API Key</h2>
+    <div class="form-group">
+      <label for="gmapsKey">API Key</label>
+      <input type="text" id="gmapsKey" placeholder="AIza…" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="action-bar">
+      <button class="btn btn-primary" onclick="saveGmapsKey()">💾 Speichern</button>
+    </div>
+    <div class="info-box" style="margin-top:14px">
+      <strong>ℹ️ Google Maps API einrichten</strong>
+      <ol style="padding-left:18px; margin-top:6px; line-height:1.8">
+        <li>Besuchen Sie <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a></li>
+        <li>Aktivieren Sie: <strong>Distance Matrix API</strong> und <strong>Maps JavaScript API</strong></li>
+        <li>Erstellen Sie unter Credentials einen API Key</li>
+        <li>Tragen Sie den Key hier ein</li>
+      </ol>
+      Kostenlos bis ca. 200 Anfragen/Tag (Distance Matrix API Free Tier).
+    </div>
+  </div>
+
+  <!-- Erstattungssatz -->
+  <div class="card">
+    <h2>💶 Erstattungssatz</h2>
+    <div class="info-box">
+      <strong>Aktueller Satz: 0,30 € / km</strong><br>
+      Der Erstattungssatz kann in der Datei <code>app.js</code>, Zeile 3
+      (<code>const RATE_PER_KM = 0.30</code>) angepasst werden.
+    </div>
+  </div>
+
+  <!-- Passwort -->
+  <div class="card">
+    <h2>🔑 Passwort ändern</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="pwCurrent">Aktuelles Passwort</label>
+        <input type="password" id="pwCurrent" autocomplete="current-password">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="pwNew">Neues Passwort</label>
+        <input type="password" id="pwNew" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label for="pwConfirm">Passwort bestätigen</label>
+        <input type="password" id="pwConfirm" autocomplete="new-password">
+      </div>
+    </div>
+    <div class="action-bar">
+      <button class="btn btn-primary" onclick="changePassword()">🔑 Passwort ändern</button>
+    </div>
+    <div class="info-box" style="margin-top:14px">
+      <strong>⚠️ Hinweis zur Sicherheit</strong>
+      Das Passwort wird lokal im Browser (localStorage) gespeichert. Es verhindert versehentliche Nutzung,
+      bietet aber keinen echten Zugriffsschutz.
+    </div>
+  </div>
+
+  <!-- Reset -->
+  <div class="card">
+    <h2>⚙️ Einstellungen zurücksetzen</h2>
+    <p class="text-muted" style="margin-bottom:12px">
+      Setzt alle Admin-Einstellungen (Arbeitgeberdaten, Teams, Passwort, API Key)
+      auf die Standardwerte zurück. Entwürfe und Mitarbeiterprofil bleiben erhalten.
+    </p>
+    <button class="btn btn-danger" onclick="resetToDefaults()">🔄 Auf Standard zurücksetzen</button>
+  </div>
+
+</main>
+
+<script src="app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', initAdmin);
+</script>
+
+</body>
+</html>

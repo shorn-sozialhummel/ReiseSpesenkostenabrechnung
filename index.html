@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reisekostenabrechnung – Sozialhummel gGmbH</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <h1>
+      🚗 Reisekostenabrechnung
+      <span class="subtitle">Sozialhummel gGmbH</span>
+    </h1>
+    <nav>
+      <a href="index.html" class="active">Neue Abrechnung</a>
+      <a href="drafts.html">Entwürfe</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- Mitarbeiterdaten -->
+  <div class="card">
+    <h2>👤 Mitarbeiter/in</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="firstName">Vorname</label>
+        <input type="text" id="firstName" placeholder="Erika" autocomplete="given-name">
+      </div>
+      <div class="form-group">
+        <label for="lastName">Nachname</label>
+        <input type="text" id="lastName" placeholder="Mustermann" autocomplete="family-name">
+      </div>
+    </div>
+    <div class="form-row three">
+      <div class="form-group">
+        <label for="empStreet">Straße &amp; Hausnummer</label>
+        <input type="text" id="empStreet" placeholder="Musterstraße 1" autocomplete="street-address">
+      </div>
+      <div class="form-group">
+        <label for="empZip">PLZ</label>
+        <input type="text" id="empZip" placeholder="12345" autocomplete="postal-code" maxlength="5">
+      </div>
+      <div class="form-group">
+        <label for="empCity">Ort</label>
+        <input type="text" id="empCity" placeholder="Musterstadt" autocomplete="address-level2">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="empTeam">Team / Bereich</label>
+        <select id="empTeam">
+          <option value="">Bitte wählen …</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="empIban">IBAN (für Erstattung)</label>
+        <input type="text" id="empIban" placeholder="DE12 3456 7890 1234 5678 90" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <!-- Abrechnungszeitraum & Pendelstrecke -->
+  <div class="card">
+    <h2>📅 Abrechnungszeitraum &amp; Pendelstrecke</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="period">Abrechnungszeitraum</label>
+        <input type="text" id="period" placeholder="z.B. Mai 2025 oder 01.05.–31.05.2025">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="commuteKm">Pendelstrecke (km, einfach)</label>
+        <input type="number" id="commuteKm" min="0" step="1" placeholder="0"
+               title="Einfache Strecke Wohnort → Hauptarbeitsort (wird pro Dienstfahrt abgezogen)">
+      </div>
+      <div class="form-group">
+        <label for="commuteTrips">Anzahl Arbeitstage im Zeitraum</label>
+        <input type="number" id="commuteTrips" min="0" step="1" placeholder="0"
+               title="Wie viele Tage haben Sie die Pendelstrecke zurückgelegt?">
+      </div>
+    </div>
+    <div class="info-box">
+      <strong>ℹ️ Hinweis zur Pendelstrecke</strong>
+      Die einfache Strecke × Anzahl Arbeitstage wird vom Erstattungsbetrag abgezogen.
+      Diese Kosten können Sie aber als <strong>Entfernungspauschale (Anlage N)</strong> in der Steuererklärung geltend machen.
+    </div>
+  </div>
+
+  <!-- Fahrten -->
+  <div class="card">
+    <h2>🗺️ Dienstliche Fahrten</h2>
+
+    <div style="overflow-x:auto">
+      <table class="trip-table">
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Von</th>
+            <th>Nach</th>
+            <th>Zweck</th>
+            <th>km</th>
+            <th style="text-align:right">Betrag</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="trip-tbody">
+          <!-- rows inserted by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <button class="add-row-btn" onclick="addTripRow()">
+      + Fahrt hinzufügen
+    </button>
+
+    <div class="info-box" style="margin-top:12px">
+      <strong>📍 Kilometer per Google Maps berechnen</strong>
+      Klicken Sie auf das 📍-Symbol in der km-Spalte um die Entfernung automatisch zu berechnen.
+      Dafür ist ein Google Maps API Key im Admin-Bereich erforderlich.
+    </div>
+  </div>
+
+  <!-- Anmerkungen -->
+  <div class="card">
+    <h2>📝 Anmerkungen</h2>
+    <div class="form-group">
+      <label for="notes">Hinweise / Begründungen (optional)</label>
+      <textarea id="notes" placeholder="z.B. Besonderheiten, Parkgebühren, Fahrtgrund …"></textarea>
+    </div>
+    <div class="info-box">
+      <strong>💡 Verpflegungspauschalen</strong>
+      Ab <strong>8 Std. Abwesenheit: 14,00 €</strong> / ab <strong>24 Std.: 28,00 €</strong> –
+      diese können über die Steuererklärung geltend gemacht werden.
+    </div>
+  </div>
+
+  <!-- Zusammenfassung -->
+  <div class="card">
+    <h2>💶 Zusammenfassung</h2>
+    <div class="summary-box">
+      <div class="summary-item">
+        <span class="label">Gesamt km</span>
+        <span class="value" id="sumTotalKm">0 km</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Abzug Pendel</span>
+        <span class="value" id="sumCommuteKm">0 km</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Erstattungs-km</span>
+        <span class="value" id="sumReimburseKm">0 km</span>
+      </div>
+      <div class="summary-item total">
+        <span class="label">Gesamtbetrag</span>
+        <span class="value" id="sumTotal">0,00 €</span>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-primary" onclick="generatePDFFromForm()">
+        📄 PDF erstellen &amp; herunterladen
+      </button>
+      <button class="btn btn-outline" onclick="saveDraft()">
+        💾 Entwurf speichern
+      </button>
+      <button class="btn btn-secondary" onclick="resetForm()">
+        🗑️ Formular leeren
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<!-- jsPDF CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="app.js"></script>
+<script src="pdf-gen.js"></script>
+<script>
+  function resetForm() {
+    if (!confirm('Alle Eingaben verwerfen?')) return;
+    document.getElementById('period').value = '';
+    document.getElementById('commuteKm').value = '';
+    document.getElementById('commuteTrips').value = '';
+    document.getElementById('notes').value = '';
+    document.getElementById('trip-tbody').innerHTML = '';
+    tripRows = [];
+    rowCounter = 0;
+    addTripRow();
+    updateSummary();
+  }
+
+  document.addEventListener('DOMContentLoaded', initIndex);
+</script>
+
+</body>
+</html>

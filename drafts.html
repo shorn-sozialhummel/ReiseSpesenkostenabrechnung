@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entwürfe – Reisekostenabrechnung</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <h1>
+      🚗 Reisekostenabrechnung
+      <span class="subtitle">Sozialhummel gGmbH</span>
+    </h1>
+    <nav>
+      <a href="index.html">Neue Abrechnung</a>
+      <a href="drafts.html" class="active">Entwürfe</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <div class="card">
+    <h2>💾 Gespeicherte Entwürfe</h2>
+
+    <div id="draft-list">
+      <!-- rendered by JS -->
+    </div>
+
+    <div class="action-bar" style="margin-top:20px">
+      <a href="index.html" class="btn btn-primary">+ Neue Abrechnung</a>
+      <button class="btn btn-danger btn-sm" onclick="clearAllDrafts()">Alle löschen</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>ℹ️ Hinweise</h2>
+    <ul style="padding-left:20px; font-size:0.9rem; line-height:2">
+      <li>Entwürfe werden <strong>lokal in Ihrem Browser</strong> gespeichert (localStorage).</li>
+      <li>Beim Löschen des Browser-Verlaufs gehen Entwürfe verloren.</li>
+      <li>Bitte laden Sie wichtige Abrechnungen als PDF herunter.</li>
+      <li>Entwürfe können bearbeitet werden: auf <strong>Laden</strong> klicken, dann im Formular anpassen und erneut als PDF exportieren.</li>
+    </ul>
+  </div>
+
+</main>
+
+<!-- jsPDF CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="app.js"></script>
+<script src="pdf-gen.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', initDrafts);
+</script>
+
+</body>
+</html>
