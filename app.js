@@ -143,9 +143,14 @@ async function mitMapsButton(btnId, origin, destination, onSuccess) {
 // startTyp: 'zuhause' | 'arbeitsort' | 'andere'
 // Pendelabzug immer nur einmal pro Fahrt-Eintrag
 
+function getAktuellePendelKm() {
+  if (window._tempPendelReset) return 0;
+  if (window._pendingKm != null) return window._pendingKm;
+  return parseInt(getProfil().pendelKmEinfach) || 0;
+}
+
 function berechneFahrtErstattung(modus, kmHin, kmRueck, startTyp) {
-  var p = getProfil();
-  var pendelKm = (p.pendelKmEinfach || 0) * 2;
+  var pendelKm = getAktuellePendelKm() * 2;
   var gesamtKm = 0;
   if (modus === 'einfach')    gesamtKm = parseInt(kmHin) || 0;
   if (modus === 'hinrueck')   gesamtKm = (parseInt(kmHin) || 0) * 2;

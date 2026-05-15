@@ -263,6 +263,10 @@ function profilSpeichern() {
     p.pendelBerechnetAm = '';
   }
   saveProfil(p);
+  window._tempPendelReset = false;
+  window._pendingKm       = null;
+  Object.keys(trips).forEach(function (id) { updateFahrtKarte(parseInt(id)); });
+  updateSummary();
   showToast('Profil gespeichert ✓', 'ok');
 }
 
@@ -1147,7 +1151,7 @@ function updateAllPendelRows() {
       <div class="sum-label">Gesamt km (hin &amp; zurück)</div>
       <div class="sum-value" id="sum-gesamt-km">0 km</div>
     </div>
-    <div class="sum-block deduct">
+    <div class="sum-block deduct" id="sum-pendel-block">
       <div class="sum-label">Pendelabzug gesamt</div>
       <div class="sum-value" id="sum-pendel-km">0 km</div>
     </div>
@@ -1212,9 +1216,18 @@ function updateSummary() {
 
   function ss(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
   ss('sum-gesamt-km',    fmtKm(totalKmGesamt));
-  ss('sum-pendel-km',    fmtKm(pendelGesamt));
   ss('sum-erst-km',      fmtKm(erstattungGesamt));
   ss('sum-gesamt-betrag', fmt(gesamt));
+
+  var pendelEl    = document.getElementById('sum-pendel-km');
+  var pendelBlock = document.getElementById('sum-pendel-block');
+  if (pendelEl) {
+    pendelEl.textContent = fmtKm(pendelGesamt);
+    pendelEl.style.color = pendelGesamt > 0 ? '#A32D2D' : 'var(--text-muted)';
+  }
+  if (pendelBlock) {
+    pendelBlock.style.background = pendelGesamt > 0 ? '#FCEBEB' : 'var(--gray-50)';
+  }
 
   var line = document.getElementById('sum-calc-line');
   if (line) {
