@@ -199,16 +199,6 @@ var currentId = newAntragId();
 
 document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('topbar-mount').innerHTML = renderTopbar('index');
-
-  ladeProfilFelder();
-
-  // Draft aus URL?
-  var params  = new URLSearchParams(location.search);
-  var draftId = params.get('draft');
-  if (draftId) {
-    var d = getDrafts().find(function (x) { return x.id === draftId; });
-    if (d) { ladeDraft(d); return; }
-  }
 });
 
 // ─── Profil: Laden & Speichern ────────────────────────────────────────────────
@@ -1050,25 +1040,6 @@ function updateAllPendelRows() {
   Object.keys(trips).forEach(function (id) { updateFahrtKarte(parseInt(id)); });
 }
 
-// ─── Draft-Load: Fahrten wiederherstellen ─────────────────────────────────────
-
-var _origLadeDraft = ladeDraft;
-ladeDraft = function (d) {
-  _origLadeDraft(d);
-  document.getElementById('fahrten-container').innerHTML = '';
-  trips = {};
-  tripCounter = 0;
-  (d.fahrten || []).forEach(function (f) { fahrtHinzufuegen(f); });
-  if (Object.keys(trips).length === 0) fahrtHinzufuegen();
-  updateSummary();
-};
-
-// ─── Erster Seitenload ────────────────────────────────────────────────────────
-
-document.addEventListener('DOMContentLoaded', function () {
-  var params = new URLSearchParams(location.search);
-  if (!params.get('draft')) fahrtHinzufuegen();
-});
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
@@ -1208,11 +1179,9 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
 'use strict';
 
-// ─── Datei-Upload State ───────────────────────────────────────────────────────
-
 var uploadedFiles = [];
 
-// ─── updateSummary (echte Implementierung) ────────────────────────────────────
+// ─── updateSummary ────────────────────────────────────────────────────────────
 
 function updateSummary() {
   var totalKmGesamt = 0, pendelGesamt = 0, erstattungGesamt = 0;
@@ -1226,26 +1195,18 @@ function updateSummary() {
     erstattungGesamt += r.erstattungKm;
     updateFahrtKarte(parseInt(id));
   });
-
   var fahrtBetrag = erstattungGesamt * RATE;
-  var spesenIds   = ['sp-uebernachtung', 'sp-opnv', 'sp-parken', 'sp-sonstige'];
-  var spesen = spesenIds.reduce(function (s, sid) {
-    var el = document.getElementById(sid);
-    return s + (parseFloat(el ? el.value : 0) || 0);
+  var spesen = ['sp-uebernachtung','sp-opnv','sp-parken','sp-sonstige'].reduce(function (s, sid) {
+    return s + (parseFloat((document.getElementById(sid) || {}).value) || 0);
   }, 0);
   var gesamt = fahrtBetrag + spesen;
 
-  var setSafe = function (id, val) {
-    var el = document.getElementById(id);
-    if (el) el.textContent = val;
-  };
+  function ss(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+  ss('sum-gesamt-km',    fmtKm(totalKmGesamt));
+  ss('sum-pendel-km',    fmtKm(pendelGesamt));
+  ss('sum-erst-km',      fmtKm(erstattungGesamt));
+  ss('sum-gesamt-betrag', fmt(gesamt));
 
-  setSafe('sum-gesamt-km',   fmtKm(totalKmGesamt));
-  setSafe('sum-pendel-km',   fmtKm(pendelGesamt));
-  setSafe('sum-erst-km',     fmtKm(erstattungGesamt));
-  setSafe('sum-gesamt-betrag', fmt(gesamt));
-
-  // Rechenzeile
   var line = document.getElementById('sum-calc-line');
   if (line) {
     var parts = fmtKm(erstattungGesamt) + ' × 0,30 € = <strong>' + fmt(fahrtBetrag) + '</strong>';
@@ -1255,7 +1216,7 @@ function updateSummary() {
   }
 }
 
-// ─── collectData() ────────────────────────────────────────────────────────────
+// ─── collectData ──────────────────────────────────────────────────────────────
 
 function collectData() {
   var p = getProfil();
@@ -1264,15 +1225,15 @@ function collectData() {
     var t      = trips[idn];
     var kmHin  = parseInt((document.getElementById('km-hin-'   + idn) || {}).value) || 0;
     var kmRueck= parseInt((document.getElementById('km-rueck-' + idn) || {}).value) || 0;
-    var art    = (document.getElementById('art-' + idn) || {}).value || '';
     var artEl  = document.getElementById('art-' + idn);
-    var artLabel = artEl ? artEl.options[artEl.selectedIndex].text : art;
+    var art    = artEl ? artEl.value : '';
+    var artLabel = artEl ? artEl.options[artEl.selectedIndex].text : '';
     var r      = berechneFahrtErstattung(t.modus || 'hinrueck', kmHin, kmRueck, t.startTyp);
     return {
       modus:        t.modus || 'hinrueck',
-      datumHin:     t.datumHin  || '',
+      datumHin:     t.datumHin   || '',
       datumRueck:   t.datumRueck || '',
-      datum:        t.datumHin  || '',
+      datum:        t.datumHin   || '',
       startTyp:     t.startTyp,
       startAdresse: getStartAdresse(idn),
       ziel:         (document.getElementById('ziel-'  + idn) || {}).value || '',
@@ -1286,14 +1247,10 @@ function collectData() {
       erstattungKm: r.erstattungKm,
       betrag:       r.betrag,
       andereAdresse: t.startTyp === 'andere'
-        ? ((document.getElementById('start-andere-' + idn) || {}).value || '')
-        : ''
+        ? ((document.getElementById('start-andere-' + idn) || {}).value || '') : ''
     };
   });
-
-  var spWert = function (sid) {
-    return parseFloat((document.getElementById(sid) || {}).value) || 0;
-  };
+  var spWert = function (sid) { return parseFloat((document.getElementById(sid) || {}).value) || 0; };
   var spesen = {
     uebernachtung: spWert('sp-uebernachtung'),
     opnv:          spWert('sp-opnv'),
@@ -1302,10 +1259,8 @@ function collectData() {
     sonstigeText:  (document.getElementById('sp-sonstige-text') || {}).value || ''
   };
   var spesenSum = spesen.uebernachtung + spesen.opnv + spesen.parken + spesen.sonstige;
-
   var erstattungGesamt = fahrten.reduce(function (s, f) { return s + f.erstattungKm; }, 0);
   var fahrtBetrag = erstattungGesamt * RATE;
-
   return {
     id:          currentId || newAntragId(),
     arbeitgeber: getArbeitgeber(),
@@ -1320,7 +1275,7 @@ function collectData() {
       heimOrt:           gV('heim-ort'),
       arbeitsortName:    gV('arbeit-name'),
       arbeitsortAdresse: gV('arbeit-adresse'),
-      pendelKmEinfach:   p.pendelKmEinfach || 0,
+      pendelKmEinfach:   p.pendelKmEinfach   || 0,
       pendelBerechnetAm: p.pendelBerechnetAm || ''
     },
     zeitraum:    gV('zeitraum'),
@@ -1362,17 +1317,17 @@ function antragEinreichen() {
 }
 
 function neuerAntrag() {
-  currentId = newAntragId();
+  currentId = null;
   document.getElementById('draft-bar').style.display = 'none';
   window.history.replaceState({}, '', 'index.html');
-  formularLeeren(true);
+  formularLeeren();
 }
 
-function formularLeeren(skipConfirm) {
-  if (!skipConfirm && !confirm('Formular leeren? Nicht gespeicherte Daten gehen verloren.')) return;
+function formularLeeren() {
+  if (!confirm('Formular leeren? Nicht gespeicherte Daten gehen verloren.')) return;
   setV('zeitraum', '');
   ['sp-uebernachtung','sp-opnv','sp-parken','sp-sonstige','sp-sonstige-text','anmerkung']
-    .forEach(function (id) { setV(id, ''); });
+    .forEach(function (k) { setV(k, ''); });
   document.getElementById('fahrten-container').innerHTML = '';
   Object.keys(trips).forEach(function (k) { delete trips[k]; });
   tripCounter = 0;
@@ -1382,20 +1337,44 @@ function formularLeeren(skipConfirm) {
   updateSummary();
 }
 
-// ─── ladeDraft Erweiterung: Spesen + Anmerkung ────────────────────────────────
+// ─── ladeDraft (vollständig) ──────────────────────────────────────────────────
 
-var _origLadeDraft2 = ladeDraft;
-ladeDraft = function (d) {
-  _origLadeDraft2(d);
+function ladeDraft(draftOrId) {
+  var d = typeof draftOrId === 'string'
+    ? getDrafts().find(function (x) { return x.id === draftOrId; })
+    : draftOrId;
+  if (!d) return;
+  currentId = d.id;
+  zeigeDraftBar(d.id);
+  var m = d.mitarbeiter || {};
+  setV('ma-vorname',    m.vorname   || '');
+  setV('ma-nachname',   m.nachname  || '');
+  setV('ma-rolle',      m.rolle     || '');
+  setV('ma-rolle-text', m.rolleText || '');
+  setV('ma-iban',       m.iban      || '');
+  setV('heim-strasse',  m.heimStrasse || '');
+  setV('heim-plz',      m.heimPlz    || '');
+  setV('heim-ort',      m.heimOrt    || '');
+  setV('arbeit-name',     m.arbeitsortName    || '');
+  setV('arbeit-adresse',  m.arbeitsortAdresse || '');
+  onRolleChange();
+  aktualisierePendelAdresszeile();
+  if (m.pendelKmEinfach > 0) zeigePendelB(m.pendelKmEinfach, m.pendelBerechnetAm);
+  setV('zeitraum', d.zeitraum || '');
+  document.getElementById('fahrten-container').innerHTML = '';
+  Object.keys(trips).forEach(function (k) { delete trips[k]; });
+  tripCounter = 0;
+  (d.fahrten || []).forEach(function (f) { fahrtHinzufuegen(f); });
+  if (Object.keys(trips).length === 0) fahrtHinzufuegen();
   var sp = d.spesen || {};
-  setV('sp-uebernachtung',  sp.uebernachtung || '');
-  setV('sp-opnv',           sp.opnv          || '');
-  setV('sp-parken',         sp.parken         || '');
-  setV('sp-sonstige',       sp.sonstige       || '');
-  setV('sp-sonstige-text',  sp.sonstigeText   || '');
-  setV('anmerkung',         d.anmerkung       || '');
+  setV('sp-uebernachtung', sp.uebernachtung || '');
+  setV('sp-opnv',          sp.opnv          || '');
+  setV('sp-parken',        sp.parken         || '');
+  setV('sp-sonstige',      sp.sonstige       || '');
+  setV('sp-sonstige-text', sp.sonstigeText   || '');
+  setV('anmerkung',        d.anmerkung       || '');
   updateSummary();
-};
+}
 
 // ─── Datei-Upload ─────────────────────────────────────────────────────────────
 
@@ -1442,8 +1421,8 @@ function renderFileList() {
     return '<div style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;' +
            'background:var(--gray-100);border-radius:20px;font-size:11px;color:var(--text-muted)">' +
            '📎 <span>' + esc(f.name) + ' (' + size + ')</span>' +
-           '<button onclick="removeFile(' + i + ')" ' +
-           'style="background:none;border:none;cursor:pointer;color:var(--text-hint);' +
+           '<button onclick="removeFile(' + i + ')"' +
+           ' style="background:none;border:none;cursor:pointer;color:var(--text-hint);' +
            'font-size:12px;padding:0;font-family:inherit;line-height:1">✕</button>' +
            '</div>';
   }).join('');
@@ -1454,10 +1433,17 @@ function removeFile(i) {
   renderFileList();
 }
 
-// ─── Finaler DOMContentLoaded ─────────────────────────────────────────────────
+// ─── DOMContentLoaded ─────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', function () {
-  updateSummary();
+  ladeProfilFelder();
+  var draftId = new URLSearchParams(window.location.search).get('draft');
+  if (draftId) {
+    ladeDraft(draftId);
+  } else {
+    fahrtHinzufuegen();
+    updateSummary();
+  }
 });
 </script>
 
