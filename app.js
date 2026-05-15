@@ -140,17 +140,26 @@ async function mitMapsButton(btnId, origin, destination, onSuccess) {
 
 // ─── Pendelabzug-Logik ────────────────────────────────────────────────────────
 // Start vom Arbeitsort = kein Pendelabzug (volle Strecke wird erstattet)
-// Start von Zuhause oder anderer Adresse = Pendelabzug (pendelKmEinfach * 2)
+// modus: 'einfach' | 'hinrueck' | 'mehrtaegig'
+// startTyp: 'zuhause' | 'arbeitsort' | 'andere'
+// Pendelabzug immer nur einmal pro Fahrt-Eintrag
 
-function berechneFahrtErstattung(kmEinfach, startTyp) {
-  const p = getProfil();
-  const pendelKm = (p.pendelKmEinfach || 0) * 2;
-  const kmHR = kmEinfach * 2;
-  if (startTyp === 'arbeitsort') {
-    return { kmHR, pendelAbzug: 0, erstattungKm: kmHR, betrag: kmHR * RATE, keinAbzug: true };
-  }
-  const erstattungKm = Math.max(0, kmHR - pendelKm);
-  return { kmHR, pendelAbzug: pendelKm, erstattungKm, betrag: erstattungKm * RATE, keinAbzug: false };
+function berechneFahrtErstattung(modus, kmHin, kmRueck, startTyp) {
+  var p = getProfil();
+  var pendelKm = (p.pendelKmEinfach || 0) * 2;
+  var gesamtKm = 0;
+  if (modus === 'einfach')    gesamtKm = parseInt(kmHin) || 0;
+  if (modus === 'hinrueck')   gesamtKm = (parseInt(kmHin) || 0) * 2;
+  if (modus === 'mehrtaegig') gesamtKm = (parseInt(kmHin) || 0) + (parseInt(kmRueck) || 0);
+  var pendelAbzug   = startTyp === 'arbeitsort' ? 0 : pendelKm;
+  var erstattungKm  = Math.max(0, gesamtKm - pendelAbzug);
+  return {
+    gesamtKm:    gesamtKm,
+    pendelAbzug: pendelAbzug,
+    erstattungKm: erstattungKm,
+    betrag:      erstattungKm * RATE,
+    keinAbzug:   startTyp === 'arbeitsort'
+  };
 }
 
 // ─── Formatierung ─────────────────────────────────────────────────────────────

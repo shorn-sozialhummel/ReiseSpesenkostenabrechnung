@@ -385,14 +385,15 @@ function zeigeDraftBar(id) {
      ABSCHNITT 3: Dienstliche Fahrten
 ════════════════════════════════════════════════════════════════════════════ -->
 <style>
-  .fahrt-card { border:1px solid var(--gray-200); border-radius:14px; overflow:hidden; margin-bottom:10px; }
-  .fk-header  { background:var(--gray-50); border-bottom:1px solid var(--gray-200); padding:10px 14px;
-                display:flex; align-items:center; gap:8px; }
-  .fk-nr      { width:22px; height:22px; border-radius:50%; background:var(--green); color:#fff;
-                font-size:11px; font-weight:600; display:flex; align-items:center; justify-content:center;
-                flex-shrink:0; }
+  /* Fahrt-Karte */
+  .fahrt-card  { border:1px solid var(--gray-200); border-radius:14px; overflow:hidden; margin-bottom:10px; }
+  .fk-header   { background:var(--gray-50); border-bottom:1px solid var(--gray-200); padding:10px 14px;
+                 display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .fk-nr       { width:22px; height:22px; border-radius:50%; background:var(--green); color:#fff;
+                 font-size:11px; font-weight:600; display:flex; align-items:center; justify-content:center;
+                 flex-shrink:0; }
   .fk-art-badge { font-size:11px; font-weight:500; padding:2px 9px; border-radius:20px; white-space:nowrap; }
-  .fk-datum   { font-size:12px; color:var(--text-muted); margin-left:auto; }
+  .fk-datum-lbl { font-size:12px; color:var(--text-muted); margin-left:auto; }
   .fk-del     { background:none; border:none; cursor:pointer; font-size:14px; color:var(--text-hint);
                 padding:2px 4px; border-radius:6px; transition:color .15s,background .15s;
                 font-family:inherit; }
@@ -400,12 +401,43 @@ function zeigeDraftBar(id) {
 
   .fk-body    { padding:12px 14px; display:flex; flex-direction:column; gap:10px; }
 
-  .fk-start-row { display:flex; align-items:flex-start; gap:10px; }
-  .fk-start-lbl { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em;
-                  color:var(--text-muted); width:48px; flex-shrink:0; padding-top:8px; }
-  .fk-start-btns { display:flex; gap:5px; flex-wrap:wrap; }
+  /* Modus-Buttons */
+  .modus-btn  { border-radius:20px; font-size:11px; font-weight:500; padding:5px 11px;
+                border:1px solid var(--gray-200); background:var(--gray-50);
+                cursor:pointer; font-family:inherit; transition:all .15s; white-space:nowrap; }
+  .modus-btn:hover { background:var(--gray-100); }
+  .modus-btn.on-einfach    { background:var(--green-light); color:var(--green-dark); border-color:#5DCAA5; }
+  .modus-btn.on-hinrueck   { background:var(--blue-light);  color:#0C447C;           border-color:#85B7EB; }
+  .modus-btn.on-mehrtaegig { background:#EEEDFE;            color:#3C3489;           border-color:#AFA9EC; }
+
+  /* Start-Buttons */
+  .fsk { border-radius:20px; font-size:11px; font-weight:500; padding:4px 10px;
+         border:1px solid var(--gray-200); background:var(--gray-50);
+         cursor:pointer; font-family:inherit; transition:all .15s; }
+  .fsk:hover { background:var(--gray-100); }
+  .fsk.active-zh { background:#E6F1FB; color:#0C447C;           border-color:#85B7EB; }
+  .fsk.active-ao { background:var(--green-light); color:var(--green-dark); border-color:#5DCAA5; }
+  .fsk.active-an { background:#EEEDFE; color:#3C3489;           border-color:#AFA9EC; }
+
+  .fk-start-row   { display:flex; align-items:flex-start; gap:10px; }
+  .fk-start-lbl   { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em;
+                    color:var(--text-muted); width:50px; flex-shrink:0; padding-top:7px; }
+  .fk-start-btns  { display:flex; gap:5px; flex-wrap:wrap; }
   .fk-start-block { display:flex; flex-direction:column; gap:4px; flex:1; }
   .fk-start-addr  { font-size:11px; color:var(--text-muted); padding-left:2px; min-height:14px; }
+
+  .fk-grid  { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .fk-span2 { grid-column:span 2; }
+
+  .fk-datum-box { background:var(--gray-50); border:1px solid var(--gray-200);
+                  border-radius:10px; padding:10px 12px; }
+  .fk-datum-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+  .fk-pendel { border-top:1px solid var(--gray-200); padding:7px 14px; font-size:11px;
+               display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .fk-pendel.p-ao   { background:var(--green-light); color:var(--green-dark); }
+  .fk-pendel.p-warn { background:var(--amber-light); color:#633806; }
+  .fk-pendel .p-right { font-weight:500; white-space:nowrap; flex-shrink:0; }
 
   .fsk { border-radius:20px; font-size:11px; font-weight:500; padding:4px 10px;
          border:1px solid var(--gray-200); background:var(--gray-50);
@@ -420,18 +452,6 @@ function zeigeDraftBar(id) {
 
   .fk-km-row  { background:var(--gray-50); border-radius:10px; padding:10px 12px;
                 display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-  .fk-km-row .km-inp  { width:70px; font-size:14px; font-weight:500; text-align:center; }
-  .fk-km-lbl  { font-size:12px; color:var(--text-muted); }
-  .fk-km-sep  { font-size:12px; color:var(--text-hint); }
-  .fk-km-val  { font-size:18px; font-weight:500; }
-  .fk-km-val.green { color:var(--green-dark); }
-  .fk-km-val.blue  { color:var(--blue); }
-
-  .fk-pendel { border-top:1px solid var(--gray-200); padding:7px 14px; font-size:11px;
-               display:flex; align-items:center; justify-content:space-between; gap:8px; }
-  .fk-pendel.p-ao  { background:var(--green-light); color:var(--green-dark); }
-  .fk-pendel.p-warn{ background:var(--amber-light); color:#633806; }
-  .fk-pendel .p-right { font-weight:500; white-space:nowrap; flex-shrink:0; }
 </style>
 
 <div class="card" id="fahrten-card">
@@ -450,7 +470,7 @@ function zeigeDraftBar(id) {
     <span>
       <strong>Startpunkt wählen:</strong> Zuhause und Arbeitsort werden automatisch aus dem Profil übernommen.
       Andere Startpunkte: „Andere" wählen und Adresse eingeben.
-      KM als einfache Strecke — Hin- &amp; Rückweg wird verdoppelt.
+      KM als einfache Strecke (einfach) oder Hin &amp; Zurück je nach Fahrtmodus.
     </span>
   </div>
 </div>
@@ -459,9 +479,13 @@ function zeigeDraftBar(id) {
 'use strict';
 
 // ─── Fahrten State ────────────────────────────────────────────────────────────
+// trips[id] = { modus, startTyp, kmHin, kmRueck, datumHin, datumRueck,
+//               ziel, art, zweck, andereAdresse }
 
 var tripCounter = 0;
 var trips = {};
+
+// ─── Art-Badge Farben ─────────────────────────────────────────────────────────
 
 // ─── Art-Badge Farben ─────────────────────────────────────────────────────────
 
@@ -474,6 +498,12 @@ var ART_BADGE = {
   sonstiges:     { bg:'#F1F0EC', fg:'#5F5E5A' }
 };
 
+var MODUS_CONF = {
+  einfach:    { text:'→ Einfache Fahrt',         bg:'#E1F5EE', color:'#085041' },
+  hinrueck:   { text:'⇄ Hin & Rückfahrt',        bg:'#E6F1FB', color:'#0C447C' },
+  mehrtaegig: { text:'📅 Mehrtägig',              bg:'#EEEDFE', color:'#3C3489' }
+};
+
 // ─── Karte erstellen ──────────────────────────────────────────────────────────
 
 function fahrtHinzufuegen(data) {
@@ -481,10 +511,13 @@ function fahrtHinzufuegen(data) {
   tripCounter++;
   var id = tripCounter;
   trips[id] = {
+    modus:         data.modus         || 'hinrueck',
     startTyp:      data.startTyp      || 'zuhause',
-    km:            data.km            || data.kmEinfach || 0,
+    kmHin:         data.kmHin         || data.kmEinfach || 0,
+    kmRueck:       data.kmRueck       || 0,
+    datumHin:      data.datumHin      || data.datum || todayISO(),
+    datumRueck:    data.datumRueck    || '',
     ziel:          data.ziel          || '',
-    datum:         data.datum         || todayISO(),
     art:           data.art           || '',
     zweck:         data.zweck         || '',
     andereAdresse: data.andereAdresse || ''
@@ -496,6 +529,7 @@ function fahrtHinzufuegen(data) {
 
 function renderFahrtKarte(id) {
   var t = trips[id];
+  var modus = t.modus || 'hinrueck';
 
   var artOpts = REISEARTEN.map(function (r) {
     return '<option value="' + esc(r.v) + '"' + (t.art === r.v ? ' selected' : '') + '>' + esc(r.l) + '</option>';
@@ -504,30 +538,52 @@ function renderFahrtKarte(id) {
   var html =
     '<div class="fahrt-card" id="fahrt-card-' + id + '">' +
 
-    // Header
+    // ── Header ──────────────────────────────────────────────────────────────
     '<div class="fk-header">' +
       '<div class="fk-nr">' + id + '</div>' +
-      '<div class="fk-art-badge" id="art-badge-' + id + '">– Art wählen –</div>' +
-      '<span class="fk-datum">' +
-        '<input type="date" id="dat-' + id + '" value="' + esc(t.datum) + '"' +
-        ' style="border:none;background:transparent;font-family:inherit;font-size:12px;' +
-        'color:var(--text-muted);cursor:pointer;outline:none;padding:0"' +
-        ' oninput="updateSummary()">' +
-      '</span>' +
-      '<button class="fk-del" onclick="fahrtLoeschen(' + id + ')" title="Fahrt löschen">✕</button>' +
+      '<div class="fk-art-badge" id="art-badge-' + id + '"' +
+      ' style="background:#F1F0EC;color:#5F5E5A">– Art wählen –</div>' +
+      '<div class="fk-art-badge" id="modus-badge-' + id + '"' +
+      ' style="background:' + MODUS_CONF[modus].bg + ';color:' + MODUS_CONF[modus].color + '">' +
+        MODUS_CONF[modus].text +
+      '</div>' +
+      '<button class="fk-del" style="margin-left:auto"' +
+      ' onclick="fahrtLoeschen(' + id + ')" title="Fahrt löschen">✕</button>' +
     '</div>' +
 
-    // Body
+    // ── Body ────────────────────────────────────────────────────────────────
     '<div class="fk-body">' +
 
-      // Start
+      // A) Fahrtmodus
+      '<div>' +
+        '<div style="font-size:10px;font-weight:600;text-transform:uppercase;' +
+        'letter-spacing:.05em;color:var(--text-muted);margin-bottom:6px">FAHRTMODUS</div>' +
+        '<div style="display:flex;gap:5px;flex-wrap:wrap">' +
+          '<button class="modus-btn" id="modus-einfach-' + id + '"' +
+          ' onclick="setModus(' + id + ',\'einfach\')">→ Einfache Fahrt</button>' +
+          '<button class="modus-btn" id="modus-hinrueck-' + id + '"' +
+          ' onclick="setModus(' + id + ',\'hinrueck\')">⇄ Hin &amp; Rückfahrt (gleicher Tag)</button>' +
+          '<button class="modus-btn" id="modus-mehrtaegig-' + id + '"' +
+          ' onclick="setModus(' + id + ',\'mehrtaegig\')">📅 Mehrtägig (Rückfahrt anderer Tag)</button>' +
+        '</div>' +
+      '</div>' +
+
+      // B) Datum-Block (dynamisch via setModus)
+      '<div id="datum-block-' + id + '" class="fk-datum-box">' +
+        buildDatumBlock(id, modus) +
+      '</div>' +
+
+      // C) Startpunkt
       '<div class="fk-start-row">' +
         '<div class="fk-start-lbl">START</div>' +
         '<div class="fk-start-block">' +
           '<div class="fk-start-btns">' +
-            '<button class="fsk" id="sb-zh-' + id + '" onclick="setStartTyp(' + id + ',\'zuhause\')">🏠 Zuhause</button>' +
-            '<button class="fsk" id="sb-ao-' + id + '" onclick="setStartTyp(' + id + ',\'arbeitsort\')">🏢 Arbeitsort</button>' +
-            '<button class="fsk" id="sb-an-' + id + '" onclick="setStartTyp(' + id + ',\'andere\')">✏️ Andere</button>' +
+            '<button class="fsk" id="sb-zh-' + id + '"' +
+            ' onclick="setStartTyp(' + id + ',\'zuhause\')">🏠 Zuhause</button>' +
+            '<button class="fsk" id="sb-ao-' + id + '"' +
+            ' onclick="setStartTyp(' + id + ',\'arbeitsort\')">🏢 Arbeitsort</button>' +
+            '<button class="fsk" id="sb-an-' + id + '"' +
+            ' onclick="setStartTyp(' + id + ',\'andere\')">✏️ Andere</button>' +
           '</div>' +
           '<div class="fk-start-addr" id="start-addr-' + id + '"></div>' +
           '<div id="start-andere-wrap-' + id + '" style="display:none;margin-top:4px">' +
@@ -539,7 +595,7 @@ function renderFahrtKarte(id) {
         '</div>' +
       '</div>' +
 
-      // Felder-Grid
+      // D) Felder-Grid
       '<div class="fk-grid">' +
         '<div class="field">' +
           '<label class="field-label">Ziel / Adresse *</label>' +
@@ -547,52 +603,25 @@ function renderFahrtKarte(id) {
           ' value="' + esc(t.ziel) + '" oninput="updateSummary()">' +
         '</div>' +
         '<div class="field">' +
-          '<label class="field-label">Datum</label>' +
-          '<input type="date" id="dat2-' + id + '" value="' + esc(t.datum) + '"' +
-          ' style="display:none">' +
+          '<label class="field-label">Art der Reise</label>' +
+          '<select id="art-' + id + '" onchange="onArtChange(' + id + ')">' + artOpts + '</select>' +
         '</div>' +
         '<div class="field fk-span2">' +
           '<label class="field-label">Zweck / Beschreibung</label>' +
           '<input type="text" id="zweck-' + id + '"' +
-          ' placeholder="z. B. Klient Hr. Maier, Teamtreffen …"' +
+          ' placeholder="z. B. Urlaubsbegleitung Klient Hr. Stegemann …"' +
           ' value="' + esc(t.zweck) + '" oninput="updateSummary()">' +
-        '</div>' +
-        '<div class="field fk-span2">' +
-          '<label class="field-label">Art der Reise</label>' +
-          '<select id="art-' + id + '" onchange="onArtChange(' + id + ')">' + artOpts + '</select>' +
         '</div>' +
       '</div>' +
 
-      // KM-Zeile
-      '<div class="fk-km-row">' +
-        '<div style="display:flex;align-items:center;gap:5px">' +
-          '<input type="number" class="km-inp" id="km-' + id + '"' +
-          ' min="0" step="1" placeholder="0" value="' + esc(t.km || '') + '"' +
-          ' oninput="updateFahrtKarte(' + id + ');updateSummary()">' +
-          '<span class="fk-km-lbl">km</span>' +
-        '</div>' +
-        '<span class="fk-km-sep">× 2 =</span>' +
-        '<div style="display:flex;flex-direction:column;align-items:center">' +
-          '<span class="fk-km-lbl" style="font-size:9px">Hin &amp; Zurück</span>' +
-          '<span class="fk-km-val" id="km-hr-' + id + '">0 km</span>' +
-        '</div>' +
-        '<span class="fk-km-sep">→</span>' +
-        '<div style="display:flex;flex-direction:column;align-items:center">' +
-          '<span class="fk-km-lbl" style="font-size:9px">Erstattungs-km</span>' +
-          '<span class="fk-km-val green" id="km-erst-' + id + '">0 km</span>' +
-        '</div>' +
-        '<div style="display:flex;flex-direction:column;align-items:center">' +
-          '<span class="fk-km-lbl" style="font-size:9px">Betrag</span>' +
-          '<span class="fk-km-val blue" id="betrag-' + id + '">0,00 €</span>' +
-        '</div>' +
-        '<button class="btn-primary btn-icon" id="maps-' + id + '"' +
-        ' style="margin-left:auto;font-size:12px;padding:7px 11px"' +
-        ' onclick="doFahrtMaps(' + id + ')">📍 via Maps</button>' +
+      // E) KM-Block (dynamisch via setModus)
+      '<div id="km-block-' + id + '">' +
+        buildKmBlock(id, modus) +
       '</div>' +
 
     '</div>' + // fk-body
 
-    // Pendel-Footer
+    // ── Pendel-Footer (stub — nächster Prompt) ──────────────────────────────
     '<div class="fk-pendel" id="fk-pendel-' + id + '"></div>' +
 
     '</div>'; // fahrt-card
@@ -602,58 +631,193 @@ function renderFahrtKarte(id) {
   tmp.innerHTML = html;
   container.appendChild(tmp.firstElementChild);
 
-  // Art-Badge Initialzustand
-  onArtChange(id);
-  // Start-Button Zustand
+  aktualisiereModusButtons(id);
   aktualisiereStartButtons(id);
+  aktualisiereStartAdresszeile(id);
+  onArtChange(id);
 }
 
-// ─── Karte aktualisieren ──────────────────────────────────────────────────────
+// ─── Datum-Block ──────────────────────────────────────────────────────────────
+
+function buildDatumBlock(id, modus) {
+  var t = trips[id];
+  var dHin   = t.datumHin   || todayISO();
+  var dRueck = t.datumRueck || '';
+
+  var hinInput = '<input type="date" id="datum-hin-' + id + '" value="' + esc(dHin) + '"' +
+    ' oninput="saveDatumHin(' + id + ');updateSummary()">';
+
+  if (modus === 'einfach') {
+    return '<div style="font-size:10px;font-weight:600;text-transform:uppercase;' +
+           'letter-spacing:.05em;color:var(--text-muted);margin-bottom:6px">Fahrtdatum</div>' +
+           '<div class="fk-datum-row">' + hinInput + '</div>' +
+           '<div style="font-size:11px;color:var(--text-hint);margin-top:6px">' +
+           '→ Einfache Fahrt — nur Hinfahrt wird abgerechnet. ' +
+           'Rückfahrt ggf. als separate Fahrt eintragen.</div>';
+  }
+  if (modus === 'hinrueck') {
+    return '<div style="font-size:10px;font-weight:600;text-transform:uppercase;' +
+           'letter-spacing:.05em;color:var(--text-muted);margin-bottom:6px">' +
+           'Fahrtdatum (Hin &amp; Zurück)</div>' +
+           '<div class="fk-datum-row">' + hinInput + '</div>' +
+           '<div style="font-size:11px;color:var(--text-hint);margin-top:6px">' +
+           '⇄ Hin- und Rückfahrt am selben Tag — KM wird automatisch verdoppelt.</div>';
+  }
+  // mehrtaegig
+  var rueckInput = '<input type="date" id="datum-rueck-' + id + '" value="' + esc(dRueck) + '"' +
+    ' oninput="saveDatumRueck(' + id + ');berechneTage(' + id + ');updateSummary()">';
+  return '<div style="font-size:10px;font-weight:600;text-transform:uppercase;' +
+         'letter-spacing:.05em;color:var(--text-muted);margin-bottom:6px">Reisezeitraum</div>' +
+         '<div class="fk-datum-row">' +
+           '<div class="field" style="flex:1">' +
+             '<label class="field-label">Hinfahrt</label>' + hinInput +
+           '</div>' +
+           '<span style="font-size:14px;color:var(--text-hint);align-self:flex-end;padding-bottom:8px">→</span>' +
+           '<div class="field" style="flex:1">' +
+             '<label class="field-label">Rückfahrt</label>' + rueckInput +
+           '</div>' +
+           '<div style="align-self:flex-end;padding-bottom:8px">' +
+             '<span id="datum-tage-' + id + '" style="font-size:11px;color:var(--text-muted)"></span>' +
+           '</div>' +
+         '</div>' +
+         '<div style="font-size:11px;color:var(--text-hint);margin-top:6px">' +
+         '📅 Hin- und Rückfahrt separat — KM wird NICHT automatisch verdoppelt. ' +
+         'Bitte Hin- und Rückfahrt-KM einzeln eingeben.</div>';
+}
+
+function saveDatumHin(id)   { var el = document.getElementById('datum-hin-'  + id); if (el && trips[id]) trips[id].datumHin   = el.value; }
+function saveDatumRueck(id) { var el = document.getElementById('datum-rueck-'+ id); if (el && trips[id]) trips[id].datumRueck = el.value; }
+
+function berechneTage(id) {
+  var el = document.getElementById('datum-tage-' + id);
+  if (!el || !trips[id]) return;
+  var h = trips[id].datumHin;
+  var r = trips[id].datumRueck;
+  if (!h || !r) { el.textContent = ''; return; }
+  var diff = Math.round((new Date(r) - new Date(h)) / 86400000);
+  el.textContent = diff > 0 ? diff + ' Tag' + (diff !== 1 ? 'e' : '') : '';
+}
+
+// ─── KM-Block (Stub — nächster Prompt baut den vollen UI) ────────────────────
+
+function buildKmBlock(id, modus) {
+  var t = trips[id];
+  var html = '<div id="km-block-inner-' + id + '" style="display:flex;gap:8px;align-items:center;padding:6px 0;flex-wrap:wrap">' +
+    '<label style="font-size:11px;color:var(--text-muted);white-space:nowrap">' +
+      (modus === 'mehrtaegig' ? 'KM Hinfahrt:' : 'KM einfach:') +
+    '</label>' +
+    '<input type="number" id="km-hin-' + id + '" min="0" step="1" placeholder="0"' +
+    ' value="' + esc(t.kmHin || '') + '"' +
+    ' style="width:72px;font-size:14px;font-weight:500;text-align:center"' +
+    ' oninput="updateFahrtKarte(' + id + ');updateSummary()">';
+  if (modus === 'mehrtaegig') {
+    html += '<label style="font-size:11px;color:var(--text-muted);white-space:nowrap">KM Rückfahrt:</label>' +
+      '<input type="number" id="km-rueck-' + id + '" min="0" step="1" placeholder="0"' +
+      ' value="' + esc(t.kmRueck || '') + '"' +
+      ' style="width:72px;font-size:14px;font-weight:500;text-align:center"' +
+      ' oninput="updateFahrtKarte(' + id + ');updateSummary()">';
+  }
+  html += '<button class="btn-ghost btn-icon" id="maps-' + id + '"' +
+    ' style="margin-left:auto;font-size:12px" onclick="doFahrtMaps(' + id + ')">📍 via Maps</button>' +
+    '</div>';
+  return html;
+}
+
+// ─── setModus ─────────────────────────────────────────────────────────────────
+
+function setModus(id, modus) {
+  if (!trips[id]) return;
+
+  // Werte aus aktuellen Inputs retten bevor DOM-Tausch
+  var kHin  = document.getElementById('km-hin-'   + id);
+  var kRueck= document.getElementById('km-rueck-' + id);
+  if (kHin)   trips[id].kmHin   = parseInt(kHin.value)   || 0;
+  if (kRueck) trips[id].kmRueck = parseInt(kRueck.value) || 0;
+  var dHin  = document.getElementById('datum-hin-'   + id);
+  var dRueck= document.getElementById('datum-rueck-' + id);
+  if (dHin)   trips[id].datumHin   = dHin.value;
+  if (dRueck) trips[id].datumRueck = dRueck.value;
+
+  trips[id].modus = modus;
+  aktualisiereModusButtons(id);
+
+  var datumBlock = document.getElementById('datum-block-' + id);
+  if (datumBlock) datumBlock.innerHTML = buildDatumBlock(id, modus);
+
+  var kmBlock = document.getElementById('km-block-' + id);
+  if (kmBlock) kmBlock.innerHTML = buildKmBlock(id, modus);
+
+  var badge = document.getElementById('modus-badge-' + id);
+  if (badge) {
+    var c = MODUS_CONF[modus];
+    badge.textContent      = c.text;
+    badge.style.background = c.bg;
+    badge.style.color      = c.color;
+  }
+
+  updateFahrtKarte(id);
+  updateSummary();
+}
+
+// ─── Karte live aktualisieren ─────────────────────────────────────────────────
 
 function updateFahrtKarte(id) {
-  var t  = trips[id];
+  var t = trips[id];
   if (!t) return;
-  var km = parseInt(document.getElementById('km-' + id) && document.getElementById('km-' + id).value) || 0;
-  var r  = berechneFahrtErstattung(km, t.startTyp);
-  trips[id].km = km;
-
-  var hrEl   = document.getElementById('km-hr-'   + id);
-  var erstEl = document.getElementById('km-erst-' + id);
-  var betEl  = document.getElementById('betrag-'  + id);
-  if (hrEl)   hrEl.textContent   = fmtKm(r.kmHR);
-  if (erstEl) erstEl.textContent = fmtKm(r.erstattungKm);
-  if (betEl)  betEl.textContent  = fmt(r.betrag);
-
+  var kmHin   = parseInt((document.getElementById('km-hin-'   + id) || {}).value) || 0;
+  var kmRueck = parseInt((document.getElementById('km-rueck-' + id) || {}).value) || 0;
+  t.kmHin   = kmHin;
+  t.kmRueck = kmRueck;
+  var r = berechneFahrtErstattung(t.modus || 'hinrueck', kmHin, kmRueck, t.startTyp);
+  // Pendel-Footer (wird von nächstem Prompt voll implementiert)
   aktualisierePendelFooter(id, r);
-  aktualisiereStartAdresszeile(id);
 }
 
 function aktualisierePendelFooter(id, r) {
-  var t   = trips[id];
+  var t  = trips[id];
   if (!t) return;
-  var el  = document.getElementById('fk-pendel-' + id);
+  var el = document.getElementById('fk-pendel-' + id);
   if (!el) return;
-  var p   = getProfil();
-  var pendelKm = (window._pendingKm !== null && window._pendingKm !== undefined)
-    ? window._pendingKm
-    : (p.pendelKmEinfach || 0);
+  var p  = getProfil();
+  var pendelKm = (window._pendingKm != null ? window._pendingKm : (p.pendelKmEinfach || 0));
 
   if (t.startTyp === 'arbeitsort') {
     el.className = 'fk-pendel p-ao';
-    el.innerHTML =
-      '<span>✓ Start vom Arbeitsort — kein Pendelabzug, volle Strecke erstattet</span>' +
+    el.innerHTML = '<span>✓ Start vom Arbeitsort — kein Pendelabzug, volle Strecke erstattet</span>' +
       '<span class="p-right" style="color:var(--green-dark)">+ ' + fmt(r.betrag) + '</span>';
   } else if (pendelKm === 0) {
     el.className = 'fk-pendel p-warn';
     el.innerHTML = '<span>⚠️ Bitte zuerst Pendelstrecke im Profil berechnen.</span>';
   } else {
     el.className = 'fk-pendel p-warn';
-    el.innerHTML =
-      '<span>− Pendelabzug ' + fmtKm(pendelKm * 2) + ' × 0,30 € — steuerlich absetzbar (Anlage N)</span>' +
+    el.innerHTML = '<span>− Pendelabzug ' + fmtKm(pendelKm * 2) +
+      ' × 0,30 € — steuerlich absetzbar (Anlage N)</span>' +
       '<span class="p-right" style="color:var(--red)">' +
-        fmtKm(pendelKm * 2) + ' · − ' + fmt(pendelKm * 2 * RATE) +
+        fmtKm(pendelKm * 2) + ' · −' + fmt(pendelKm * 2 * RATE) +
       '</span>';
   }
+}
+
+// ─── Start-Typ ────────────────────────────────────────────────────────────────
+
+function setStartTyp(id, typ) {
+  if (!trips[id]) return;
+  trips[id].startTyp = typ;
+  aktualisiereStartButtons(id);
+  aktualisiereStartAdresszeile(id);
+  updateFahrtKarte(id);
+  updateSummary();
+}
+
+function aktualisiereStartButtons(id) {
+  var t = trips[id];
+  if (!t) return;
+  var map = { zuhause:'zh', arbeitsort:'ao', andere:'an' };
+  ['zh','ao','an'].forEach(function (k) {
+    var btn = document.getElementById('sb-' + k + '-' + id);
+    if (!btn) return;
+    btn.className = 'fsk' + (map[t.startTyp] === k ? ' active-' + k : '');
+  });
 }
 
 function aktualisiereStartAdresszeile(id) {
@@ -663,7 +827,6 @@ function aktualisiereStartAdresszeile(id) {
   var el = document.getElementById('start-addr-' + id);
   var wr = document.getElementById('start-andere-wrap-' + id);
   if (!el) return;
-
   if (t.startTyp === 'zuhause') {
     el.textContent = [p.heimStrasse, (p.heimPlz + ' ' + p.heimOrt).trim()].filter(Boolean).join(', ') || '(Heimadresse aus Profil)';
     if (wr) wr.style.display = 'none';
@@ -676,19 +839,19 @@ function aktualisiereStartAdresszeile(id) {
   }
 }
 
-function aktualisiereStartButtons(id) {
-  var t = trips[id];
-  if (!t) return;
-  var map = { zuhause: 'zh', arbeitsort: 'ao', andere: 'an' };
-  ['zh', 'ao', 'an'].forEach(function (k) {
-    var btn = document.getElementById('sb-' + k + '-' + id);
+function aktualisiereModusButtons(id) {
+  var modus = trips[id] ? (trips[id].modus || 'hinrueck') : 'hinrueck';
+  ['einfach','hinrueck','mehrtaegig'].forEach(function (m) {
+    var btn = document.getElementById('modus-' + m + '-' + id);
     if (!btn) return;
-    btn.className = 'fsk' + (map[t.startTyp] === k ? ' active-' + k : '');
+    btn.className = 'modus-btn' + (m === modus ? ' on-' + m : '');
   });
 }
 
+// ─── Art-Badge ────────────────────────────────────────────────────────────────
+
 function onArtChange(id) {
-  var sel  = document.getElementById('art-' + id);
+  var sel   = document.getElementById('art-' + id);
   var badge = document.getElementById('art-badge-' + id);
   if (!sel || !badge) return;
   var val  = sel.value;
@@ -706,15 +869,7 @@ function onArtChange(id) {
   updateSummary();
 }
 
-// ─── Aktionen ─────────────────────────────────────────────────────────────────
-
-function setStartTyp(id, typ) {
-  if (!trips[id]) return;
-  trips[id].startTyp = typ;
-  aktualisiereStartButtons(id);
-  updateFahrtKarte(id);
-  updateSummary();
-}
+// ─── Maps ─────────────────────────────────────────────────────────────────────
 
 function getStartAdresse(id) {
   var t = trips[id];
@@ -732,22 +887,20 @@ function getZielAdresse(id) {
   return el ? el.value.trim() : '';
 }
 
-function setKm(id, km) {
-  trips[id].km = km;
-  var inp = document.getElementById('km-' + id);
-  if (inp) inp.value = km;
-}
-
 function doFahrtMaps(id) {
+  var t     = trips[id];
   var start = getStartAdresse(id);
   var ziel  = getZielAdresse(id);
   mitMapsButton('maps-' + id, start, ziel, function (km) {
-    setKm(id, km);
+    var kEl = document.getElementById('km-hin-' + id);
+    if (kEl) { kEl.value = km; trips[id].kmHin = km; }
     updateFahrtKarte(id);
     updateSummary();
     showToast(km + ' km ✓', 'ok');
   });
 }
+
+// ─── Löschen / Count ──────────────────────────────────────────────────────────
 
 function fahrtLoeschen(id) {
   if (Object.keys(trips).length <= 1) {
@@ -770,17 +923,11 @@ function updateAllPendelRows() {
   Object.keys(trips).forEach(function (id) { updateFahrtKarte(parseInt(id)); });
 }
 
-// updateSummary() — Platzhalter bis Teil 3 eintrifft
-function updateSummary() {
-  /* wird in Teil 3 (Zusammenfassung) vollständig implementiert */
-}
-
-// ─── Fahrten beim Draft-Load wiederherstellen ─────────────────────────────────
+// ─── Draft-Load: Fahrten wiederherstellen ─────────────────────────────────────
 
 var _origLadeDraft = ladeDraft;
 ladeDraft = function (d) {
   _origLadeDraft(d);
-  // Fahrten leeren und neu aufbauen
   document.getElementById('fahrten-container').innerHTML = '';
   trips = {};
   tripCounter = 0;
@@ -789,9 +936,9 @@ ladeDraft = function (d) {
   updateSummary();
 };
 
-// Beim ersten Seitenload: eine leere Fahrt anlegen
+// ─── Erster Seitenload ────────────────────────────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', function () {
-  // Nur wenn kein Draft geladen wird
   var params = new URLSearchParams(location.search);
   if (!params.get('draft')) fahrtHinzufuegen();
 });
@@ -941,15 +1088,15 @@ var uploadedFiles = [];
 // ─── updateSummary (echte Implementierung) ────────────────────────────────────
 
 function updateSummary() {
-  var totalKmHR = 0, pendelGesamt = 0, erstattungGesamt = 0;
+  var totalKmGesamt = 0, pendelGesamt = 0, erstattungGesamt = 0;
   Object.keys(trips).forEach(function (id) {
-    var inp = document.getElementById('km-' + id);
-    var km  = parseInt(inp ? inp.value : 0) || 0;
-    var r   = berechneFahrtErstattung(km, trips[id].startTyp);
-    totalKmHR       += r.kmHR;
-    pendelGesamt    += r.pendelAbzug;
+    var t      = trips[id];
+    var kmHin  = parseInt((document.getElementById('km-hin-'  + id) || {}).value) || 0;
+    var kmRueck= parseInt((document.getElementById('km-rueck-'+ id) || {}).value) || 0;
+    var r      = berechneFahrtErstattung(t.modus || 'hinrueck', kmHin, kmRueck, t.startTyp);
+    totalKmGesamt    += r.gesamtKm;
+    pendelGesamt     += r.pendelAbzug;
     erstattungGesamt += r.erstattungKm;
-    // Karte ebenfalls live aktualisieren
     updateFahrtKarte(parseInt(id));
   });
 
@@ -966,7 +1113,7 @@ function updateSummary() {
     if (el) el.textContent = val;
   };
 
-  setSafe('sum-gesamt-km',   fmtKm(totalKmHR));
+  setSafe('sum-gesamt-km',   fmtKm(totalKmGesamt));
   setSafe('sum-pendel-km',   fmtKm(pendelGesamt));
   setSafe('sum-erst-km',     fmtKm(erstattungGesamt));
   setSafe('sum-gesamt-betrag', fmt(gesamt));
@@ -986,26 +1133,32 @@ function updateSummary() {
 function collectData() {
   var p = getProfil();
   var fahrten = Object.keys(trips).map(function (id) {
-    var idn  = parseInt(id);
-    var km   = parseInt((document.getElementById('km-' + idn) || {}).value) || 0;
-    var art  = (document.getElementById('art-' + idn) || {}).value || '';
-    var artEl = document.getElementById('art-' + idn);
+    var idn    = parseInt(id);
+    var t      = trips[idn];
+    var kmHin  = parseInt((document.getElementById('km-hin-'   + idn) || {}).value) || 0;
+    var kmRueck= parseInt((document.getElementById('km-rueck-' + idn) || {}).value) || 0;
+    var art    = (document.getElementById('art-' + idn) || {}).value || '';
+    var artEl  = document.getElementById('art-' + idn);
     var artLabel = artEl ? artEl.options[artEl.selectedIndex].text : art;
-    var r    = berechneFahrtErstattung(km, trips[idn].startTyp);
+    var r      = berechneFahrtErstattung(t.modus || 'hinrueck', kmHin, kmRueck, t.startTyp);
     return {
-      datum:        (document.getElementById('dat-'   + idn) || {}).value || '',
-      startTyp:     trips[idn].startTyp,
+      modus:        t.modus || 'hinrueck',
+      datumHin:     t.datumHin  || '',
+      datumRueck:   t.datumRueck || '',
+      datum:        t.datumHin  || '',
+      startTyp:     t.startTyp,
       startAdresse: getStartAdresse(idn),
       ziel:         (document.getElementById('ziel-'  + idn) || {}).value || '',
       art:          art,
       artLabel:     artLabel,
       zweck:        (document.getElementById('zweck-' + idn) || {}).value || '',
-      kmEinfach:    km,
-      kmHR:         r.kmHR,
+      kmHin:        kmHin,
+      kmRueck:      kmRueck,
+      gesamtKm:     r.gesamtKm,
       pendelAbzug:  r.pendelAbzug,
       erstattungKm: r.erstattungKm,
       betrag:       r.betrag,
-      andereAdresse: trips[idn].startTyp === 'andere'
+      andereAdresse: t.startTyp === 'andere'
         ? ((document.getElementById('start-andere-' + idn) || {}).value || '')
         : ''
     };
