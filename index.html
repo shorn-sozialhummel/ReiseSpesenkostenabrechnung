@@ -121,7 +121,7 @@
     <div id="pendel-a">
       <div class="warn-box" style="margin-bottom:8px">
         <span class="box-icon">⚠️</span>
-        <span>Noch nicht berechnet — Adressen eintragen und berechnen.</span>
+        <span id="pendel-warn-text">Noch nicht berechnet — Adressen eintragen und berechnen.</span>
       </div>
       <div id="pendel-adressen"
            style="font-size:12px;color:var(--text-muted);margin-bottom:10px;min-height:16px">
@@ -240,6 +240,8 @@ function aktualisierePendelAdresszeile() {
 }
 
 function profilSpeichern() {
+  var hadReset = !!window._tempPendelReset;
+  window._tempPendelReset = false;
   var p = getProfil();
   p.vorname   = gV('ma-vorname');
   p.nachname  = gV('ma-nachname');
@@ -256,14 +258,18 @@ function profilSpeichern() {
     p.pendelBerechnetAm = window._pendingDatum || today();
     window._pendingKm   = null;
     window._pendingDatum = null;
+  } else if (hadReset) {
+    p.pendelKmEinfach   = 0;
+    p.pendelBerechnetAm = '';
   }
   saveProfil(p);
   showToast('Profil gespeichert ✓', 'ok');
 }
 
 function profilAbbrechen() {
-  window._pendingKm    = null;
-  window._pendingDatum = null;
+  window._pendingKm       = null;
+  window._pendingDatum    = null;
+  window._tempPendelReset = false;
   ladeProfilFelder();
 }
 
@@ -296,10 +302,12 @@ function doPendelNeuBerechnen() {
   if (typeof updateSummary      === 'function') updateSummary();
 }
 
-function zeigePendelA() {
+function zeigePendelA(warnText) {
   document.getElementById('pendel-a').style.display = '';
   document.getElementById('pendel-b').style.display = 'none';
   aktualisierePendelAdresszeile();
+  var warnEl = document.getElementById('pendel-warn-text');
+  if (warnEl) warnEl.textContent = warnText || 'Noch nicht berechnet — Adressen eintragen und berechnen.';
 }
 
 function zeigePendelB(km, datum) {
@@ -1438,6 +1446,21 @@ function removeFile(i) {
 
 document.addEventListener('DOMContentLoaded', function () {
   ladeProfilFelder();
+
+  // Adressfelder überwachen — Pendelstrecke sofort invalidieren
+  ['heim-strasse', 'heim-plz', 'heim-ort', 'arbeit-adresse'].forEach(function (fieldId) {
+    var el = document.getElementById(fieldId);
+    if (!el) return;
+    el.addEventListener('input', function () {
+      window._pendingKm       = null;
+      window._pendingDatum    = null;
+      window._tempPendelReset = true;
+      zeigePendelA('Adressen geändert — bitte Pendelstrecke neu berechnen.');
+      Object.keys(trips).forEach(function (id) { updateFahrtKarte(parseInt(id)); });
+      updateSummary();
+    });
+  });
+
   var draftId = new URLSearchParams(window.location.search).get('draft');
   if (draftId) {
     ladeDraft(draftId);

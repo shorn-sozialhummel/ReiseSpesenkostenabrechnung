@@ -37,12 +37,14 @@ function getArbeitgeber() {
 // ─── Profil ───────────────────────────────────────────────────────────────────
 
 function getProfil() {
-  return store.get('profil', {
+  const p = store.get('profil', {
     vorname: '', nachname: '', iban: '', rolle: '', rolleText: '',
     heimStrasse: '', heimPlz: '', heimOrt: '',
     arbeitsortName: '', arbeitsortAdresse: '',
     pendelKmEinfach: 0, pendelBerechnetAm: ''
   });
+  p.pendelKmEinfach = window._tempPendelReset ? 0 : (parseInt(p.pendelKmEinfach) || 0);
+  return p;
 }
 
 function saveProfil(p) { store.set('profil', p); }
