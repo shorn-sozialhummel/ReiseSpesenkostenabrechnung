@@ -3,413 +3,225 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin – Reisekostenabrechnung Sozialhummel gGmbH</title>
+  <title>Admin · Reisekostenabrechnung</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- ─── Login Overlay ──────────────────────────────────────────────── -->
-<div id="admin-overlay" class="admin-overlay">
+<!-- Login overlay -->
+<div id="login-overlay" class="login-wrap">
   <div class="login-card">
-    <div style="font-size:2.2rem; margin-bottom:8px;">🐝</div>
+    <div class="login-icon">🐝</div>
     <h2>Admin-Bereich</h2>
     <p>Reisekostenabrechnung · Sozialhummel gGmbH</p>
-    <div class="form-group" style="text-align:left; margin-bottom:12px;">
-      <label for="pw-input">Passwort</label>
+    <div class="field" style="text-align:left">
+      <label class="field-label" for="pw-input">Passwort</label>
       <input type="password" id="pw-input" placeholder="Passwort eingeben"
-             onkeydown="if(event.key==='Enter') login()">
+             onkeydown="if(event.key==='Enter') doLogin()">
     </div>
-    <div class="pw-error" id="pw-error"></div>
-    <button class="btn btn-primary btn-block" onclick="login()">Anmelden</button>
-    <div style="margin-top:16px; font-size:0.78rem; color:var(--gray-400);">
-      Standard-Passwort: <code>sozialhummel</code>
+    <div class="login-error" id="pw-error"></div>
+    <div style="margin-top:14px">
+      <button class="btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">Anmelden</button>
     </div>
+    <div class="login-hint">Standard-Passwort: <code>sozialhummel</code> — bitte nach erstem Login ändern.</div>
   </div>
 </div>
 
-<!-- ─── Admin Content ──────────────────────────────────────────────── -->
-<div id="admin-content" class="hidden">
+<!-- Admin UI (hidden until login) -->
+<div id="admin-ui" style="display:none">
 
   <!-- Topbar -->
-  <header class="topbar">
-    <div class="topbar-inner">
-      <span class="logo">🐝 Sozialhummel gGmbH</span>
-      <nav>
-        <a href="index.html">Neue Abrechnung</a>
-        <a href="drafts.html">Entwürfe</a>
-        <a href="admin.html" class="active">Admin</a>
-      </nav>
-      <button class="btn btn-ghost btn-sm" style="color:#fff; border-color:rgba(255,255,255,0.4);"
-              onclick="logout()">Abmelden</button>
-    </div>
-  </header>
+  <div id="topbar-mount"></div>
 
   <main>
-    <div class="section">
-      <div class="section-title">⚙️ Admin-Einstellungen</div>
 
-      <!-- Tab Nav -->
-      <div class="admin-nav">
-        <button id="tab-btn-ag"   class="active" onclick="switchTab('ag')">Arbeitgeberdaten</button>
-        <button id="tab-btn-teams"         onclick="switchTab('teams')">Teams</button>
-        <button id="tab-btn-pw"            onclick="switchTab('pw')">Passwort</button>
-        <button id="tab-btn-daten"         onclick="switchTab('daten')">Daten</button>
-      </div>
+    <!-- ═══ SECTION 1: Arbeitgeberdaten ════════════════════════════════════ -->
+    <div class="card">
+      <div class="section-title">🏢 Arbeitgeberdaten</div>
 
-      <!-- ─── Tab: Arbeitgeberdaten ─────────────────────────────────── -->
-      <div id="tab-ag">
-        <div class="form-grid form-grid-2 mb-12">
-          <div class="form-group" style="grid-column: span 2;">
-            <label for="ag-name">Firmenname</label>
-            <input type="text" id="ag-name" placeholder="Sozialhummel gGmbH">
-          </div>
+      <div class="grid-2" style="gap:12px">
+        <div class="field col-span-2">
+          <label class="field-label" for="ag-name">Firmenname</label>
+          <input type="text" id="ag-name" placeholder="Sozialhummel gGmbH">
         </div>
-        <div class="form-grid form-grid-3 mb-12">
-          <div class="form-group" style="grid-column: span 2;">
-            <label for="ag-strasse">Straße & Hausnummer</label>
-            <input type="text" id="ag-strasse" placeholder="Mozartstr. 10">
-          </div>
-          <div class="form-group">
-            <label for="ag-plz">PLZ</label>
-            <input type="text" id="ag-plz" placeholder="53819" maxlength="10">
-          </div>
+        <div class="field">
+          <label class="field-label" for="ag-strasse">Straße</label>
+          <input type="text" id="ag-strasse" placeholder="Mozartstr. 10">
         </div>
-        <div class="form-grid form-grid-2 mb-12">
-          <div class="form-group">
-            <label for="ag-ort">Ort</label>
-            <input type="text" id="ag-ort" placeholder="Neunkirchen-Seelscheid">
-          </div>
-          <div class="form-group">
-            <label for="ag-email">E-Mail</label>
-            <input type="email" id="ag-email" placeholder="info@sozialhummel.de">
-          </div>
+        <div class="field">
+          <label class="field-label" for="ag-plz">PLZ</label>
+          <input type="text" id="ag-plz" placeholder="53819" maxlength="5">
         </div>
-        <div class="form-grid form-grid-2 mb-12">
-          <div class="form-group">
-            <label for="ag-tel">Telefon</label>
-            <input type="tel" id="ag-tel" placeholder="+49 2247 …">
-          </div>
-          <div class="form-group">
-            <label for="ag-maps-key">Google Maps API-Key</label>
-            <input type="text" id="ag-maps-key" placeholder="AIza…">
-          </div>
+        <div class="field">
+          <label class="field-label" for="ag-ort">Ort</label>
+          <input type="text" id="ag-ort" placeholder="Neunkirchen-Seelscheid">
         </div>
-        <div class="info-box blue mb-12">
-          <strong>Google Maps API-Key</strong>
-          Den API-Key erhalten Sie in der
-          <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">
-            Google Cloud Console
-          </a>.
-          Benötigte APIs: <em>Maps JavaScript API</em> und <em>Distance Matrix API</em>.
-          Der Key wird nur lokal in Ihrem Browser gespeichert.
+        <div class="field">
+          <label class="field-label" for="ag-email">E-Mail</label>
+          <input type="email" id="ag-email" placeholder="info@sozialhummel.de">
         </div>
-        <div class="action-row">
-          <button class="btn btn-primary" onclick="speichernAGDaten()">💾 Arbeitgeberdaten speichern</button>
+        <div class="field">
+          <label class="field-label" for="ag-tel">Telefon</label>
+          <input type="tel" id="ag-tel" placeholder="+49 2247 …">
         </div>
       </div>
 
-      <!-- ─── Tab: Teams ────────────────────────────────────────────── -->
-      <div id="tab-teams" class="hidden">
-        <div id="teams-grid" class="teams-grid mb-12"></div>
+      <hr class="section-hr">
 
-        <div class="section" style="margin-bottom:0; background:var(--gray-50);">
-          <div class="section-title" style="font-size:0.8rem;">➕ Neues Team</div>
-          <div class="form-grid form-grid-2 mb-12">
-            <div class="form-group">
-              <label for="new-team-name">Teamname *</label>
-              <input type="text" id="new-team-name" placeholder="Team Musterstadt">
-            </div>
-            <div class="form-group">
-              <label for="new-team-adresse">Adresse (= Arbeitsort)</label>
-              <input type="text" id="new-team-adresse" placeholder="Hauptstr. 1, 53111 Bonn">
-            </div>
-          </div>
-          <div class="action-row" style="margin-top:0;">
-            <button class="btn btn-primary" onclick="addTeam()">➕ Team hinzufügen</button>
-          </div>
+      <div class="field" style="margin-bottom:8px">
+        <label class="field-label" for="ag-maps-key">Google Maps API Key</label>
+        <input type="text" id="ag-maps-key" placeholder="AIzaSy…" autocomplete="off">
+      </div>
+      <div class="box-info">
+        Für automatische KM-Berechnung (Distance Matrix API). Kostenlos bis ca. 200 Anfragen/Tag.
+        Schlüssel erstellen unter: <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" onclick="speichernAG()">Speichern</button>
+      </div>
+    </div>
+
+    <!-- ═══ SECTION 2: Passwort ═════════════════════════════════════════════ -->
+    <div class="card">
+      <div class="section-title">🔐 Admin-Passwort ändern</div>
+
+      <div class="grid-2" style="gap:12px">
+        <div class="field">
+          <label class="field-label" for="new-pw">Neues Passwort</label>
+          <input type="password" id="new-pw" placeholder="Mind. 6 Zeichen" autocomplete="new-password">
+        </div>
+        <div class="field">
+          <label class="field-label" for="new-pw-confirm">Passwort bestätigen</label>
+          <input type="password" id="new-pw-confirm" placeholder="Wiederholen" autocomplete="new-password">
         </div>
       </div>
 
-      <!-- ─── Tab: Passwort ─────────────────────────────────────────── -->
-      <div id="tab-pw" class="hidden">
-        <div class="info-box blue mb-12">
-          Das Passwort schützt den Admin-Bereich und wird lokal in Ihrem Browser gespeichert.
-          Mindestlänge: 6 Zeichen.
-        </div>
-        <div class="form-grid form-grid-2 mb-12" style="max-width:480px;">
-          <div class="form-group">
-            <label for="new-pw">Neues Passwort</label>
-            <input type="password" id="new-pw" placeholder="Mindestens 6 Zeichen">
-          </div>
-          <div class="form-group">
-            <label for="new-pw-confirm">Passwort bestätigen</label>
-            <input type="password" id="new-pw-confirm" placeholder="Passwort wiederholen">
-          </div>
-        </div>
-        <div class="action-row">
-          <button class="btn btn-primary" onclick="aendernPasswort()">🔑 Passwort ändern</button>
-        </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="aendernPasswort()">Passwort ändern</button>
       </div>
+    </div>
 
-      <!-- ─── Tab: Daten ────────────────────────────────────────────── -->
-      <div id="tab-daten" class="hidden">
-        <div class="section danger-section">
-          <div class="section-title" style="color:var(--red); border-bottom-color:var(--red-light);">
-            ⚠️ Daten löschen
-          </div>
-          <p style="margin-bottom:16px; font-size:0.9rem;">
-            Hier können Sie alle gespeicherten <strong>Entwürfe</strong> und das gespeicherte
-            <strong>Mitarbeiterprofil</strong> aus dem Browser-Speicher löschen.
-            Arbeitgeberdaten und Teams bleiben erhalten.
-          </p>
-          <ul style="font-size:0.875rem; margin-left:20px; margin-bottom:16px; color:var(--gray-700); line-height:1.8;">
-            <li>Alle gespeicherten Entwürfe (localStorage: <code>drafts</code>)</li>
-            <li>Gespeichertes Mitarbeiterprofil (localStorage: <code>profil</code>)</li>
-          </ul>
-          <div class="info-box amber" style="margin-bottom:16px;">
-            <strong>Achtung: Diese Aktion kann nicht rückgängig gemacht werden!</strong>
-            Bitte stellen Sie sicher, dass alle benötigten PDFs bereits heruntergeladen wurden.
-          </div>
-          <div class="action-row">
-            <button class="btn btn-danger" onclick="datenLoeschen()">🗑 Entwürfe &amp; Profil löschen</button>
-          </div>
-        </div>
+    <!-- ═══ SECTION 3: Daten löschen ════════════════════════════════════════ -->
+    <div class="danger-card">
+      <div class="section-title" style="color:#A32D2D;border-color:rgba(163,45,45,.2)">🗑 Lokale Daten löschen</div>
 
-        <div class="section" style="margin-top:12px;">
-          <div class="section-title">📊 Speicherübersicht</div>
-          <div id="storage-info" style="font-size:0.875rem; color:var(--gray-700); line-height:2;"></div>
-        </div>
-      </div>
+      <p style="font-size:13px;color:#A32D2D;margin-bottom:12px">
+        Löscht alle gespeicherten <strong>Entwürfe</strong> und <strong>Profildaten</strong> aus dem Browser-Speicher.
+        Arbeitgeberdaten und Admin-Passwort bleiben erhalten.
+      </p>
 
-    </div><!-- /section -->
+      <button class="btn-danger" onclick="loeschenDaten()">Entwürfe &amp; Profil löschen</button>
+    </div>
+
   </main>
-</div><!-- /admin-content -->
+</div>
 
-<!-- ─── Toast Root ─────────────────────────────────────────────────── -->
-<div class="toast-root"></div>
+<!-- Toast container -->
+<div id="toast-container"></div>
 
 <script src="app.js"></script>
+
 <script>
 'use strict';
 
-// ─── Login / Logout ───────────────────────────────────────────────────────────
-function checkLogin() {
-  const stored = store.get('admin_pw', 'sozialhummel');
-  // Try session flag
-  if (sessionStorage.getItem('admin_auth') === '1') {
-    showAdmin();
-  } else {
-    document.getElementById('admin-overlay').style.display = 'flex';
-    document.getElementById('admin-content').classList.add('hidden');
-  }
+var DEFAULT_PW = 'sozialhummel';
+
+function getAdminPw() {
+  return store.get('admin_pw', DEFAULT_PW);
 }
 
-function login() {
-  const input  = document.getElementById('pw-input').value;
-  const stored = store.get('admin_pw', 'sozialhummel');
-  const errEl  = document.getElementById('pw-error');
+function doLogin() {
+  var pw = document.getElementById('pw-input').value;
+  var errEl = document.getElementById('pw-error');
+  var stored = getAdminPw();
 
-  if (!input) {
-    errEl.textContent = 'Bitte Passwort eingeben.';
-    return;
-  }
-
-  if (input === stored) {
-    errEl.textContent = '';
-    sessionStorage.setItem('admin_auth', '1');
-    showAdmin();
+  if (pw === stored) {
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('admin-ui').style.display = 'block';
+    loadAGData();
+    document.getElementById('topbar-mount').innerHTML = renderTopbar('admin');
   } else {
-    errEl.textContent = 'Falsches Passwort.';
+    errEl.textContent = 'Falsches Passwort. Bitte erneut versuchen.';
     document.getElementById('pw-input').value = '';
     document.getElementById('pw-input').focus();
   }
 }
 
-function logout() {
-  sessionStorage.removeItem('admin_auth');
-  document.getElementById('admin-content').classList.add('hidden');
-  document.getElementById('admin-overlay').style.display = 'flex';
-  document.getElementById('pw-input').value = '';
-  document.getElementById('pw-error').textContent = '';
+function loadAGData() {
+  var ag = getArbeitgeber();
+  setVal('ag-name', ag.name || '');
+  setVal('ag-strasse', ag.strasse || '');
+  setVal('ag-plz', ag.plz || '');
+  setVal('ag-ort', ag.ort || '');
+  setVal('ag-email', ag.email || '');
+  setVal('ag-tel', ag.tel || '');
+  setVal('ag-maps-key', ag.mapsKey || '');
 }
 
-function showAdmin() {
-  document.getElementById('admin-overlay').style.display = 'none';
-  document.getElementById('admin-content').classList.remove('hidden');
-  ladeAGDaten();
-  renderTeams();
-  updateStorageInfo();
+function setVal(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.value = val;
 }
 
-// ─── Tab Switching ────────────────────────────────────────────────────────────
-function switchTab(name) {
-  ['ag', 'teams', 'pw', 'daten'].forEach(t => {
-    document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== name);
-    document.getElementById(`tab-btn-${t}`).classList.toggle('active', t === name);
-  });
-  if (name === 'daten') updateStorageInfo();
+function getVal(id) {
+  var el = document.getElementById(id);
+  return el ? el.value.trim() : '';
 }
 
-// ─── AG Daten ─────────────────────────────────────────────────────────────────
-function ladeAGDaten() {
-  const ag = getAG();
-  document.getElementById('ag-name').value      = ag.name      || '';
-  document.getElementById('ag-strasse').value   = ag.strasse   || '';
-  document.getElementById('ag-plz').value       = ag.plz       || '';
-  document.getElementById('ag-ort').value       = ag.ort       || '';
-  document.getElementById('ag-email').value     = ag.email     || '';
-  document.getElementById('ag-tel').value       = ag.tel       || '';
-  document.getElementById('ag-maps-key').value  = ag.mapsKey   || '';
-}
-
-function speichernAGDaten() {
-  const ag = {
-    name:     document.getElementById('ag-name').value.trim(),
-    strasse:  document.getElementById('ag-strasse').value.trim(),
-    plz:      document.getElementById('ag-plz').value.trim(),
-    ort:      document.getElementById('ag-ort').value.trim(),
-    email:    document.getElementById('ag-email').value.trim(),
-    tel:      document.getElementById('ag-tel').value.trim(),
-    mapsKey:  document.getElementById('ag-maps-key').value.trim()
+function speichernAG() {
+  var ag = {
+    name: getVal('ag-name'),
+    strasse: getVal('ag-strasse'),
+    plz: getVal('ag-plz'),
+    ort: getVal('ag-ort'),
+    email: getVal('ag-email'),
+    tel: getVal('ag-tel'),
+    mapsKey: getVal('ag-maps-key')
   };
-
-  if (!ag.name) {
-    toast('Bitte Firmennamen angeben.', 'error');
-    return;
-  }
-
   store.set('ag_data', ag);
-  toast('Arbeitgeberdaten gespeichert.', 'success');
-
-  // Reload Maps if key changed
-  if (ag.mapsKey && ag.mapsKey !== 'YOUR_API_KEY') {
-    ladeGoogleMaps(ag.mapsKey);
-  }
+  showToast('Gespeichert ✓', 'ok');
 }
 
-// ─── Teams ────────────────────────────────────────────────────────────────────
-function renderTeams() {
-  const teams  = getTeams();
-  const grid   = document.getElementById('teams-grid');
-  if (!grid) return;
-
-  if (teams.length === 0) {
-    grid.innerHTML = '<div class="info-box blue">Noch keine Teams vorhanden.</div>';
-    return;
-  }
-
-  grid.innerHTML = '';
-  teams.forEach(team => {
-    const item = document.createElement('div');
-    item.className = 'team-item';
-    item.innerHTML = `
-      <div class="team-info">
-        <div class="team-name">${escAdmin(team.name)}</div>
-        <div class="team-adresse">${escAdmin(team.adresse || '–')}</div>
-      </div>
-      <button class="btn btn-danger btn-sm" onclick="removeTeam('${team.id}')">🗑 Löschen</button>
-    `;
-    grid.appendChild(item);
-  });
-}
-
-function addTeam() {
-  const name    = document.getElementById('new-team-name').value.trim();
-  const adresse = document.getElementById('new-team-adresse').value.trim();
-
-  if (!name) {
-    toast('Bitte Teamname angeben.', 'error');
-    return;
-  }
-
-  const teams = getTeams();
-  const id    = 't' + Date.now();
-  teams.push({ id, name, adresse });
-  store.set('teams', teams);
-  renderTeams();
-
-  document.getElementById('new-team-name').value    = '';
-  document.getElementById('new-team-adresse').value = '';
-  toast(`Team "${name}" hinzugefügt.`, 'success');
-}
-
-function removeTeam(id) {
-  const teams = getTeams();
-  const team  = teams.find(t => t.id === id);
-  if (!team) return;
-  if (!confirm(`Team "${team.name}" wirklich löschen?`)) return;
-
-  const updated = teams.filter(t => t.id !== id);
-  store.set('teams', updated);
-  renderTeams();
-  toast(`Team "${team.name}" gelöscht.`, 'success');
-}
-
-// ─── Passwort ändern ──────────────────────────────────────────────────────────
 function aendernPasswort() {
-  const pw1 = document.getElementById('new-pw').value;
-  const pw2 = document.getElementById('new-pw-confirm').value;
+  var newPw = getVal('new-pw');
+  var confirm = getVal('new-pw-confirm');
 
-  if (!pw1) {
-    toast('Bitte neues Passwort eingeben.', 'error');
+  if (!newPw) {
+    showToast('Bitte neues Passwort eingeben.', 'warn');
     return;
   }
-  if (pw1.length < 6) {
-    toast('Passwort muss mindestens 6 Zeichen lang sein.', 'error');
+  if (newPw.length < 6) {
+    showToast('Passwort muss mindestens 6 Zeichen lang sein.', 'warn');
     return;
   }
-  if (pw1 !== pw2) {
-    toast('Passwörter stimmen nicht überein.', 'error');
+  if (newPw !== confirm) {
+    showToast('Passwörter stimmen nicht überein.', 'warn');
     return;
   }
 
-  store.set('admin_pw', pw1);
-  document.getElementById('new-pw').value         = '';
-  document.getElementById('new-pw-confirm').value = '';
-  toast('Passwort erfolgreich geändert.', 'success');
+  store.set('admin_pw', newPw);
+  setVal('new-pw', '');
+  setVal('new-pw-confirm', '');
+  showToast('Passwort geändert ✓', 'ok');
 }
 
-// ─── Daten löschen ────────────────────────────────────────────────────────────
-function datenLoeschen() {
-  if (!confirm('Wirklich alle Entwürfe und das Mitarbeiterprofil löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
-
+function loeschenDaten() {
+  if (!confirm('Alle Entwürfe und Profildaten wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.')) return;
   store.del('drafts');
   store.del('profil');
-  updateStorageInfo();
-  toast('Entwürfe und Profil wurden gelöscht.', 'success');
+  showToast('Entwürfe und Profil gelöscht.', 'ok');
 }
 
-// ─── Storage Info ─────────────────────────────────────────────────────────────
-function updateStorageInfo() {
-  const drafts   = getDrafts();
-  const profil   = getProfile();
-  const ag       = getAG();
-  const teams    = getTeams();
-
-  const el = document.getElementById('storage-info');
-  if (!el) return;
-
-  el.innerHTML = `
-    <div>📋 Gespeicherte Entwürfe: <strong>${drafts.length}</strong></div>
-    <div>👤 Profil gespeichert: <strong>${profil.vorname ? profil.vorname + ' ' + profil.nachname : 'Nein'}</strong></div>
-    <div>🏢 Arbeitgeberdaten: <strong>${ag.name || 'Standard'}</strong></div>
-    <div>👥 Teams: <strong>${teams.length}</strong></div>
-  `;
-}
-
-// ─── Escape HTML ──────────────────────────────────────────────────────────────
-function escAdmin(str) {
-  return String(str || '')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
-}
-
-// ─── Init ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', checkLogin);
+document.addEventListener('DOMContentLoaded', function() {
+  // Always show login overlay first
+  document.getElementById('login-overlay').style.display = 'flex';
+  document.getElementById('admin-ui').style.display = 'none';
+  document.getElementById('pw-input').focus();
+});
 </script>
 
 </body>

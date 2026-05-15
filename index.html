@@ -3,77 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reisekostenabrechnung – Sozialhummel gGmbH</title>
+  <title>Neue Abrechnung · Reisekostenabrechnung</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- ─── Topbar ─────────────────────────────────────────────────────── -->
-<header class="topbar">
-  <div class="topbar-inner">
-    <span class="logo">🐝 Sozialhummel gGmbH</span>
-    <nav>
-      <a href="index.html" class="active">Neue Abrechnung</a>
-      <a href="drafts.html">Entwürfe</a>
-      <a href="admin.html">Admin</a>
-    </nav>
-  </div>
-</header>
+<!-- Topbar -->
+<div id="topbar-mount"></div>
 
-<!-- ─── Draft Bar ──────────────────────────────────────────────────── -->
-<div id="draft-bar" class="draft-bar hidden">
-  <span>📝 Entwurf: <strong id="draft-bar-name">–</strong></span>
-  <span id="draft-bar-id" style="font-size:0.8rem; opacity:0.8;"></span>
-  <div class="draft-bar-actions">
-    <button class="btn btn-sm btn-ghost" onclick="speicherEntwurf()">💾 Speichern</button>
-    <a href="drafts.html" class="btn btn-sm btn-ghost">📋 Alle Entwürfe</a>
-  </div>
+<!-- Draft bar -->
+<div class="draft-bar" id="draft-bar">
+  <span>📝 Entwurf: <strong id="draft-bar-id"></strong></span>
+  <span style="flex:1"></span>
+  <a href="index.html">Neuen Antrag beginnen</a>
 </div>
 
 <main>
 
-  <!-- ─── Section 1: Mitarbeiter/in ──────────────────────────────── -->
-  <div class="section">
-    <div class="section-title">👤 Mitarbeiter/in</div>
+  <!-- ═══ SECTION 1: Meine Daten ═══════════════════════════════════════════ -->
+  <div class="card" id="card-profil">
+    <div class="section-title">👤 Meine Daten</div>
 
-    <div class="form-grid form-grid-2 mb-12">
-      <div class="form-group">
-        <label for="vorname">Vorname *</label>
-        <input type="text" id="vorname" placeholder="Max" oninput="updateSummary()">
+    <!-- Block A: Persönliche Daten -->
+    <div class="grid-2" style="gap:12px">
+      <div class="field">
+        <label class="field-label" for="vorname">Vorname *</label>
+        <input type="text" id="vorname" placeholder="Vorname" autocomplete="given-name">
       </div>
-      <div class="form-group">
-        <label for="nachname">Nachname *</label>
-        <input type="text" id="nachname" placeholder="Mustermann" oninput="updateSummary()">
+      <div class="field">
+        <label class="field-label" for="nachname">Nachname *</label>
+        <input type="text" id="nachname" placeholder="Nachname" autocomplete="family-name">
       </div>
-    </div>
-
-    <div class="form-grid form-grid-3 mb-12">
-      <div class="form-group" style="grid-column: span 2;">
-        <label for="strasse">Straße & Hausnummer *</label>
-        <input type="text" id="strasse" placeholder="Musterstraße 12">
-      </div>
-      <div class="form-group">
-        <label for="plz">PLZ</label>
-        <input type="text" id="plz" placeholder="53111" maxlength="10">
-      </div>
-    </div>
-
-    <div class="form-grid form-grid-2 mb-12">
-      <div class="form-group">
-        <label for="ort">Ort</label>
-        <input type="text" id="ort" placeholder="Bonn">
-      </div>
-      <div class="form-group">
-        <label for="iban">IBAN (für Erstattung)</label>
-        <input type="text" id="iban" placeholder="DE12 3456 7890 1234 5678 90">
-      </div>
-    </div>
-
-    <div class="form-grid form-grid-2 mb-12">
-      <div class="form-group">
-        <label for="rolle">Funktion / Rolle *</label>
+      <div class="field">
+        <label class="field-label" for="rolle">Funktion / Rolle *</label>
         <select id="rolle" onchange="rolleChanged()">
           <option value="">– bitte wählen –</option>
           <option value="assistenz">Assistenz</option>
@@ -81,845 +46,866 @@
           <option value="andere">Andere</option>
         </select>
       </div>
+      <div class="field">
+        <label class="field-label" for="iban">IBAN</label>
+        <input type="text" id="iban" placeholder="DE00 0000 0000 0000 0000 00" autocomplete="off">
+      </div>
     </div>
 
-    <!-- Assistenz block -->
-    <div id="block-assistenz" class="hidden">
-      <div class="form-grid form-grid-2 mb-12">
-        <div class="form-group">
-          <label for="empTeam">Team *</label>
-          <select id="empTeam" onchange="teamChanged()">
-            <option value="">– Team wählen –</option>
-          </select>
+    <!-- Conditional: rolleText -->
+    <div id="rolle-text-wrap" style="display:none; margin-top:12px">
+      <div class="field">
+        <label class="field-label" for="rolleText">Funktionsbezeichnung *</label>
+        <input type="text" id="rolleText" placeholder="z. B. Haushaltshilfe, Fahrdienst …">
+      </div>
+    </div>
+
+    <hr class="section-hr">
+
+    <!-- Block B: Heimadresse -->
+    <div class="sub-section-label">🏠 Heimadresse (Wohnort)</div>
+    <div class="grid-3" style="gap:12px">
+      <div class="field col-span-2">
+        <label class="field-label" for="heimStrasse">Straße &amp; Hausnummer *</label>
+        <input type="text" id="heimStrasse" placeholder="Musterstraße 12" autocomplete="street-address"
+               oninput="updatePendelDisplay()">
+      </div>
+      <div class="field">
+        <label class="field-label" for="heimPlz">PLZ *</label>
+        <input type="text" id="heimPlz" placeholder="53819" maxlength="5"
+               oninput="updatePendelDisplay()">
+      </div>
+      <div class="field">
+        <label class="field-label" for="heimOrt">Ort *</label>
+        <input type="text" id="heimOrt" placeholder="Neunkirchen-Seelscheid"
+               oninput="updatePendelDisplay()">
+      </div>
+    </div>
+
+    <hr class="section-hr">
+
+    <!-- Block C: Üblicher Arbeitsort -->
+    <div class="sub-section-label">🏢 Üblicher Arbeitsort (für Pendelabzug)</div>
+    <div class="grid-2" style="gap:12px">
+      <div class="field">
+        <label class="field-label" for="arbeitsortName">Teamname / Bezeichnung</label>
+        <input type="text" id="arbeitsortName" placeholder="z. B. Team Stegemann, WG Sonnenhof, Büro Siegburg">
+      </div>
+      <div class="field">
+        <label class="field-label" for="arbeitsortAdresse">Adresse des Arbeitsortes *</label>
+        <input type="text" id="arbeitsortAdresse" placeholder="Vollständige Adresse — für Google Maps Berechnung"
+               oninput="updatePendelDisplay()">
+      </div>
+    </div>
+
+    <!-- Pendel box -->
+    <div class="pendel-box" id="pendel-box">
+      <div class="pendel-box-title">📍 Pendelstrecke (Wohnort → Arbeitsort)</div>
+
+      <!-- State A: Not calculated -->
+      <div id="pendel-state-a">
+        <div class="box-warn" style="margin-bottom:10px">
+          Noch nicht berechnet — bitte Adressen eintragen und dann berechnen.
         </div>
-        <div class="form-group">
-          <label for="teamAdresse">Adresse des Teams (= Arbeitsort für Pendelabzug)</label>
-          <input type="text" id="teamAdresse" readonly placeholder="Wird automatisch befüllt">
-        </div>
-      </div>
-    </div>
-
-    <!-- TK block -->
-    <div id="block-tk" class="hidden">
-      <div class="form-grid form-grid-2 mb-12">
-        <div class="form-group">
-          <label for="bereich">Bereich / Region</label>
-          <input type="text" id="bereich" placeholder="z.B. Rhein-Sieg-Kreis">
-        </div>
-        <div class="form-group">
-          <label for="arbeitsortTk">Arbeitsort-Adresse (für Pendelabzug)</label>
-          <input type="text" id="arbeitsortTk" placeholder="z.B. Schlossstr. 12, 53721 Siegburg">
-          <span style="font-size:0.75rem; color:var(--gray-500); margin-top:3px;">Wird für den Pendelabzug verwendet</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Andere block -->
-    <div id="block-andere" class="hidden">
-      <div class="form-grid form-grid-2 mb-12">
-        <div class="form-group">
-          <label for="rolleText">Funktionsbezeichnung</label>
-          <input type="text" id="rolleText" placeholder="z.B. Verwaltung, Honorarkraft …">
-        </div>
-      </div>
-    </div>
-
-    <div class="action-row" style="margin-top:8px;">
-      <button class="btn btn-ghost btn-sm" onclick="profilMerken()">💾 Profil merken</button>
-    </div>
-  </div>
-
-  <!-- ─── Section 2: Zeitraum & Pendel ───────────────────────────── -->
-  <div class="section">
-    <div class="section-title">📅 Zeitraum &amp; Pendelstrecke</div>
-
-    <div class="form-grid form-grid-2 mb-12">
-      <div class="form-group">
-        <label for="zeitraum">Abrechnungszeitraum *</label>
-        <input type="text" id="zeitraum" placeholder="z.B. Mai 2026">
-      </div>
-      <div class="form-group">
-        <label for="arbeitstage">Anzahl Arbeitstage (im Zeitraum)</label>
-        <input type="number" id="arbeitstage" min="0" max="31" value="20" oninput="updateSummary()">
-      </div>
-    </div>
-
-    <div class="form-grid form-grid-2 mb-12">
-      <div class="form-group">
-        <label for="pendelKm">Pendelstrecke km (einfach)</label>
-        <input type="number" id="pendelKm" min="0" step="0.1" value="0" oninput="updateSummary()">
-      </div>
-      <div class="form-group">
-        <label>&nbsp;</label>
-        <button class="btn btn-ghost" id="btn-pendel-maps" onclick="berechnePendel()" title="Berechnet Wohnort → Arbeitsort via Google Maps">
-          📍 via Maps berechnen
+        <div class="pendel-addr" id="pendel-addr-a">– → –</div>
+        <button class="btn-blue" style="border-radius:10px;border:none;padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px"
+                id="btn-berechn-pendel" onclick="berechnePendelMaps()">
+          📍 Jetzt via Google Maps berechnen
         </button>
       </div>
+
+      <!-- State B: Calculated -->
+      <div id="pendel-state-b" style="display:none">
+        <div class="box-success" id="pendel-success-box">
+          Berechnet am <span id="pendel-datum"></span> · Google Maps: kürzeste Route (Straße)
+          &nbsp;<a onclick="berechnePendelMaps()" style="cursor:pointer">Neu berechnen</a>
+        </div>
+        <div class="pendel-result-strip">
+          <div class="pendel-result-block">
+            <div class="prb-label">Einfache Strecke</div>
+            <div class="prb-value" id="pr-einfach" style="color:#1D9E75">– km</div>
+          </div>
+          <div class="pendel-result-block">
+            <div class="prb-label">Hin &amp; Zurück</div>
+            <div class="prb-value" id="pr-hr" style="color:#1a1a18">– km</div>
+          </div>
+          <div class="pendel-result-block">
+            <div class="prb-label">Abzug pro Fahrt</div>
+            <div class="prb-value" id="pr-abzug" style="color:#A32D2D">–</div>
+          </div>
+        </div>
+        <div class="box-info" id="pendel-info-box" style="margin-top:10px"></div>
+      </div>
     </div>
 
-    <div class="info-box blue">
-      <strong>Pendelabzug</strong>
-      Die einfache Pendelstrecke × 2 × Arbeitstage wird vom Gesamterstattungsbetrag abgezogen.
-      Beispiel: 15 km × 2 × 20 Tage = 600 km werden nicht erstattet (übliche Wegstrecke Wohnung ↔ Arbeitsort).
+    <!-- Profile save row -->
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="formularLeeren()">Abbrechen</button>
+      <button class="btn-primary" onclick="profilSpeichern()">Profil speichern →</button>
     </div>
   </div>
 
-  <!-- ─── Section 3: Dienstliche Fahrten ─────────────────────────── -->
-  <div class="section">
+  <!-- ═══ SECTION 2: Abrechnungszeitraum ═══════════════════════════════════ -->
+  <div class="card">
+    <div class="section-title">📅 Abrechnungszeitraum</div>
+    <div class="field" style="max-width:340px">
+      <label class="field-label" for="zeitraum">Zeitraum *</label>
+      <input type="text" id="zeitraum" placeholder="z. B. Mai 2026 oder 01.05.–31.05.2026">
+    </div>
+  </div>
+
+  <!-- ═══ SECTION 3: Dienstliche Fahrten ══════════════════════════════════ -->
+  <div class="card">
     <div class="section-title">🚗 Dienstliche Fahrten</div>
 
-    <div class="info-box green mb-12">
-      📍 KM als <strong>einfache Strecke</strong> eingeben – die Hin- und Rückfahrt wird automatisch verdoppelt.
-      Der angezeigte Betrag pro Zeile = km × 2 × 0,30 €.
+    <div class="box-success" style="margin-bottom:14px">
+      📍-Button → KM wird automatisch via Google Maps berechnet. KM als einfache Strecke eingeben — Hin- &amp; Rückweg wird automatisch verdoppelt.
     </div>
 
-    <div class="trip-wrap">
-      <table class="trip-table">
+    <div class="fahrt-table-wrap">
+      <table class="fahrt-table">
+        <colgroup>
+          <col style="width:105px">
+          <col style="width:13%">
+          <col style="width:13%">
+          <col style="width:155px">
+          <col class="col-zweck"><!-- auto -->
+          <col style="width:85px">
+          <col style="width:68px">
+          <col style="width:32px">
+        </colgroup>
         <thead>
           <tr>
             <th>Datum</th>
             <th>Von</th>
             <th>Nach</th>
-            <th>Art der Fahrt</th>
-            <th>Zweck / Beschreibung</th>
-            <th>KM (einfach)</th>
-            <th>Betrag</th>
+            <th>Art</th>
+            <th class="col-zweck">Zweck</th>
+            <th>KM</th>
+            <th style="text-align:right">Betrag</th>
             <th></th>
           </tr>
         </thead>
-        <tbody id="fahrt-body"></tbody>
+        <tbody id="fahrt-body">
+          <!-- rows injected by JS -->
+        </tbody>
       </table>
     </div>
 
-    <button class="add-trip-btn" onclick="addFahrtRow()">+ Fahrt hinzufügen</button>
+    <button class="btn-add-row" onclick="addFahrtRow()">+ Fahrt hinzufügen</button>
   </div>
 
-  <!-- ─── Section 4: Spesen & Auslagen ───────────────────────────── -->
-  <div class="section">
-    <div class="section-title">🧾 Spesen &amp; Auslagen</div>
-
-    <div class="info-box amber mb-12">
-      <strong>Verpflegungspauschalen (steuerlich absetzbar)</strong>
-      Ab 8 Std. Abwesenheit: 14,00 € / ab 24 Std.: 28,00 €. Diese werden hier <em>nicht</em> direkt ausgezahlt,
-      sind aber in der Steuererklärung (Anlage N) als Werbungskosten absetzbar.
+  <!-- ═══ SECTION 4: Spesen ════════════════════════════════════════════════ -->
+  <div class="card">
+    <div class="section-title">
+      💶 Spesen &amp; weitere Auslagen
+      <span class="badge-optional">optional</span>
     </div>
 
-    <div class="form-grid form-grid-2 mb-12">
-      <div class="form-group">
-        <label for="s-uebernacht">Übernachtungskosten (€)</label>
-        <input type="number" id="s-uebernacht" min="0" step="0.01" value="0" oninput="updateSummary()">
+    <div class="box-warn" style="margin-bottom:14px">
+      Verpflegungspauschalen (ab 8h: 14 €, ab 24h: 28 €) sind steuerlich absetzbar → vorrangig über Steuererklärung (Anlage N). Der AG erstattet nur tatsächliche Auslagen gegen Beleg.
+    </div>
+
+    <div class="grid-2" style="gap:12px">
+      <div class="field">
+        <label class="field-label" for="s-uebernacht">Übernachtungskosten gesamt (€)</label>
+        <input type="number" id="s-uebernacht" min="0" step="0.01" placeholder="0,00" oninput="updateSummary()">
+        <span class="field-hint">Tatsächliche Kosten laut Belegen</span>
       </div>
-      <div class="form-group">
-        <label for="s-oepnv">ÖPNV / Bahn / Taxi (€)</label>
-        <input type="number" id="s-oepnv" min="0" step="0.01" value="0" oninput="updateSummary()">
+      <div class="field">
+        <label class="field-label" for="s-opnv">ÖPNV / Bahn / Taxi (€)</label>
+        <input type="number" id="s-opnv" min="0" step="0.01" placeholder="0,00" oninput="updateSummary()">
+        <span class="field-hint">Nur gegen Beleg</span>
+      </div>
+      <div class="field">
+        <label class="field-label" for="s-parken">Parkgebühren / Maut (€)</label>
+        <input type="number" id="s-parken" min="0" step="0.01" placeholder="0,00" oninput="updateSummary()">
+      </div>
+      <div class="field">
+        <label class="field-label" for="s-sonstige">Sonstige Auslagen (€)</label>
+        <input type="number" id="s-sonstige" min="0" step="0.01" placeholder="0,00" oninput="updateSummary()">
+      </div>
+      <div class="field col-span-2">
+        <label class="field-label" for="s-sonstigeText">Beschreibung sonstige Auslagen</label>
+        <textarea id="s-sonstigeText" placeholder="Beschreibung der sonstigen Auslagen …"></textarea>
       </div>
     </div>
 
-    <div class="form-grid form-grid-2 mb-12">
-      <div class="form-group">
-        <label for="s-parken">Parkgebühren / Maut (€)</label>
-        <input type="number" id="s-parken" min="0" step="0.01" value="0" oninput="updateSummary()">
-      </div>
-      <div class="form-group">
-        <label for="s-sonstige">Sonstige Auslagen (€)</label>
-        <input type="number" id="s-sonstige" min="0" step="0.01" value="0" oninput="updateSummary()">
-      </div>
+    <!-- Upload zone -->
+    <div class="upload-zone" id="upload-zone"
+         onclick="document.getElementById('file-input').click()"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleDrop(event)">
+      <div class="upload-zone-icon">📎</div>
+      <div class="upload-zone-text">PDF, JPG oder PNG hierher ziehen oder klicken</div>
     </div>
-
-    <div class="form-group mb-12">
-      <label for="s-sonstige-text">Beschreibung sonstige Auslagen</label>
-      <textarea id="s-sonstige-text" placeholder="Bitte sonstige Auslagen kurz beschreiben …"></textarea>
-    </div>
-
-    <div class="form-group">
-      <label>Belege (PDF, JPG, PNG)</label>
-      <div id="upload-zone" class="upload-zone"
-           onclick="document.getElementById('file-input').click()"
-           ondragover="event.preventDefault(); this.classList.add('dragover')"
-           ondragleave="this.classList.remove('dragover')"
-           ondrop="handleDrop(event)">
-        <span class="upload-icon">📎</span>
-        <strong>Klicken oder Dateien hierher ziehen</strong>
-        <div style="font-size:0.8rem; margin-top:4px;">PDF, JPG, PNG – max. 10 MB pro Datei</div>
-      </div>
-      <input type="file" id="file-input" accept="application/pdf,image/jpeg,image/png" multiple
-             style="display:none" onchange="handleFileInput(this.files)">
-    </div>
-    <div id="file-chips" class="file-chips"></div>
+    <input type="file" id="file-input" accept="application/pdf,image/jpeg,image/png"
+           multiple style="display:none" onchange="handleFiles(this.files)">
+    <div class="file-chips" id="file-chips"></div>
   </div>
 
-  <!-- ─── Section 5: Anmerkungen ─────────────────────────────────── -->
-  <div class="section">
-    <div class="section-title">💬 Anmerkungen</div>
-
-    <div class="form-group mb-12">
-      <label for="anmerkungen">Anmerkungen (optional)</label>
-      <textarea id="anmerkungen" placeholder="Besondere Hinweise, Erklärungen zu einzelnen Fahrten …" style="min-height:100px;"></textarea>
+  <!-- ═══ SECTION 5: Anmerkungen ══════════════════════════════════════════ -->
+  <div class="card">
+    <div class="section-title">✏️ Anmerkungen</div>
+    <div class="field">
+      <textarea id="anmerkungen" style="min-height:80px"
+                placeholder="z. B. Besonderheiten, Erläuterungen …"></textarea>
     </div>
-
-    <div class="info-box green">
-      <strong>Verpflegungspauschalen – Info für die Steuererklärung</strong>
-      Ab 8 Std.: 14,00 € / ab 24 Std.: 28,00 € → Eintragen in Anlage N als Werbungskosten.
+    <div class="box-info" style="margin-top:12px">
+      Verpflegungspauschalen: ab 8 Std. Abwesenheit 14,00 € / ab 24 Std. 28,00 € → über Steuererklärung (Anlage N) geltend machen.
     </div>
   </div>
 
-  <!-- ─── Section 6: Zusammenfassung & Aktionen ──────────────────── -->
-  <div class="section">
-    <div class="section-title">📊 Zusammenfassung</div>
+  <!-- ═══ SECTION 6: Zusammenfassung ══════════════════════════════════════ -->
+  <div class="card">
+    <div class="section-title">💶 Zusammenfassung</div>
 
-    <div class="summary-strip mb-12">
-      <div class="sum-block">
-        <span class="sum-label">Gesamt km</span>
-        <span class="sum-value" id="sum-gesamt-km">0 km</span>
+    <!-- 3-block strip -->
+    <div class="summary-strip">
+      <div class="summary-block" style="background:#fff">
+        <span class="sb-label">Gesamt km (hin &amp; zurück)</span>
+        <span class="sb-value" id="sum-gesamt-km">0 km</span>
       </div>
-      <div class="sum-block">
-        <span class="sum-label">Abzug Pendel</span>
-        <span class="sum-value" id="sum-pendel-km">0 km</span>
+      <div class="summary-block" style="background:#FEF2F2">
+        <span class="sb-label" style="color:#A32D2D">Pendelabzug gesamt</span>
+        <span class="sb-value" id="sum-pendel" style="color:#A32D2D">0 km</span>
       </div>
-      <div class="sum-block">
-        <span class="sum-label">Erstattungs-km</span>
-        <span class="sum-value" id="sum-erstatt-km">0 km</span>
-      </div>
-      <div class="sum-block">
-        <span class="sum-label">Gesamtbetrag</span>
-        <span class="sum-value" id="sum-gesamt-betrag">0,00 €</span>
+      <div class="summary-block" style="background:#E1F5EE">
+        <span class="sb-label" style="color:#085041">Erstattungs-km</span>
+        <span class="sb-value" id="sum-erstatt-km" style="color:#1D9E75;font-size:20px">0 km</span>
       </div>
     </div>
 
-    <div class="status-bar">
+    <!-- Calculation line -->
+    <div class="sum-calc-line" id="sum-calc-line">
+      <span id="sum-line-text">0 km × 0,30 € = <strong>0,00 €</strong> Fahrtkosten +
+        <strong>0,00 €</strong> Spesen =
+      </span>
+      <span class="sum-total-val" id="sum-gesamt">0,00 €</span>
+    </div>
+
+    <!-- Status bar -->
+    <div class="sum-status-bar">
       ✓ Genehmigungsweg: Vorgesetzte/r → Buchhaltung → Auszahlung mit nächster Gehaltsabrechnung
     </div>
 
-    <div class="action-row">
-      <button class="btn btn-primary" onclick="pdfErstellen()">📄 PDF erstellen &amp; herunterladen</button>
-      <button class="btn btn-ghost" onclick="speicherEntwurf()">💾 Entwurf speichern</button>
-      <button class="btn btn-ghost" onclick="formLeeren()" style="margin-left:auto; color:var(--red); border-color:var(--red-light);">🗑 Formular leeren</button>
+    <!-- Button row -->
+    <div class="btn-row">
+      <button class="btn-primary" onclick="pdfErstellen()">📄 PDF erstellen &amp; herunterladen</button>
+      <button class="btn-ghost" onclick="entwurfSpeichern()">💾 Entwurf speichern</button>
+      <button class="btn-ghost ml-auto" onclick="formularLeeren()">🗑 Formular leeren</button>
     </div>
   </div>
 
 </main>
 
-<!-- ─── Toast Root ─────────────────────────────────────────────────── -->
-<div class="toast-root"></div>
+<!-- Toast container -->
+<div id="toast-container"></div>
 
-<!-- ─── Scripts ───────────────────────────────────────────────────── -->
+<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- Shared logic -->
 <script src="app.js"></script>
+
+<!-- PDF generation -->
 <script src="pdf-gen.js"></script>
+
+<!-- ═══ Inline page logic ═══════════════════════════════════════════════════ -->
 <script>
 'use strict';
 
-// ─── State ────────────────────────────────────────────────────────────────────
-let fahrten       = [];
-let fahrtCounter  = 0;
-let uploadedFiles = [];
-let currentDraftId = null;
+// ─── State ──────────────────────────────────────────────────────────────────
+var fahrtenRows = [];
+var fahrtCounter = 0;
+var pendelKmEinfach = 0;
+var pendelBerechnetAm = '';
+var uploadedFiles = [];
+var currentDraftId = null;
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// ─── Init ────────────────────────────────────────────────────────────────────
 function init() {
-  ladeProfilAusStorage();
-  populateTeamDropdown();
+  // Render topbar
+  document.getElementById('topbar-mount').innerHTML = renderTopbar('index');
+
+  // Restore profile
+  var p = getProfil();
+  setVal('vorname', p.vorname || '');
+  setVal('nachname', p.nachname || '');
+  setVal('rolle', p.rolle || '');
+  setVal('rolleText', p.rolleText || '');
+  setVal('iban', p.iban || '');
+  setVal('heimStrasse', p.heimStrasse || '');
+  setVal('heimPlz', p.heimPlz || '');
+  setVal('heimOrt', p.heimOrt || '');
+  setVal('arbeitsortName', p.arbeitsortName || '');
+  setVal('arbeitsortAdresse', p.arbeitsortAdresse || '');
+
   rolleChanged();
+
+  // Restore pendel
+  pendelKmEinfach = p.pendelKmEinfach || 0;
+  pendelBerechnetAm = p.pendelBerechnetAm || '';
+  updatePendelDisplay();
+
+  // Add initial trip row
+  addFahrtRow();
 
   // Check for ?draft=ID
-  const params = new URLSearchParams(window.location.search);
-  const draftId = params.get('draft');
-  if (draftId) {
-    loadDraft(draftId);
-  } else {
-    addFahrtRow();
-  }
+  var params = new URLSearchParams(window.location.search);
+  var draftId = params.get('draft');
+  if (draftId) loadDraft(draftId);
 
-  // Pre-fill Zeitraum with current month
-  const jetzt = new Date();
-  const monate = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  const zeitraumEl = document.getElementById('zeitraum');
-  if (zeitraumEl && !zeitraumEl.value) {
-    zeitraumEl.value = `${monate[jetzt.getMonth()]} ${jetzt.getFullYear()}`;
-  }
+  // Upload zone events (drag/drop wired via HTML attributes, file input via HTML)
 
   updateSummary();
-  checkMapsButton();
 }
 
-// ─── Populate Team Dropdown ───────────────────────────────────────────────────
-function populateTeamDropdown() {
-  const sel = document.getElementById('empTeam');
-  if (!sel) return;
-  const teams = getTeams();
-  sel.innerHTML = '<option value="">– Team wählen –</option>';
-  teams.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t.id;
-    opt.textContent = t.name;
-    opt.dataset.adresse = t.adresse || '';
-    sel.appendChild(opt);
-  });
-}
-
-// ─── Load Draft ───────────────────────────────────────────────────────────────
-function loadDraft(id) {
-  const drafts = getDrafts();
-  const draft  = drafts.find(d => d.id === id);
-  if (!draft) {
-    toast('Entwurf nicht gefunden.', 'error');
-    addFahrtRow();
-    return;
-  }
-
-  currentDraftId = draft.id;
-
-  // Profil
-  const p = draft.profil || {};
-  setValue('vorname',    p.vorname    || '');
-  setValue('nachname',   p.nachname   || '');
-  setValue('strasse',    p.strasse    || '');
-  setValue('plz',        p.plz        || '');
-  setValue('ort',        p.ort        || '');
-  setValue('iban',       p.iban       || '');
-  setValue('rolle',      p.rolle      || '');
-  rolleChanged();
-
-  if (p.rolle === 'assistenz') {
-    setValue('empTeam', p.teamId || '');
-    teamChanged();
-    if (p.teamAdresse) setValue('teamAdresse', p.teamAdresse);
-  } else if (p.rolle === 'tk') {
-    setValue('bereich',     p.bereich     || '');
-    setValue('arbeitsortTk', p.arbeitsortTk || '');
-  } else if (p.rolle === 'andere') {
-    setValue('rolleText', p.rolleText || '');
-  }
-
-  // Zeitraum
-  setValue('zeitraum',    draft.zeitraum    || '');
-  setValue('arbeitstage', draft.arbeitstage !== undefined ? draft.arbeitstage : 20);
-  setValue('pendelKm',    draft.pendelKm    !== undefined ? draft.pendelKm    : 0);
-
-  // Fahrten
-  fahrten = [];
-  const tbody = document.getElementById('fahrt-body');
-  tbody.innerHTML = '';
-  (draft.fahrten || []).forEach(f => addFahrtRow(f));
-  if (fahrten.length === 0) addFahrtRow();
-
-  // Spesen
-  const sp = draft.spesen || {};
-  setValue('s-uebernacht',   sp.uebernachtung || 0);
-  setValue('s-oepnv',        sp.oepnv         || 0);
-  setValue('s-parken',       sp.parken         || 0);
-  setValue('s-sonstige',     sp.sonstige       || 0);
-  setValue('s-sonstige-text', sp.sonstigeText  || '');
-
-  setValue('anmerkungen', draft.anmerkungen || '');
-
-  // Files (names only from draft)
-  uploadedFiles = [];
-  renderFileChips();
-
-  showDraftBar(draft.id, `${p.vorname || ''} ${p.nachname || ''}`.trim() || draft.id);
-  updateSummary();
-}
-
-function setValue(id, val) {
-  const el = document.getElementById(id);
+function setVal(id, val) {
+  var el = document.getElementById(id);
   if (el) el.value = val;
 }
 
-// ─── Rolle Changed ────────────────────────────────────────────────────────────
+function getVal(id) {
+  var el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+// ─── Rolle ───────────────────────────────────────────────────────────────────
 function rolleChanged() {
-  const rolle = document.getElementById('rolle').value;
-  document.getElementById('block-assistenz').classList.toggle('hidden', rolle !== 'assistenz');
-  document.getElementById('block-tk').classList.toggle('hidden',        rolle !== 'tk');
-  document.getElementById('block-andere').classList.toggle('hidden',    rolle !== 'andere');
+  var v = getVal('rolle');
+  var wrap = document.getElementById('rolle-text-wrap');
+  if (wrap) wrap.style.display = (v === 'andere') ? 'block' : 'none';
 }
 
-// ─── Team Changed ─────────────────────────────────────────────────────────────
-function teamChanged() {
-  const sel = document.getElementById('empTeam');
-  const opt = sel.selectedOptions[0];
-  const adresse = opt ? (opt.dataset.adresse || '') : '';
-  const addrField = document.getElementById('teamAdresse');
-  if (addrField) addrField.value = adresse;
+// ─── Pendel display ───────────────────────────────────────────────────────────
+function updatePendelDisplay() {
+  var hs = getVal('heimStrasse');
+  var hp = getVal('heimPlz');
+  var ho = getVal('heimOrt');
+  var aa = getVal('arbeitsortAdresse');
+
+  var heimFull = [hs, (hp + ' ' + ho).trim()].filter(Boolean).join(', ');
+  var addrText = (heimFull || '–') + ' → ' + (aa || '–');
+
+  // State A addr
+  var addrEl = document.getElementById('pendel-addr-a');
+  if (addrEl) addrEl.textContent = addrText;
+
+  var stateA = document.getElementById('pendel-state-a');
+  var stateB = document.getElementById('pendel-state-b');
+
+  if (pendelKmEinfach > 0) {
+    if (stateA) stateA.style.display = 'none';
+    if (stateB) stateB.style.display = 'block';
+
+    // Update values
+    var datum = document.getElementById('pendel-datum');
+    if (datum) datum.textContent = pendelBerechnetAm;
+
+    var prE = document.getElementById('pr-einfach');
+    if (prE) prE.textContent = pendelKmEinfach + ' km';
+
+    var prHR = document.getElementById('pr-hr');
+    if (prHR) prHR.textContent = (pendelKmEinfach * 2) + ' km';
+
+    var prA = document.getElementById('pr-abzug');
+    if (prA) prA.textContent = '−' + fmt(pendelKmEinfach * 2 * RATE_PER_KM);
+
+    var infoBox = document.getElementById('pendel-info-box');
+    if (infoBox) {
+      infoBox.textContent = 'Diese ' + (pendelKmEinfach * 2) + ' km werden pro Dienstfahrt vom Erstattungsbetrag abgezogen. ' +
+        'Die abgezogenen km können Sie als Entfernungspauschale (Anlage N) in der Steuererklärung angeben.';
+    }
+  } else {
+    if (stateA) stateA.style.display = 'block';
+    if (stateB) stateB.style.display = 'none';
+  }
+
+  updateAllSubRows();
+  updateSummary();
 }
 
-// ─── Berechne Pendel ──────────────────────────────────────────────────────────
-async function berechnePendel() {
-  const ort      = document.getElementById('ort').value.trim();
-  const strasse  = document.getElementById('strasse').value.trim();
-  const plz      = document.getElementById('plz').value.trim();
-  const rolle    = document.getElementById('rolle').value;
+// ─── Compute Pendel via Google Maps ───────────────────────────────────────────
+function berechnePendelMaps() {
+  var hs = getVal('heimStrasse');
+  var hp = getVal('heimPlz');
+  var ho = getVal('heimOrt');
+  var aa = getVal('arbeitsortAdresse');
 
-  let wohnort = [strasse, plz, ort].filter(Boolean).join(', ');
-  if (!wohnort) {
-    toast('Bitte Wohnort (Straße, PLZ, Ort) angeben.', 'warning');
+  if (!hs || !ho || !aa) {
+    showToast('Bitte Heimadresse und Arbeitsort vollständig eintragen.', 'warn');
     return;
   }
 
-  let arbeitsort = '';
-  if (rolle === 'assistenz') {
-    arbeitsort = document.getElementById('teamAdresse').value.trim();
-  } else if (rolle === 'tk') {
-    arbeitsort = document.getElementById('arbeitsortTk').value.trim();
-  }
+  var heimAdresse = hs + ', ' + hp + ' ' + ho;
 
-  if (!arbeitsort) {
-    toast('Bitte zuerst den Arbeitsort angeben (Team oder TK-Arbeitsort).', 'warning');
-    return;
-  }
+  var btn = document.getElementById('btn-berechn-pendel');
+  var origText = '';
+  if (btn) { origText = btn.textContent; btn.textContent = '⏳ Berechne …'; btn.disabled = true; }
 
-  const btn = document.getElementById('btn-pendel-maps');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Berechne …'; }
-
-  try {
-    const km = await berechnKm(wohnort, arbeitsort);
-    document.getElementById('pendelKm').value = km;
-    updateSummary();
-    toast(`Pendelstrecke berechnet: ${km} km`, 'success');
-  } catch (err) {
-    toast(err.message || 'Fehler bei Maps-Berechnung.', 'error');
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '📍 via Maps berechnen'; }
-  }
+  berechnKm(heimAdresse, aa).then(function(km) {
+    pendelKmEinfach = km;
+    pendelBerechnetAm = today();
+    // Save into profile immediately
+    var p = getProfil();
+    p.pendelKmEinfach = pendelKmEinfach;
+    p.pendelBerechnetAm = pendelBerechnetAm;
+    saveProfil(p);
+    updatePendelDisplay();
+    showToast('Pendelstrecke berechnet: ' + km + ' km einfach', 'ok');
+  }).catch(function(err) {
+    showToast(err.message, 'warn');
+  }).finally(function() {
+    if (btn) { btn.textContent = origText || '📍 Jetzt via Google Maps berechnen'; btn.disabled = false; }
+  });
 }
 
-// ─── Add Fahrt Row ────────────────────────────────────────────────────────────
-function addFahrtRow(data = {}) {
-  fahrtCounter++;
-  const id = 'f' + fahrtCounter;
-  const row = {
-    id,
-    datum: data.datum || todayISO(),
-    von:   data.von   || '',
-    nach:  data.nach  || '',
-    art:   data.art   || 'Teamtreffen',
-    zweck: data.zweck || '',
-    km:    data.km    !== undefined ? data.km : ''
+// ─── Save Profile ─────────────────────────────────────────────────────────────
+function profilSpeichern() {
+  var p = {
+    vorname: getVal('vorname'),
+    nachname: getVal('nachname'),
+    rolle: getVal('rolle'),
+    rolleText: getVal('rolleText'),
+    iban: getVal('iban'),
+    heimStrasse: getVal('heimStrasse'),
+    heimPlz: getVal('heimPlz'),
+    heimOrt: getVal('heimOrt'),
+    arbeitsortName: getVal('arbeitsortName'),
+    arbeitsortAdresse: getVal('arbeitsortAdresse'),
+    pendelKmEinfach: pendelKmEinfach,
+    pendelBerechnetAm: pendelBerechnetAm
   };
-  fahrten.push(row);
-
-  const tbody = document.getElementById('fahrt-body');
-  const tr = document.createElement('tr');
-  tr.id = `row-${id}`;
-  tr.innerHTML = `
-    <td><input type="date" id="datum-${id}" value="${row.datum}" onchange="updateFahrtBetrag('${id}')"></td>
-    <td><input type="text" id="von-${id}" value="${escHtml(row.von)}" placeholder="Startort" style="min-width:100px;"></td>
-    <td><input type="text" id="nach-${id}" value="${escHtml(row.nach)}" placeholder="Zielort" style="min-width:100px;"></td>
-    <td>
-      <select id="art-${id}" onchange="updateFahrtBetrag('${id}')">
-        <option value="Teamtreffen"${row.art==='Teamtreffen'?' selected':''}>Teamtreffen / Dienstbesprechung</option>
-        <option value="Urlaubsbegleitung"${row.art==='Urlaubsbegleitung'?' selected':''}>Urlaubsbegleitung</option>
-        <option value="Helfertreffen"${row.art==='Helfertreffen'?' selected':''}>Helfertreffen</option>
-        <option value="Kundenbesuch"${row.art==='Kundenbesuch'?' selected':''}>Kundenbesuch / Klientenbegleitung</option>
-        <option value="Fortbildung"${row.art==='Fortbildung'?' selected':''}>Fortbildung / Schulung</option>
-        <option value="Sonstiges"${row.art==='Sonstiges'?' selected':''}>Sonstiges</option>
-      </select>
-    </td>
-    <td><input type="text" id="zweck-${id}" value="${escHtml(row.zweck)}" placeholder="Beschreibung" style="min-width:120px;"></td>
-    <td>
-      <div class="km-input-cell">
-        <input type="number" id="km-${id}" value="${row.km}" min="0" step="0.1" placeholder="0"
-               style="width:70px;" oninput="updateFahrtBetrag('${id}')">
-        <button class="btn btn-ghost btn-icon btn-sm" title="Via Maps berechnen"
-                onclick="berechnFahrtKm('${id}')">📍</button>
-      </div>
-    </td>
-    <td><span id="betrag-${id}" style="font-weight:600; color:var(--green-dark);">0,00 €</span></td>
-    <td>
-      <button class="btn btn-icon btn-sm" id="del-${id}"
-              style="color:var(--red); background:var(--red-light); border:none;"
-              onclick="removeFahrtRow('${id}')" title="Zeile löschen">✕</button>
-    </td>
-  `;
-  tbody.appendChild(tr);
-  updateFahrtBetrag(id);
-  updateDeleteButtons();
+  saveProfil(p);
+  showToast('Profil gespeichert ✓', 'ok');
 }
 
-// ─── Remove Fahrt Row ─────────────────────────────────────────────────────────
+// ─── Fahrt rows ───────────────────────────────────────────────────────────────
+function addFahrtRow(data) {
+  data = data || {};
+  fahrtCounter++;
+  var id = 'fr' + fahrtCounter;
+
+  var tbody = document.getElementById('fahrt-body');
+  if (!tbody) return;
+
+  // Build Art select options
+  var artOpts = REISEARTEN.map(function(r) {
+    var sel = (data.art === r.v) ? ' selected' : '';
+    return '<option value="' + esc(r.v) + '"' + sel + '>' + esc(r.l) + '</option>';
+  }).join('');
+
+  // Main row
+  var mainTr = document.createElement('tr');
+  mainTr.className = 'main-row';
+  mainTr.id = 'main-' + id;
+  mainTr.innerHTML = [
+    '<td><input type="date" value="' + esc(data.datum || todayISO()) + '" oninput="updateSummary()"></td>',
+    '<td><input type="text" placeholder="Von" value="' + esc(data.von || '') + '"></td>',
+    '<td><input type="text" placeholder="Nach" value="' + esc(data.nach || '') + '"></td>',
+    '<td><select onchange="updateSummary()">' + artOpts + '</select></td>',
+    '<td class="col-zweck"><input type="text" placeholder="Zweck / Beschreibung" value="' + esc(data.zweck || '') + '"></td>',
+    '<td><div class="km-cell">',
+      '<input type="number" min="0" step="1" placeholder="0" value="' + esc(data.kmEinfach || '') + '"',
+      ' style="width:52px" oninput="updateRowBetrag(\'' + id + '\')" id="km-' + id + '">',
+      '<button class="btn-ghost btn-icon" style="padding:5px 7px;font-size:12px;flex-shrink:0"',
+      ' title="Via Google Maps berechnen" onclick="berechnFahrtKm(\'' + id + '\')">📍</button>',
+    '</div></td>',
+    '<td class="betrag-cell" id="betrag-' + id + '">0,00 €</td>',
+    '<td><button class="btn-danger btn-icon" style="padding:5px 7px;font-size:13px"',
+    ' id="del-' + id + '" onclick="removeFahrtRow(\'' + id + '\')" title="Fahrt löschen">✕</button></td>'
+  ].join('');
+
+  // Sub row
+  var subTr = document.createElement('tr');
+  subTr.className = 'sub-row';
+  subTr.id = 'sub-' + id;
+  var subTd = document.createElement('td');
+  subTd.colSpan = 8;
+  subTr.appendChild(subTd);
+
+  tbody.appendChild(mainTr);
+  tbody.appendChild(subTr);
+
+  fahrtenRows.push({ id: id, mainTr: mainTr, subTr: subTr, subTd: subTd });
+
+  updateDeleteButtons();
+  updateRowBetrag(id);
+}
+
 function removeFahrtRow(id) {
-  if (fahrten.length <= 1) {
-    toast('Mindestens eine Fahrt muss vorhanden sein.', 'warning');
-    return;
-  }
-  fahrten = fahrten.filter(f => f.id !== id);
-  const row = document.getElementById(`row-${id}`);
-  if (row) row.remove();
+  if (fahrtenRows.length <= 1) return;
+  var row = fahrtenRows.find(function(r) { return r.id === id; });
+  if (!row) return;
+  if (row.mainTr.parentNode) row.mainTr.parentNode.removeChild(row.mainTr);
+  if (row.subTr.parentNode) row.subTr.parentNode.removeChild(row.subTr);
+  fahrtenRows = fahrtenRows.filter(function(r) { return r.id !== id; });
   updateDeleteButtons();
   updateSummary();
 }
 
 function updateDeleteButtons() {
-  fahrten.forEach(f => {
-    const btn = document.getElementById(`del-${f.id}`);
-    if (btn) btn.disabled = fahrten.length <= 1;
+  fahrtenRows.forEach(function(row) {
+    var btn = document.getElementById('del-' + row.id);
+    if (btn) btn.disabled = (fahrtenRows.length <= 1);
   });
 }
 
-// ─── Berechne Fahrt KM via Maps ───────────────────────────────────────────────
-async function berechnFahrtKm(id) {
-  const von  = document.getElementById(`von-${id}`)?.value.trim();
-  const nach = document.getElementById(`nach-${id}`)?.value.trim();
-  if (!von || !nach) {
-    toast('Bitte Von und Nach für diese Zeile angeben.', 'warning');
-    return;
-  }
-
-  const btn = document.querySelector(`#row-${id} .btn-icon`);
-  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
-
-  try {
-    const km = await berechnKm(von, nach);
-    const inp = document.getElementById(`km-${id}`);
-    if (inp) { inp.value = km; }
-    updateFahrtBetrag(id);
-    toast(`Strecke berechnet: ${km} km`, 'success');
-  } catch (err) {
-    toast(err.message || 'Fehler bei Maps-Berechnung.', 'error');
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '📍'; }
-  }
+function getRowKm(id) {
+  var el = document.getElementById('km-' + id);
+  return el ? (parseFloat(el.value) || 0) : 0;
 }
 
-// ─── Update Fahrt Betrag ──────────────────────────────────────────────────────
-function updateFahrtBetrag(id) {
-  const km  = parseFloat(document.getElementById(`km-${id}`)?.value) || 0;
-  const betrag = km * 2 * RATE_PER_KM;
-  const el = document.getElementById(`betrag-${id}`);
-  if (el) el.textContent = fmt(betrag);
+function getRowInputs(id) {
+  var mainTr = document.getElementById('main-' + id);
+  if (!mainTr) return null;
+  var inputs = mainTr.querySelectorAll('input, select');
+  return {
+    datum: inputs[0] ? inputs[0].value : '',
+    von: inputs[1] ? inputs[1].value : '',
+    nach: inputs[2] ? inputs[2].value : '',
+    art: inputs[3] ? inputs[3].value : '',
+    zweck: inputs[4] ? inputs[4].value : '',
+    kmEinfach: parseFloat(inputs[5] ? inputs[5].value : 0) || 0
+  };
+}
+
+function updateRowBetrag(id) {
+  var km = getRowKm(id);
+  var betrag = Math.max(0, km * 2 - pendelKmEinfach * 2) * RATE_PER_KM;
+  var betragEl = document.getElementById('betrag-' + id);
+  if (betragEl) betragEl.textContent = fmt(betrag);
+
+  // Update sub-row
+  var row = fahrtenRows.find(function(r) { return r.id === id; });
+  if (row) renderSubRow(row, km);
+
   updateSummary();
 }
 
-// ─── Update Summary ───────────────────────────────────────────────────────────
+function renderSubRow(row, km) {
+  var subTd = row.subTd;
+  if (!subTd) return;
+
+  if (pendelKmEinfach <= 0) {
+    subTd.innerHTML = '<div class="sub-row-inner no-pendel">⚠ Bitte zuerst Pendelstrecke im Profil berechnen.</div>';
+    return;
+  }
+
+  var pendelHR = pendelKmEinfach * 2;
+  var pendelEuro = pendelHR * RATE_PER_KM;
+  var isZero = km > 0 && km <= pendelKmEinfach;
+
+  var rightHtml = '<div class="sub-row-right">' +
+    '<span>' + pendelHR + ' km</span>' +
+    '<span>−' + fmt(pendelEuro) + '</span>' +
+    (isZero ? '<span class="badge-zero">Fahrt = Pendelstrecke → 0,00 € Erstattung</span>' : '') +
+    '</div>';
+
+  subTd.innerHTML = '<div class="sub-row-inner">' +
+    '<span>− Pendelabzug (Wohnort → Arbeitsort, ' + pendelHR + ' km × 0,30 €) · steuerlich absetzbar (Anlage N)</span>' +
+    rightHtml +
+    '</div>';
+}
+
+function updateAllSubRows() {
+  fahrtenRows.forEach(function(row) {
+    var km = getRowKm(row.id);
+    renderSubRow(row, km);
+  });
+}
+
+// ─── Google Maps per trip ─────────────────────────────────────────────────────
+function berechnFahrtKm(id) {
+  var inputs = getRowInputs(id);
+  if (!inputs) return;
+  var von = inputs.von;
+  var nach = inputs.nach;
+
+  if (!von || !nach) {
+    showToast('Bitte Von- und Nach-Adresse für diese Fahrt eintragen.', 'warn');
+    return;
+  }
+
+  var btn = document.querySelector('#main-' + id + ' button[title="Via Google Maps berechnen"]');
+  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+
+  berechnKm(von, nach).then(function(km) {
+    var kmInput = document.getElementById('km-' + id);
+    if (kmInput) kmInput.value = km;
+    updateRowBetrag(id);
+    showToast('Strecke berechnet: ' + km + ' km', 'ok');
+  }).catch(function(err) {
+    showToast(err.message, 'warn');
+  }).finally(function() {
+    if (btn) { btn.textContent = '📍'; btn.disabled = false; }
+  });
+}
+
+// ─── Summary ──────────────────────────────────────────────────────────────────
 function updateSummary() {
-  let totalKm = 0;
-  fahrten.forEach(f => {
-    const km = parseFloat(document.getElementById(`km-${f.id}`)?.value) || 0;
-    totalKm += km * 2;
+  var totalKmHR = 0;
+  var totalPendel = 0;
+  var totalErstatt = 0;
+
+  fahrtenRows.forEach(function(row) {
+    var km = getRowKm(row.id);
+    var kmHR = km * 2;
+    var pendelHR = pendelKmEinfach * 2;
+    var pendelUsed = Math.min(pendelHR, kmHR);
+    var erstatt = Math.max(0, kmHR - pendelHR);
+    totalKmHR += kmHR;
+    totalPendel += pendelUsed;
+    totalErstatt += erstatt;
   });
 
-  const pendelKm    = parseFloat(document.getElementById('pendelKm')?.value) || 0;
-  const arbeitstage = parseInt(document.getElementById('arbeitstage')?.value) || 0;
-  const pendelGes   = pendelKm * 2 * arbeitstage;
-  const erstattKm   = Math.max(0, totalKm - pendelGes);
+  var fahrtBetrag = totalErstatt * RATE_PER_KM;
 
-  const spesen = (parseFloat(document.getElementById('s-uebernacht')?.value) || 0)
-               + (parseFloat(document.getElementById('s-oepnv')?.value)      || 0)
-               + (parseFloat(document.getElementById('s-parken')?.value)      || 0)
-               + (parseFloat(document.getElementById('s-sonstige')?.value)    || 0);
+  var spesen = (parseFloat(document.getElementById('s-uebernacht')?.value) || 0) +
+               (parseFloat(document.getElementById('s-opnv')?.value) || 0) +
+               (parseFloat(document.getElementById('s-parken')?.value) || 0) +
+               (parseFloat(document.getElementById('s-sonstige')?.value) || 0);
 
-  const betragGes = erstattKm * RATE_PER_KM + spesen;
+  var gesamt = fahrtBetrag + spesen;
 
-  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  setEl('sum-gesamt-km',    fmtKm(totalKm));
-  setEl('sum-pendel-km',    fmtKm(pendelGes));
-  setEl('sum-erstatt-km',   fmtKm(erstattKm));
-  setEl('sum-gesamt-betrag', fmt(betragGes));
+  // Update DOM
+  var el = function(id) { return document.getElementById(id); };
+  if (el('sum-gesamt-km')) el('sum-gesamt-km').textContent = totalKmHR + ' km';
+  if (el('sum-pendel')) el('sum-pendel').textContent = totalPendel + ' km';
+  if (el('sum-erstatt-km')) el('sum-erstatt-km').textContent = totalErstatt + ' km';
+
+  if (el('sum-line-text')) {
+    el('sum-line-text').innerHTML = totalErstatt + ' km × 0,30 € = <strong>' + fmt(fahrtBetrag) + '</strong> Fahrtkosten' +
+      (spesen > 0 ? ' + <strong>' + fmt(spesen) + '</strong> Spesen =' : ' =');
+  }
+  if (el('sum-gesamt')) el('sum-gesamt').textContent = fmt(gesamt);
 }
 
-// ─── Collect Data ─────────────────────────────────────────────────────────────
+// ─── Collect data ─────────────────────────────────────────────────────────────
 function collectData() {
-  const rolle = document.getElementById('rolle').value;
+  var fahrten = fahrtenRows.map(function(row) {
+    var inp = getRowInputs(row.id);
+    return inp;
+  });
 
-  const profil = {
-    vorname:      document.getElementById('vorname').value.trim(),
-    nachname:     document.getElementById('nachname').value.trim(),
-    strasse:      document.getElementById('strasse').value.trim(),
-    plz:          document.getElementById('plz').value.trim(),
-    ort:          document.getElementById('ort').value.trim(),
-    iban:         document.getElementById('iban').value.trim(),
-    rolle,
-    rolleText:    document.getElementById('rolleText')?.value.trim() || '',
-    teamId:       '',
-    teamName:     '',
-    teamAdresse:  '',
-    bereich:      '',
-    arbeitsortTk: ''
+  var spesen = {
+    uebernacht: parseFloat(document.getElementById('s-uebernacht')?.value) || 0,
+    opnv: parseFloat(document.getElementById('s-opnv')?.value) || 0,
+    parken: parseFloat(document.getElementById('s-parken')?.value) || 0,
+    sonstige: parseFloat(document.getElementById('s-sonstige')?.value) || 0,
+    sonstigeText: getVal('s-sonstigeText')
   };
+  var spesenSum = spesen.uebernacht + spesen.opnv + spesen.parken + spesen.sonstige;
 
-  if (rolle === 'assistenz') {
-    const sel = document.getElementById('empTeam');
-    profil.teamId      = sel?.value || '';
-    profil.teamName    = sel?.selectedOptions[0]?.textContent || '';
-    profil.teamAdresse = document.getElementById('teamAdresse')?.value.trim() || '';
-    profil.rolleText   = 'Assistenz';
-  } else if (rolle === 'tk') {
-    profil.bereich      = document.getElementById('bereich')?.value.trim() || '';
-    profil.arbeitsortTk = document.getElementById('arbeitsortTk')?.value.trim() || '';
-    profil.rolleText    = 'Teamkoordination';
-  }
-
-  const fahrtData = fahrten.map(f => ({
-    datum: document.getElementById(`datum-${f.id}`)?.value || '',
-    von:   document.getElementById(`von-${f.id}`)?.value.trim()   || '',
-    nach:  document.getElementById(`nach-${f.id}`)?.value.trim()  || '',
-    art:   document.getElementById(`art-${f.id}`)?.value          || 'Sonstiges',
-    zweck: document.getElementById(`zweck-${f.id}`)?.value.trim() || '',
-    km:    parseFloat(document.getElementById(`km-${f.id}`)?.value) || 0
-  }));
+  // Compute totals
+  var totalErstatt = 0;
+  fahrten.forEach(function(f) {
+    totalErstatt += Math.max(0, f.kmEinfach * 2 - pendelKmEinfach * 2);
+  });
+  var fahrtBetrag = totalErstatt * RATE_PER_KM;
 
   return {
-    id:          currentDraftId || newAntragId(),
-    savedAt:     new Date().toISOString(),
-    zeitraum:    document.getElementById('zeitraum').value.trim(),
-    arbeitstage: parseInt(document.getElementById('arbeitstage').value) || 0,
-    pendelKm:    parseFloat(document.getElementById('pendelKm').value) || 0,
-    profil,
-    fahrten:     fahrtData,
-    spesen: {
-      uebernachtung: parseFloat(document.getElementById('s-uebernacht').value) || 0,
-      oepnv:         parseFloat(document.getElementById('s-oepnv').value)      || 0,
-      parken:        parseFloat(document.getElementById('s-parken').value)      || 0,
-      sonstige:      parseFloat(document.getElementById('s-sonstige').value)    || 0,
-      sonstigeText:  document.getElementById('s-sonstige-text').value.trim()
+    id: currentDraftId || newAntragId(),
+    status: 'entwurf',
+    zeitraum: getVal('zeitraum'),
+    anmerkungen: getVal('anmerkungen'),
+    mitarbeiter: {
+      vorname: getVal('vorname'),
+      nachname: getVal('nachname'),
+      rolle: getVal('rolle'),
+      rolleText: getVal('rolleText'),
+      iban: getVal('iban'),
+      heimStrasse: getVal('heimStrasse'),
+      heimPlz: getVal('heimPlz'),
+      heimOrt: getVal('heimOrt'),
+      arbeitsortName: getVal('arbeitsortName'),
+      arbeitsortAdresse: getVal('arbeitsortAdresse'),
+      pendelKmEinfach: pendelKmEinfach,
+      pendelBerechnetAm: pendelBerechnetAm
     },
-    anmerkungen: document.getElementById('anmerkungen').value.trim(),
-    belegNamen:  uploadedFiles.map(f => f.name)
+    fahrten: fahrten,
+    spesen: spesen,
+    spesenSum: spesenSum,
+    fahrtBetrag: fahrtBetrag,
+    gesamtBetrag: fahrtBetrag + spesenSum
   };
 }
 
-// ─── Speicher Entwurf ─────────────────────────────────────────────────────────
-function speicherEntwurf() {
-  const data = collectData();
+// ─── PDF ──────────────────────────────────────────────────────────────────────
+function pdfErstellen() {
+  var vn = getVal('vorname');
+  var nn = getVal('nachname');
+  if (!vn || !nn) {
+    showToast('Bitte Vorname und Nachname eintragen.', 'warn');
+    return;
+  }
+  var data = collectData();
   if (!currentDraftId) currentDraftId = data.id;
-  else data.id = currentDraftId;
-  saveDraft(data);
-  const name = `${data.profil.vorname} ${data.profil.nachname}`.trim() || data.id;
-  showDraftBar(data.id, name);
-  toast('Entwurf gespeichert.', 'success');
+  generiereUndLadePDF(data, uploadedFiles);
 }
 
-// ─── PDF Erstellen ────────────────────────────────────────────────────────────
-async function pdfErstellen() {
-  const data = collectData();
-
-  // Validierung
-  if (!data.profil.vorname || !data.profil.nachname) {
-    toast('Bitte Vor- und Nachname angeben.', 'error');
-    return;
-  }
-  if (!data.zeitraum) {
-    toast('Bitte Abrechnungszeitraum angeben.', 'error');
-    return;
-  }
-  if (!data.profil.iban) {
-    toast('Bitte IBAN für die Erstattung angeben.', 'error');
-    return;
-  }
-  if (data.fahrten.length === 0 || data.fahrten.every(f => f.km <= 0)) {
-    toast('Bitte mindestens eine Fahrt mit KM-Angabe eintragen.', 'warning');
-    return;
-  }
-
-  if (!currentDraftId) currentDraftId = data.id;
+// ─── Draft ────────────────────────────────────────────────────────────────────
+function entwurfSpeichern() {
+  if (!currentDraftId) currentDraftId = newAntragId();
+  var data = collectData();
+  data.id = currentDraftId;
   saveDraft(data);
-
-  try {
-    const btn = document.querySelector('.btn-primary');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Erstelle PDF …'; }
-    await generiereUndLadePDF(data, uploadedFiles);
-    toast('PDF erfolgreich erstellt und heruntergeladen!', 'success');
-  } catch (err) {
-    console.error(err);
-    toast('Fehler beim PDF-Erstellen: ' + (err.message || err), 'error');
-  } finally {
-    const btn = document.querySelector('.btn-primary');
-    if (btn) { btn.disabled = false; btn.textContent = '📄 PDF erstellen & herunterladen'; }
-  }
+  // Show draft bar
+  var bar = document.getElementById('draft-bar');
+  var barId = document.getElementById('draft-bar-id');
+  if (bar) bar.classList.add('visible');
+  if (barId) barId.textContent = currentDraftId;
+  showToast('Entwurf gespeichert ✓', 'ok');
 }
 
-// ─── Formular Leeren ──────────────────────────────────────────────────────────
-function formLeeren() {
-  if (!confirm('Formular wirklich leeren? Alle nicht gespeicherten Daten gehen verloren.')) return;
+function formularLeeren() {
+  if (!confirm('Formular wirklich leeren? (Profildaten bleiben erhalten)')) return;
 
-  ['vorname','nachname','strasse','plz','ort','iban',
-   'zeitraum','anmerkungen','s-sonstige-text',
-   'bereich','arbeitsortTk','rolleText'].forEach(id => setValue(id, ''));
+  // Clear non-profile fields
+  setVal('zeitraum', '');
+  setVal('anmerkungen', '');
+  setVal('s-uebernacht', '');
+  setVal('s-opnv', '');
+  setVal('s-parken', '');
+  setVal('s-sonstige', '');
+  setVal('s-sonstigeText', '');
 
-  setValue('rolle', '');
-  rolleChanged();
-  setValue('arbeitstage', 20);
-  setValue('pendelKm', 0);
-  setValue('s-uebernacht', 0);
-  setValue('s-oepnv', 0);
-  setValue('s-parken', 0);
-  setValue('s-sonstige', 0);
-
-  fahrten = [];
+  // Reset trips
+  var tbody = document.getElementById('fahrt-body');
+  if (tbody) tbody.innerHTML = '';
+  fahrtenRows = [];
   fahrtCounter = 0;
-  document.getElementById('fahrt-body').innerHTML = '';
   addFahrtRow();
 
+  // Reset files
   uploadedFiles = [];
   renderFileChips();
 
+  // Reset draft
   currentDraftId = null;
-  document.getElementById('draft-bar').classList.add('hidden');
+  var bar = document.getElementById('draft-bar');
+  if (bar) bar.classList.remove('visible');
 
   updateSummary();
-  toast('Formular geleert.', 'success');
 }
 
-// ─── File Handling ────────────────────────────────────────────────────────────
+function loadDraft(id) {
+  var drafts = getDrafts();
+  var d = drafts.find(function(x) { return x.id === id; });
+  if (!d) { showToast('Entwurf nicht gefunden.', 'warn'); return; }
+
+  currentDraftId = d.id;
+
+  // Fill profile
+  var m = d.mitarbeiter || {};
+  setVal('vorname', m.vorname || '');
+  setVal('nachname', m.nachname || '');
+  setVal('rolle', m.rolle || '');
+  setVal('rolleText', m.rolleText || '');
+  setVal('iban', m.iban || '');
+  setVal('heimStrasse', m.heimStrasse || '');
+  setVal('heimPlz', m.heimPlz || '');
+  setVal('heimOrt', m.heimOrt || '');
+  setVal('arbeitsortName', m.arbeitsortName || '');
+  setVal('arbeitsortAdresse', m.arbeitsortAdresse || '');
+
+  pendelKmEinfach = m.pendelKmEinfach || 0;
+  pendelBerechnetAm = m.pendelBerechnetAm || '';
+
+  rolleChanged();
+  updatePendelDisplay();
+
+  // Fill form
+  setVal('zeitraum', d.zeitraum || '');
+  setVal('anmerkungen', d.anmerkungen || '');
+
+  // Spesen
+  var s = d.spesen || {};
+  setVal('s-uebernacht', s.uebernacht || '');
+  setVal('s-opnv', s.opnv || '');
+  setVal('s-parken', s.parken || '');
+  setVal('s-sonstige', s.sonstige || '');
+  setVal('s-sonstigeText', s.sonstigeText || '');
+
+  // Trips
+  var tbody = document.getElementById('fahrt-body');
+  if (tbody) tbody.innerHTML = '';
+  fahrtenRows = [];
+  fahrtCounter = 0;
+  (d.fahrten || []).forEach(function(f) { addFahrtRow(f); });
+  if (fahrtenRows.length === 0) addFahrtRow();
+
+  updateSummary();
+
+  // Show draft bar
+  var bar = document.getElementById('draft-bar');
+  var barId = document.getElementById('draft-bar-id');
+  if (bar) bar.classList.add('visible');
+  if (barId) barId.textContent = d.id;
+
+  showToast('Entwurf ' + d.id + ' geladen', 'info');
+}
+
+// ─── File handling ────────────────────────────────────────────────────────────
 function handleDrop(event) {
   event.preventDefault();
-  document.getElementById('upload-zone').classList.remove('dragover');
+  document.getElementById('upload-zone').classList.remove('drag-over');
   handleFiles(event.dataTransfer.files);
 }
 
-function handleFileInput(files) {
-  handleFiles(files);
-}
-
 function handleFiles(files) {
-  const allowed = ['application/pdf', 'image/jpeg', 'image/png'];
-  const maxSize = 10 * 1024 * 1024;
-
-  Array.from(files).forEach(file => {
-    if (!allowed.includes(file.type)) {
-      toast(`"${file.name}" – Dateityp nicht unterstützt (nur PDF, JPG, PNG).`, 'warning');
+  if (!files || !files.length) return;
+  var MAX = 10 * 1024 * 1024;
+  Array.from(files).forEach(function(file) {
+    if (file.size > MAX) {
+      showToast('Datei "' + file.name + '" ist zu groß (max 10 MB).', 'warn');
       return;
     }
-    if (file.size > maxSize) {
-      toast(`"${file.name}" – Datei zu groß (max. 10 MB).`, 'warning');
-      return;
-    }
-    // Check duplicate
-    if (uploadedFiles.find(f => f.name === file.name && f.size === file.size)) {
-      toast(`"${file.name}" – bereits hinzugefügt.`, 'warning');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      uploadedFiles.push({ name: file.name, size: file.size, type: file.type, dataUrl: e.target.result });
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      uploadedFiles.push({ name: file.name, size: file.size, dataUrl: e.target.result });
       renderFileChips();
     };
     reader.readAsDataURL(file);
   });
-
-  // Reset file input so same file can be added again if removed
-  const fi = document.getElementById('file-input');
-  if (fi) fi.value = '';
-}
-
-function removeFile(idx) {
-  uploadedFiles.splice(idx, 1);
-  renderFileChips();
 }
 
 function renderFileChips() {
-  const container = document.getElementById('file-chips');
+  var container = document.getElementById('file-chips');
   if (!container) return;
-  container.innerHTML = '';
-  uploadedFiles.forEach((f, i) => {
-    const chip = document.createElement('div');
-    chip.className = 'file-chip';
-    const sizeKb = (f.size / 1024).toFixed(0);
-    chip.innerHTML = `
-      <span>📄 ${escHtml(f.name)}</span>
-      <span style="color:var(--gray-400); font-size:0.75rem;">${sizeKb} KB</span>
-      <button class="chip-remove" onclick="removeFile(${i})" title="Entfernen">×</button>
-    `;
-    container.appendChild(chip);
-  });
+  container.innerHTML = uploadedFiles.map(function(f, i) {
+    return '<div class="file-chip">' +
+      '📄 ' + esc(f.name) +
+      '<button class="file-chip-remove" onclick="removeFile(' + i + ')" title="Entfernen">✕</button>' +
+      '</div>';
+  }).join('');
 }
 
-// ─── Profil merken ────────────────────────────────────────────────────────────
-function profilMerken() {
-  const rolle = document.getElementById('rolle').value;
-  const profil = {
-    vorname:      document.getElementById('vorname').value.trim(),
-    nachname:     document.getElementById('nachname').value.trim(),
-    strasse:      document.getElementById('strasse').value.trim(),
-    plz:          document.getElementById('plz').value.trim(),
-    ort:          document.getElementById('ort').value.trim(),
-    iban:         document.getElementById('iban').value.trim(),
-    rolle,
-    rolleText:    document.getElementById('rolleText')?.value.trim() || '',
-    teamId:       document.getElementById('empTeam')?.value          || '',
-    bereich:      document.getElementById('bereich')?.value.trim()    || '',
-    arbeitsortTk: document.getElementById('arbeitsortTk')?.value.trim() || ''
-  };
-  store.set('profil', profil);
-  toast('Profil gespeichert.', 'success');
+function removeFile(i) {
+  uploadedFiles.splice(i, 1);
+  renderFileChips();
 }
 
-// ─── Profil laden ─────────────────────────────────────────────────────────────
-function ladeProfilAusStorage() {
-  const p = getProfile();
-  if (!p || !p.vorname) return;
-
-  setValue('vorname',  p.vorname  || '');
-  setValue('nachname', p.nachname || '');
-  setValue('strasse',  p.strasse  || '');
-  setValue('plz',      p.plz      || '');
-  setValue('ort',      p.ort      || '');
-  setValue('iban',     p.iban     || '');
-  setValue('rolle',    p.rolle    || '');
-
-  rolleChanged();
-
-  if (p.rolle === 'assistenz') {
-    // Team dropdown may not be populated yet; populate then set
-    populateTeamDropdown();
-    setValue('empTeam', p.teamId || '');
-    teamChanged();
-  } else if (p.rolle === 'tk') {
-    setValue('bereich',      p.bereich      || '');
-    setValue('arbeitsortTk', p.arbeitsortTk || '');
-  } else if (p.rolle === 'andere') {
-    setValue('rolleText', p.rolleText || '');
-  }
-}
-
-// ─── Show Draft Bar ───────────────────────────────────────────────────────────
-function showDraftBar(id, name) {
-  const bar = document.getElementById('draft-bar');
-  if (!bar) return;
-  bar.classList.remove('hidden');
-  const nameEl = document.getElementById('draft-bar-name');
-  const idEl   = document.getElementById('draft-bar-id');
-  if (nameEl) nameEl.textContent = name || id;
-  if (idEl)   idEl.textContent   = id;
-}
-
-// ─── Check Maps Button ────────────────────────────────────────────────────────
-function checkMapsButton() {
-  const ag  = getAG();
-  const btn = document.getElementById('btn-pendel-maps');
-  if (!btn) return;
-  if (!ag.mapsKey || ag.mapsKey === 'YOUR_API_KEY') {
-    btn.disabled = true;
-    btn.title = 'Google Maps API-Key in Admin-Einstellungen hinterlegen';
-  }
-}
-
-// ─── Escape HTML helper ───────────────────────────────────────────────────────
-function escHtml(str) {
-  return String(str || '')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
-}
-
-// ─── Kick off ─────────────────────────────────────────────────────────────────
+// ─── Boot ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);
 </script>
 
-<!-- ─── Google Maps Loader ──────────────────────────────────────────── -->
+<!-- Google Maps IIFE loader -->
 <script>
-(function(){
-  var ag = (function(){ try { return JSON.parse(localStorage.getItem('ag_data')) || {}; } catch(e) { return {}; } })();
+(function() {
+  var ag = (function() {
+    try { return JSON.parse(localStorage.getItem('ag_data') || '{}'); } catch(e) { return {}; }
+  })();
   var key = ag.mapsKey || '';
-  if (key && key !== 'YOUR_API_KEY') {
-    var s = document.createElement('script');
-    s.id  = 'gmaps-js';
-    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&libraries=places';
-    s.async = true;
-    document.head.appendChild(s);
-  }
+  if (!key) return;
+  var s = document.createElement('script');
+  s.id = 'gmaps-script';
+  s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&libraries=&v=weekly';
+  s.async = true;
+  s.defer = true;
+  document.body.appendChild(s);
 })();
 </script>
 

@@ -1,619 +1,600 @@
 'use strict';
 
-// ─── PDF Generation ──────────────────────────────────────────────────────────
+// ─── PDF Generation ───────────────────────────────────────────────────────────
 // Requires jsPDF UMD loaded from CDN (window.jspdf.jsPDF)
 // Signature: async function generiereUndLadePDF(data, files)
-//
-// data = {
-//   id, savedAt, zeitraum, arbeitstage, pendelKm,
-//   profil: { vorname, nachname, strasse, plz, ort, iban, rolle, rolleText,
-//             teamId, teamName, teamAdresse, bereich, arbeitsortTk },
-//   fahrten: [{ datum, von, nach, art, zweck, km }],
-//   spesen: { uebernachtung, oepnv, parken, sonstige, sonstigeText },
-//   anmerkungen,
-//   belegNamen: []
-// }
 
 async function generiereUndLadePDF(data, files) {
-  if (typeof window.jspdf === 'undefined') {
-    throw new Error('jsPDF ist nicht geladen.');
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  // Page dimensions
+  var PW = 210;   // page width mm
+  var PH = 297;   // page height mm
+  var ML = 18;    // margin left
+  var MR = 18;    // margin right
+  var CW = PW - ML - MR;  // content width = 174mm
+  var y = 0;
+
+  var pageCount = 1;
+  var pageRefs = [];  // track pages for footer
+
+  function addPage() {
+    drawFooter();
+    doc.addPage();
+    pageCount++;
+    y = 20;
   }
 
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  const PAGE_W  = 210;
-  const PAGE_H  = 297;
-  const ML      = 18; // margin left
-  const MR      = 18; // margin right
-  const MT      = 15; // margin top
-  const MB      = 15; // margin bottom
-  const CONTENT_W = PAGE_W - ML - MR; // 174mm
-
-  const ag = getAG();
-
-  let y = MT;
-  let pageNum = 1;
-  const totalPages = () => doc.getNumberOfPages();
-
-  // Color helpers (RGB arrays)
-  const C_GREEN       = [29, 158, 117];
-  const C_GREEN_DARK  = [21, 110, 82];
-  const C_GREEN_LIGHT = [232, 247, 242];
-  const C_BLUE        = [24, 95, 165];
-  const C_BLUE_LIGHT  = [232, 241, 251];
-  const C_RED         = [163, 45, 45];
-  const C_RED_LIGHT   = [254, 242, 242];
-  const C_AMBER_BG    = [255, 251, 235];
-  const C_AMBER_BORDER= [217, 119, 6];
-  const C_AMBER_TEXT  = [133, 79, 11];
-  const C_GRAY_50     = [249, 250, 251];
-  const C_GRAY_100    = [243, 244, 246];
-  const C_GRAY_200    = [229, 231, 235];
-  const C_GRAY_500    = [107, 114, 128];
-  const C_GRAY_700    = [55, 65, 81];
-  const C_GRAY_800    = [31, 41, 55];
-  const C_WHITE       = [255, 255, 255];
-  const C_BLACK       = [0, 0, 0];
-
-  function setFill(c)   { doc.setFillColor(c[0], c[1], c[2]); }
-  function setDraw(c)   { doc.setDrawColor(c[0], c[1], c[2]); }
-  function setTextC(c)  { doc.setTextColor(c[0], c[1], c[2]); }
-
-  // ── Page footer ────────────────────────────────────────────────────────────
-  function drawFooter() {
-    const fp = doc.getNumberOfPages();
-    doc.setPage(fp);
-    const fy = PAGE_H - 8;
-    setTextC(C_GRAY_500);
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`${ag.name}  ·  ${ag.strasse}, ${ag.plz} ${ag.ort}`, ML, fy);
-    const rightText = `Seite ${fp} / ${fp}  ·  ${data.id}`;
-    doc.text(rightText, PAGE_W - MR, fy, { align: 'right' });
+  function checkY(needed) {
+    if (y + needed > 272) addPage();
   }
 
-  // Final pass: fix page X/Y on all pages
-  function fixAllFooters(total) {
-    for (let p = 1; p <= total; p++) {
-      doc.setPage(p);
-      const fy = PAGE_H - 8;
-      setTextC(C_GRAY_500);
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'normal');
-      // clear old footer area with white rect
-      setFill(C_WHITE);
-      setDraw(C_WHITE);
-      doc.rect(0, fy - 4, PAGE_W, 10, 'F');
-      doc.text(`${ag.name}  ·  ${ag.strasse}, ${ag.plz} ${ag.ort}`, ML, fy);
-      const rightText = `Seite ${p} / ${total}  ·  ${data.id}`;
-      doc.text(rightText, PAGE_W - MR, fy, { align: 'right' });
-    }
+  // ─── Colours ─────────────────────────────────────────────────────────────
+  function rgb(hex) {
+    var r = parseInt(hex.slice(1,3),16);
+    var g = parseInt(hex.slice(3,5),16);
+    var b = parseInt(hex.slice(5,7),16);
+    return [r,g,b];
   }
 
-  // ── Page break check ───────────────────────────────────────────────────────
-  function checkPageBreak(neededMm = 20) {
-    if (y + neededMm > PAGE_H - MB - 10) {
-      drawFooter();
-      doc.addPage();
-      y = MT;
-      return true;
-    }
-    return false;
+  function setFill(hex) { var c = rgb(hex); doc.setFillColor(c[0],c[1],c[2]); }
+  function setStroke(hex) { var c = rgb(hex); doc.setDrawColor(c[0],c[1],c[2]); }
+  function setTextColor(hex) { var c = rgb(hex); doc.setTextColor(c[0],c[1],c[2]); }
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────
+  function fmtMoney(n) {
+    return (+(n||0)).toFixed(2).replace('.',',') + ' €';
   }
 
-  // ── Text helpers ───────────────────────────────────────────────────────────
-  function textAt(text, x, ty, opts = {}) {
-    doc.text(String(text), x, ty, opts);
+  function fmtDateDE(isoStr) {
+    if (!isoStr) return '';
+    var p = isoStr.split('-');
+    if (p.length !== 3) return isoStr;
+    return p[2] + '.' + p[1] + '.' + p[0];
   }
 
-  // ── Art badge colors ───────────────────────────────────────────────────────
-  function artColor(art) {
-    const map = {
-      'Teamtreffen':          [29, 158, 117],
-      'Dienstbesprechung':    [29, 158, 117],
-      'Urlaubsbegleitung':    [24, 95, 165],
-      'Helfertreffen':        [236, 72, 153],
-      'Kundenbesuch':         [13, 148, 136],
-      'Klientenbegleitung':   [13, 148, 136],
-      'Fortbildung':          [124, 58, 237],
-      'Schulung':             [124, 58, 237],
-      'Sonstiges':            [107, 114, 128]
+  function artLabel(v) {
+    var map = {
+      teamtreffen: 'Teamtreffen',
+      urlaubsbegl: 'Urlaub',
+      helfertreffen: 'Helfer',
+      kundenbesuch: 'Kunde',
+      fortbildung: 'Fortbildung',
+      sonstiges: 'Sonstiges'
     };
-    for (const key of Object.keys(map)) {
-      if (art && art.toLowerCase().includes(key.toLowerCase())) return map[key];
-    }
-    return [107, 114, 128];
+    return map[v] || v || '–';
   }
 
-  // ── Section header ─────────────────────────────────────────────────────────
-  function sectionHeader(title, ty) {
-    setFill(C_GREEN_LIGHT);
-    setDraw(C_GREEN_LIGHT);
-    doc.roundedRect(ML, ty - 4, CONTENT_W, 8, 2, 2, 'F');
-    setTextC(C_GREEN_DARK);
-    doc.setFontSize(7.5);
-    doc.setFont('helvetica', 'bold');
-    doc.text(title.toUpperCase(), ML + 3, ty + 1);
-    return ty + 7;
+  function artColor(v) {
+    var map = {
+      teamtreffen:  '#0d9488',
+      urlaubsbegl:  '#185FA5',
+      helfertreffen:'#db2777',
+      fortbildung:  '#7c3aed',
+      kundenbesuch: '#1D9E75',
+      sonstiges:    '#6b7280'
+    };
+    return map[v] || '#6b7280';
   }
 
-  // ── Format date from ISO or dd.mm.yyyy ─────────────────────────────────────
-  function fmtDate(d) {
-    if (!d) return '';
-    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
-      const [yyyy, mm, dd] = d.split('-');
-      return `${dd}.${mm}.${yyyy}`;
-    }
-    return d;
+  function wrapText(text, maxWidth, fontSize) {
+    doc.setFontSize(fontSize);
+    return doc.splitTextToSize(String(text || ''), maxWidth);
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 1. HEADER BAR
-  // ─────────────────────────────────────────────────────────────────────────
-  const HEADER_H = 14;
-  setFill(C_GREEN);
-  setDraw(C_GREEN);
-  doc.rect(0, 0, PAGE_W, HEADER_H, 'F');
+  // ─── Footer (drawn on each page before addPage) ───────────────────────────
+  function drawFooter() {
+    var ag = getArbeitgeber();
+    var footY = PH - 8;
+    doc.setFontSize(7);
+    setTextColor('#9a9890');
+    doc.text(ag.name + ' · ' + ag.strasse + ', ' + ag.plz + ' ' + ag.ort, ML, footY);
+    doc.text(
+      'Seite ' + doc.getCurrentPageInfo().pageNumber + ' · ' + (data.id || ''),
+      PW - MR,
+      footY,
+      { align: 'right' }
+    );
+    // Thin gray line
+    setStroke('#E2E0DA');
+    doc.setLineWidth(0.2);
+    doc.line(ML, PH - 11, PW - MR, PH - 11);
+  }
+
+  var m = data.mitarbeiter || {};
+  var fahrten = data.fahrten || [];
+  var pendelEinfach = m.pendelKmEinfach || 0;
+  var pendelHR = pendelEinfach * 2;
+  var ag = getArbeitgeber();
+
+  // ─── HEADER BAR ──────────────────────────────────────────────────────────
+  y = 0;
+  setFill('#1D9E75');
+  doc.rect(0, 0, PW, 14, 'F');
 
   // Left: company name + address
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  setTextC(C_WHITE);
-  doc.text('SOZIALHUMMEL gGmbH', ML, 7.5);
+  setTextColor('#FFFFFF');
+  doc.text('SOZIALHUMMEL gGmbH', ML, 9);
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
-  doc.text(`${ag.strasse}  ·  ${ag.plz} ${ag.ort}`, ML, 12);
+  var agAddr = ag.strasse + ', ' + ag.plz + ' ' + ag.ort;
+  if (ag.email) agAddr += ' · ' + ag.email;
+  if (ag.tel) agAddr += ' · ' + ag.tel;
+  doc.text(agAddr, ML, 13);
 
-  // Right: title + antrag-nr
+  // Right: title
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
-  doc.text('REISEKOSTENABRECHNUNG', PAGE_W - MR, 7.5, { align: 'right' });
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.text(`Antrag-Nr.: ${data.id}`, PAGE_W - MR, 12, { align: 'right' });
+  doc.text('REISEKOSTENABRECHNUNG', PW - MR, 9, { align: 'right' });
 
-  y = HEADER_H + 5;
+  y = 18;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 2. META LINE
-  // ─────────────────────────────────────────────────────────────────────────
-  setFill(C_GRAY_50);
-  setDraw(C_GRAY_200);
-  doc.roundedRect(ML, y, CONTENT_W, 8, 2, 2, 'FD');
-  setTextC(C_GRAY_700);
-  doc.setFontSize(7.5);
+  // ─── META LINE ───────────────────────────────────────────────────────────
+  setFill('#F1F0EC');
+  setStroke('#E2E0DA');
+  doc.setLineWidth(0.3);
+  doc.roundedRect(ML, y, CW, 8, 2, 2, 'FD');
+
   doc.setFont('helvetica', 'normal');
-  const metaText = `Antrag-ID: ${data.id}   |   Eingereicht: ${today()}   |   Abrechnungsmonat: ${data.zeitraum || '–'}`;
-  doc.text(metaText, ML + 4, y + 5.2);
+  doc.setFontSize(8);
+  setTextColor('#6b6a65');
+
+  var metaText = 'Antrag-Nr: ' + (data.id || '–') +
+    '   |   Eingereicht: ' + today() +
+    '   |   Abrechnungsmonat: ' + (data.zeitraum || '–');
+  doc.text(metaText, ML + 3, y + 5.2);
+
   y += 12;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 3. BLOCK 1 – Mitarbeiterdaten
-  // ─────────────────────────────────────────────────────────────────────────
-  checkPageBreak(50);
+  // ─── BLOCK 1: Mitarbeiterdaten ────────────────────────────────────────────
+  checkY(52);
 
-  setFill(C_GRAY_50);
-  setDraw(C_GRAY_200);
-  const b1y = y;
-  // We'll draw the box after we know the height
-  y = sectionHeader('Mitarbeiter/In', y + 4);
+  // Gray bg box
+  setFill('#F8F8F6');
+  setStroke('#E2E0DA');
+  doc.setLineWidth(0.3);
+  doc.roundedRect(ML, y, CW, 48, 2, 2, 'FD');
 
-  const p = data.profil || {};
-  const fullName = `${p.vorname || ''} ${p.nachname || ''}`.trim();
-  const wohnort  = [p.strasse, [p.plz, p.ort].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  // Section label
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  setTextColor('#6b6a65');
+  doc.text('MITARBEITERDATEN', ML + 3, y + 5);
 
-  let arbeitsortLabel = '';
-  let arbeitsortVal   = '';
-  let bereichLabel    = '';
-  let bereichVal      = '';
+  // Divider
+  setStroke('#E2E0DA');
+  doc.setLineWidth(0.2);
+  doc.line(ML + 3, y + 7, ML + CW - 3, y + 7);
 
-  if (p.rolle === 'assistenz') {
-    arbeitsortLabel = 'Team / Arbeitsort';
-    arbeitsortVal   = `${p.teamName || ''}${p.teamAdresse ? '  ·  ' + p.teamAdresse : ''}`;
-    bereichLabel    = 'Funktion';
-    bereichVal      = 'Assistenz';
-  } else if (p.rolle === 'tk') {
-    arbeitsortLabel = 'Arbeitsort (TK)';
-    arbeitsortVal   = p.arbeitsortTk || '–';
-    bereichLabel    = 'Bereich / Region';
-    bereichVal      = p.bereich || '–';
-  } else {
-    arbeitsortLabel = 'Funktion';
-    arbeitsortVal   = p.rolleText || '–';
-    bereichLabel    = 'Bereich';
-    bereichVal      = '–';
+  // Layout: two columns
+  var col1x = ML + 3;
+  var col2x = ML + CW / 2 + 2;
+  var rowH = 7.5;
+  var dataY = y + 11;
+
+  function labelVal(lbl, val, x, ry) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    setTextColor('#9a9890');
+    doc.text(lbl, x, ry);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    setTextColor('#1a1a18');
+    doc.text(String(val || '–'), x, ry + 4);
   }
 
-  const rows = [
-    ['Name', fullName || '–',           'Funktion/Rolle', p.rolleText || p.rolle || '–'],
-    [bereichLabel, bereichVal,           arbeitsortLabel, arbeitsortVal],
-    ['Wohnort', wohnort || '–',          'IBAN (Erstattung)', p.iban || '–'],
-  ];
+  var rolleLbl = (function() {
+    var map = { assistenz: 'Assistenz', tk: 'Teamkoordination', andere: m.rolleText || 'Andere' };
+    return map[m.rolle] || m.rolle || '–';
+  })();
 
-  doc.setFontSize(8);
-  const colW = CONTENT_W / 2;
-  rows.forEach(row => {
-    // Label
-    doc.setFont('helvetica', 'bold');
-    setTextC(C_GRAY_500);
-    doc.setFontSize(6.5);
-    doc.text(String(row[0]).toUpperCase(), ML + 3, y + 2);
-    doc.text(String(row[2]).toUpperCase(), ML + 3 + colW, y + 2);
-    // Value
+  labelVal('Name', (m.vorname || '') + ' ' + (m.nachname || ''), col1x, dataY);
+  labelVal('Funktion / Rolle', rolleLbl, col2x, dataY);
+
+  dataY += rowH;
+  var heimFull = (m.heimStrasse || '') + ', ' + ((m.heimPlz || '') + ' ' + (m.heimOrt || '')).trim();
+  labelVal('Wohnort', heimFull || '–', col1x, dataY);
+  labelVal('IBAN', m.iban || '–', col2x, dataY);
+
+  dataY += rowH;
+  var arbeitsortFull = [m.arbeitsortName, m.arbeitsortAdresse].filter(Boolean).join(' · ') || '–';
+  labelVal('Arbeitsort', arbeitsortFull, col1x, dataY);
+  var pendelText = pendelEinfach > 0
+    ? pendelEinfach + ' km einfach  |  Abzug pro Fahrt: ' + pendelHR + ' km / ' + fmtMoney(pendelHR * 0.30)
+    : 'Nicht berechnet';
+  labelVal('Pendelstrecke', pendelText, col2x, dataY);
+
+  dataY += rowH;
+  // Berechnet am
+  if (pendelEinfach > 0 && m.pendelBerechnetAm) {
     doc.setFont('helvetica', 'normal');
-    setTextC(C_GRAY_800);
-    doc.setFontSize(8.5);
-    doc.text(String(row[1]), ML + 3, y + 7, { maxWidth: colW - 6 });
-    doc.text(String(row[3]), ML + 3 + colW, y + 7, { maxWidth: colW - 6 });
-    y += 12;
-  });
+    doc.setFontSize(7);
+    setTextColor('#9a9890');
+    doc.text('Pendelstrecke berechnet am: ' + m.pendelBerechnetAm, col1x, dataY + 3);
+  }
 
-  // Draw box around block 1
-  setFill(C_GRAY_50);
-  setDraw(C_GRAY_200);
-  doc.roundedRect(ML, b1y, CONTENT_W, y - b1y + 2, 3, 3, 'FD');
-  // Redraw content on top (box was drawn after but PDF layers it behind)
-  // Actually in jsPDF, later draws are on top – so we need to draw box first.
-  // We'll use a different approach: draw background, then content.
+  y += 52;
 
-  y += 6;
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // 4. BLOCK 2 – Fahrtenübersicht
-  // ─────────────────────────────────────────────────────────────────────────
-  checkPageBreak(30);
-
-  y = sectionHeader('Dienstliche Fahrten', y);
-  y += 3;
-
-  // Column widths (total = CONTENT_W = 174)
-  // # 8 | Datum 20 | Art 26 | Beschreibung 40 | Gesamt km 18 | -Pendel 18 | Erstatt 18 | Betrag 26
-  const COL = {
-    idx:     { x: ML,                        w: 8  },
-    datum:   { x: ML + 8,                    w: 20 },
-    art:     { x: ML + 8 + 20,               w: 26 },
-    desc:    { x: ML + 8 + 20 + 26,          w: 40 },
-    gesamt:  { x: ML + 8 + 20 + 26 + 40,     w: 18 },
-    pendel:  { x: ML + 8 + 20 + 26 + 40 + 18, w: 18 },
-    erstatt: { x: ML + 8 + 20 + 26 + 40 + 36, w: 18 },
-    betrag:  { x: ML + 8 + 20 + 26 + 40 + 54, w: 26 }
-  };
+  // ─── BLOCK 2: Fahrten Table ───────────────────────────────────────────────
+  y += 4;
+  checkY(24);
 
   // Table header
-  const TH = 7;
-  setFill(C_GREEN);
-  setDraw(C_GREEN);
-  doc.rect(ML, y, CONTENT_W, TH, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(6.5);
-  setTextC(C_WHITE);
-  const headers = ['#', 'Datum', 'Art', 'Beschreibung / Ziel', 'Ges. km', '−Pendel', 'Erst. km', 'Betrag'];
-  const colKeys = ['idx','datum','art','desc','gesamt','pendel','erstatt','betrag'];
-  colKeys.forEach((k, i) => {
-    const c = COL[k];
-    const align = i >= 4 ? 'right' : 'left';
-    const tx = align === 'right' ? c.x + c.w - 2 : c.x + 2;
-    doc.text(headers[i], tx, y + 4.8, { align });
+  var colWidths = [8, 20, 26, 38, 18, 18, 18, 28];
+  // # | Datum | Art | Beschreibung/Ziel | Gesamt km H&R | -Pendel km | Erstatt. km | Betrag
+
+  setFill('#1D9E75');
+  doc.rect(ML, y, CW, 7, 'F');
+
+  var headers = ['#', 'Datum', 'Art', 'Beschreibung / Ziel', 'Ges. km\n(H&R)', '−Pendel\nkm', 'Erstatt.\nkm', 'Betrag'];
+  var cx = ML;
+  headers.forEach(function(h, i) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    setTextColor('#FFFFFF');
+    var align = (i >= 4) ? 'right' : 'left';
+    var tx = (align === 'right') ? (cx + colWidths[i] - 1) : (cx + 1);
+    doc.text(h, tx, y + 4.5, { align: align, lineHeightFactor: 1.1 });
+    cx += colWidths[i];
   });
-  y += TH;
 
-  // Data rows
-  const ROW_H = 7.5;
-  let totalGesamtKm = 0;
-  let totalErstattKm = 0;
-  let totalBetrag   = 0;
-  const pendelKm    = parseFloat(data.pendelKm) || 0;
-  const arbeitstage = parseInt(data.arbeitstage) || 0;
+  y += 7;
 
-  (data.fahrten || []).forEach((fahrt, idx) => {
-    checkPageBreak(ROW_H + 4);
+  // Table rows
+  var totalGesKm = 0;
+  var totalPendelKm = 0;
+  var totalErstattKm = 0;
+  var totalBetrag = 0;
 
-    const gesamtKm  = (parseFloat(fahrt.km) || 0) * 2;
-    const pendelRow = pendelKm * 2;
-    const erstattKm = Math.max(0, gesamtKm - pendelRow);
-    const betrag    = erstattKm * RATE_PER_KM;
+  fahrten.forEach(function(f, idx) {
+    var km = +(f.kmEinfach || 0);
+    var kmHR = km * 2;
+    var usedPendel = Math.min(pendelHR, kmHR);
+    var erstattKm = Math.max(0, kmHR - pendelHR);
+    var betrag = erstattKm * 0.30;
 
-    totalGesamtKm  += gesamtKm;
+    totalGesKm += kmHR;
+    totalPendelKm += usedPendel;
     totalErstattKm += erstattKm;
-    totalBetrag    += betrag;
+    totalBetrag += betrag;
+
+    checkY(9);
 
     // Zebra
     if (idx % 2 === 1) {
-      setFill(C_GRAY_50);
-      setDraw(C_GRAY_50);
-      doc.rect(ML, y, CONTENT_W, ROW_H, 'F');
+      setFill('#F8F8F6');
+      doc.rect(ML, y, CW, 8, 'F');
     }
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    setTextC(C_GRAY_800);
+    var rowY = y + 5;
+    cx = ML;
 
     // #
-    doc.text(String(idx + 1), COL.idx.x + 2, y + 5);
-    // Datum
-    doc.text(fmtDate(fahrt.datum), COL.datum.x + 2, y + 5);
-    // Art – colored badge
-    const artStr = fahrt.art || 'Sonstiges';
-    const aC = artColor(artStr);
-    setFill(aC);
-    setDraw(aC);
-    doc.roundedRect(COL.art.x + 1, y + 1.5, COL.art.w - 2, 4.5, 1.2, 1.2, 'F');
-    setTextC(C_WHITE);
-    doc.setFontSize(6);
-    doc.text(artStr.substring(0, 14), COL.art.x + 2, y + 4.8);
-    // Desc
-    setTextC(C_GRAY_800);
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
-    const descStr = fahrt.zweck || `${fahrt.von || ''} → ${fahrt.nach || ''}`;
-    doc.text(descStr.substring(0, 28), COL.desc.x + 2, y + 5);
+    setTextColor('#6b6a65');
+    doc.text(String(idx + 1), cx + 1, rowY);
+    cx += colWidths[0];
+
+    // Datum
+    setTextColor('#1a1a18');
+    doc.text(fmtDateDE(f.datum), cx + 1, rowY);
+    cx += colWidths[1];
+
+    // Art badge
+    var artLbl = artLabel(f.art);
+    var artCol = artColor(f.art);
+    var badgeW = doc.getTextWidth(artLbl) + 4;
+    setFill(artCol);
+    doc.roundedRect(cx + 0.5, y + 1.5, badgeW, 5, 1.2, 1.2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    setTextColor('#FFFFFF');
+    doc.text(artLbl, cx + 0.5 + badgeW / 2, rowY, { align: 'center' });
+    cx += colWidths[2];
+
+    // Beschreibung / Von → Nach
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    setTextColor('#1a1a18');
+    var beschr = '';
+    if (f.von && f.nach) beschr = f.von + ' → ' + f.nach;
+    else if (f.zweck) beschr = f.zweck;
+    else beschr = '–';
+    var lines = doc.splitTextToSize(beschr, colWidths[3] - 2);
+    doc.text(lines[0], cx + 1, rowY);
+    if (lines[1]) {
+      doc.setFontSize(6.5);
+      setTextColor('#6b6a65');
+      doc.text(lines[1], cx + 1, rowY + 3.5);
+    }
+    if (f.zweck && f.von) {
+      doc.setFontSize(6.5);
+      setTextColor('#9a9890');
+      var zweckLine = doc.splitTextToSize(f.zweck, colWidths[3] - 2);
+      doc.text(zweckLine[0], cx + 1, rowY + 3.5);
+    }
+    cx += colWidths[3];
+
     // Numeric columns (right-aligned)
-    doc.text(fmtKm(gesamtKm),  COL.gesamt.x  + COL.gesamt.w  - 2, y + 5, { align: 'right' });
-    doc.text(fmtKm(pendelRow), COL.pendel.x  + COL.pendel.w  - 2, y + 5, { align: 'right' });
-    doc.text(fmtKm(erstattKm), COL.erstatt.x + COL.erstatt.w - 2, y + 5, { align: 'right' });
-    doc.text(fmt(betrag),      COL.betrag.x  + COL.betrag.w  - 2, y + 5, { align: 'right' });
-
-    // Bottom border
-    setDraw(C_GRAY_100);
-    doc.setLineWidth(0.2);
-    doc.line(ML, y + ROW_H, ML + CONTENT_W, y + ROW_H);
-
-    y += ROW_H;
-  });
-
-  // Footer row
-  checkPageBreak(9);
-  const totalPendelGesamt = pendelKm * 2 * arbeitstage;
-  const actualErstattKm   = Math.max(0, totalGesamtKm - totalPendelGesamt);
-  const actualBetrag      = actualErstattKm * RATE_PER_KM;
-
-  setFill(C_GREEN_LIGHT);
-  setDraw(C_GREEN_LIGHT);
-  doc.rect(ML, y, CONTENT_W, 8, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  setTextC(C_GREEN_DARK);
-  doc.text('Summe', COL.idx.x + 2, y + 5.3);
-  doc.text(fmtKm(totalGesamtKm),       COL.gesamt.x  + COL.gesamt.w  - 2, y + 5.3, { align: 'right' });
-  doc.text(fmtKm(totalPendelGesamt),   COL.pendel.x  + COL.pendel.w  - 2, y + 5.3, { align: 'right' });
-  doc.text(fmtKm(actualErstattKm),     COL.erstatt.x + COL.erstatt.w - 2, y + 5.3, { align: 'right' });
-  doc.text(fmt(actualBetrag),          COL.betrag.x  + COL.betrag.w  - 2, y + 5.3, { align: 'right' });
-  y += 11;
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // 5. BLOCK 3 – Spesen (only if any > 0)
-  // ─────────────────────────────────────────────────────────────────────────
-  const sp = data.spesen || {};
-  const spesenRows = [
-    ['Übernachtungskosten', parseFloat(sp.uebernachtung) || 0],
-    ['ÖPNV / Bahn / Taxi',  parseFloat(sp.oepnv)        || 0],
-    ['Parkgebühren / Maut', parseFloat(sp.parken)        || 0],
-    ['Sonstige Auslagen',   parseFloat(sp.sonstige)      || 0],
-  ].filter(r => r[1] > 0);
-
-  const totalSpesen = spesenRows.reduce((a, r) => a + r[1], 0);
-
-  if (spesenRows.length > 0) {
-    checkPageBreak(20 + spesenRows.length * 7);
-
-    y = sectionHeader('Spesen & Auslagen', y);
-    y += 3;
-
-    const SP_COL_LABEL = ML;
-    const SP_COL_VAL   = ML + CONTENT_W - 40;
-    const SP_W_LABEL   = CONTENT_W - 40;
-    const SP_W_VAL     = 40;
-
-    spesenRows.forEach((row, i) => {
-      if (i % 2 === 1) {
-        setFill(C_GRAY_50);
-        setDraw(C_GRAY_50);
-        doc.rect(ML, y, CONTENT_W, 6.5, 'F');
-      }
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      setTextC(C_GRAY_800);
-      doc.text(row[0], SP_COL_LABEL + 3, y + 4.5);
-      doc.text(fmt(row[1]), SP_COL_VAL + SP_W_VAL - 3, y + 4.5, { align: 'right' });
-      y += 6.5;
+    var nums = [kmHR + ' km', usedPendel > 0 ? ('−' + usedPendel + ' km') : '–', erstattKm + ' km', fmtMoney(betrag)];
+    doc.setFont('helvetica', 'normal');
+    nums.forEach(function(txt, ni) {
+      doc.setFontSize(7.5);
+      setTextColor(ni === 1 ? '#A32D2D' : (ni === 3 ? '#185FA5' : '#1a1a18'));
+      doc.text(txt, cx + colWidths[4 + ni] - 1, rowY, { align: 'right' });
+      cx += colWidths[4 + ni];
     });
 
-    // Spesen footer
-    setFill(C_GRAY_100);
-    setDraw(C_GRAY_200);
-    doc.rect(ML, y, CONTENT_W, 7, 'FD');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    setTextC(C_GRAY_700);
-    doc.text('Summe Spesen', SP_COL_LABEL + 3, y + 5);
-    doc.text(fmt(totalSpesen), SP_COL_VAL + SP_W_VAL - 3, y + 5, { align: 'right' });
-    y += 10;
+    // Row bottom border
+    setStroke('#E2E0DA');
+    doc.setLineWidth(0.15);
+    doc.line(ML, y + 8, ML + CW, y + 8);
 
-    if (sp.sonstigeText) {
+    y += 8;
+  });
+
+  // Footer row (totals)
+  checkY(8);
+  setFill('#E1F5EE');
+  doc.rect(ML, y, CW, 8, 'F');
+
+  cx = ML;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  setTextColor('#085041');
+  doc.text('Gesamt', cx + 1, y + 5);
+  cx += colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3];
+
+  var totals = [totalGesKm + ' km', totalPendelKm > 0 ? ('−' + totalPendelKm + ' km') : '–', totalErstattKm + ' km', fmtMoney(totalBetrag)];
+  totals.forEach(function(txt, ni) {
+    setTextColor(ni === 1 ? '#A32D2D' : (ni === 3 ? '#185FA5' : '#085041'));
+    doc.text(txt, cx + colWidths[4 + ni] - 1, y + 5, { align: 'right' });
+    cx += colWidths[4 + ni];
+  });
+
+  y += 8;
+
+  // Pendel amber note
+  if (pendelEinfach > 0) {
+    y += 4;
+    checkY(14);
+    setFill('#FAEEDA');
+    setStroke('#EF9F27');
+    doc.setLineWidth(0.3);
+    doc.roundedRect(ML, y, CW, 12, 2, 2, 'FD');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    setTextColor('#633806');
+    var pendelNote = 'Pendelabzug pro Fahrt: ' + pendelHR + ' km (Wohnort → Arbeitsort hin & zurück). ' +
+      'Die abgezogenen km können als Entfernungspauschale (Anlage N) in der Steuererklärung geltend gemacht werden.';
+    var noteLines = doc.splitTextToSize(pendelNote, CW - 6);
+    doc.text(noteLines, ML + 3, y + 5);
+    y += 12;
+  }
+
+  // ─── BLOCK 3: Spesen ─────────────────────────────────────────────────────
+  var s = data.spesen || {};
+  var spesenSum = data.spesenSum || 0;
+
+  if (spesenSum > 0) {
+    y += 6;
+    checkY(40);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    setTextColor('#1a1a18');
+    doc.text('Spesen & weitere Auslagen', ML, y);
+    y += 5;
+
+    // Thin divider
+    setStroke('#E2E0DA');
+    doc.setLineWidth(0.3);
+    doc.line(ML, y, ML + CW, y);
+    y += 3;
+
+    var spesenItems = [
+      { l: 'Übernachtungskosten', v: s.uebernacht },
+      { l: 'ÖPNV / Bahn / Taxi', v: s.opnv },
+      { l: 'Parkgebühren / Maut', v: s.parken },
+      { l: 'Sonstige Auslagen', v: s.sonstige }
+    ].filter(function(si) { return si.v > 0; });
+
+    spesenItems.forEach(function(si) {
+      checkY(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      setTextColor('#1a1a18');
+      doc.text(si.l, ML + 2, y + 4);
+      setTextColor('#185FA5');
+      doc.text(fmtMoney(si.v), ML + CW - 1, y + 4, { align: 'right' });
+      setStroke('#E2E0DA');
+      doc.setLineWidth(0.15);
+      doc.line(ML, y + 6, ML + CW, y + 6);
+      y += 6;
+    });
+
+    if (s.sonstigeText) {
+      checkY(8);
       doc.setFont('helvetica', 'italic');
       doc.setFontSize(7.5);
-      setTextC(C_GRAY_500);
-      doc.text(`Hinweis: ${sp.sonstigeText}`, ML + 3, y);
-      y += 6;
+      setTextColor('#6b6a65');
+      var stLines = doc.splitTextToSize('Beschreibung: ' + s.sonstigeText, CW - 4);
+      doc.text(stLines, ML + 2, y + 4);
+      y += Math.max(7, stLines.length * 4);
     }
-  }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 6. BLOCK 4 – Gesamtabrechnung
-  // ─────────────────────────────────────────────────────────────────────────
-  checkPageBreak(50);
-
-  y = sectionHeader('Gesamtabrechnung', y);
-  y += 4;
-
-  const fahrtkosten   = actualBetrag;
-  const auszahlung    = fahrtkosten + totalSpesen;
-
-  // Right-aligned summary box
-  const BOX_W = 90;
-  const BOX_X = ML + CONTENT_W - BOX_W;
-  const BOX_LINES = totalSpesen > 0 ? 3 : 2;
-  const BOX_H = BOX_LINES * 10 + 14;
-
-  setFill(C_WHITE);
-  setDraw(C_BLUE);
-  doc.setLineWidth(0.6);
-  doc.roundedRect(BOX_X, y, BOX_W, BOX_H, 3, 3, 'FD');
-  doc.setLineWidth(0.2);
-
-  let by = y + 8;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  setTextC(C_GRAY_700);
-  doc.text('Fahrtkosten', BOX_X + 5, by);
-  doc.text(fmt(fahrtkosten), BOX_X + BOX_W - 5, by, { align: 'right' });
-  by += 9;
-
-  if (totalSpesen > 0) {
-    doc.text('+ Spesen', BOX_X + 5, by);
-    doc.text(fmt(totalSpesen), BOX_X + BOX_W - 5, by, { align: 'right' });
-    by += 9;
-    // Separator
-    setDraw(C_GRAY_200);
-    doc.line(BOX_X + 3, by - 3, BOX_X + BOX_W - 3, by - 3);
-  }
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  setTextC(C_BLUE);
-  doc.text('= Auszahlungsbetrag', BOX_X + 5, by + 2);
-  doc.text(fmt(auszahlung), BOX_X + BOX_W - 5, by + 2, { align: 'right' });
-  by += 8;
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  setTextC(C_GRAY_500);
-  doc.text(`IBAN: ${p.iban || '–'}`, BOX_X + 5, by + 2);
-
-  y = Math.max(y + BOX_H + 6, by + 8);
-
-  // Amber tax hint box
-  checkPageBreak(20);
-  setFill(C_AMBER_BG);
-  setDraw(C_AMBER_BORDER);
-  doc.setLineWidth(0.4);
-  doc.roundedRect(ML, y, CONTENT_W, 14, 2, 2, 'FD');
-  doc.setLineWidth(0.2);
-  setTextC(C_AMBER_TEXT);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.text('Für Ihre Steuererklärung (Anlage N):', ML + 4, y + 5);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  const taxText = `Gesamte Dienstfahrten: ${fmtKm(totalGesamtKm)}  ·  Erstattete Fahrtkosten (steuerfrei): ${fmt(fahrtkosten)}  ·  Pendelabzug (${fmtKm(pendelKm)} × 2 × ${arbeitstage} AT): ${fmtKm(totalPendelGesamt)}`;
-  doc.text(taxText, ML + 4, y + 10, { maxWidth: CONTENT_W - 8 });
-  y += 18;
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // 7. BLOCK 5 – Belege
-  // ─────────────────────────────────────────────────────────────────────────
-  const belegNamen = data.belegNamen || [];
-  if (belegNamen.length > 0) {
-    checkPageBreak(16 + belegNamen.length * 6);
-
-    y = sectionHeader('Beigefügte Belege', y);
-    y += 3;
-
-    belegNamen.forEach((name, i) => {
-      if (i % 2 === 1) {
-        setFill(C_GRAY_50);
-        setDraw(C_GRAY_50);
-        doc.rect(ML, y, CONTENT_W, 6, 'F');
-      }
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      setTextC(C_GRAY_700);
-      doc.text(`${i + 1}.  ${name}`, ML + 4, y + 4.2);
-      y += 6;
-    });
-    y += 5;
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // 8. BLOCK 6 – Anmerkungen
-  // ─────────────────────────────────────────────────────────────────────────
-  if (data.anmerkungen && data.anmerkungen.trim()) {
-    checkPageBreak(20);
-    y = sectionHeader('Anmerkungen', y);
-    y += 3;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    setTextC(C_GRAY_800);
-    const lines = doc.splitTextToSize(data.anmerkungen.trim(), CONTENT_W - 6);
-    lines.forEach(line => {
-      checkPageBreak(6);
-      doc.text(line, ML + 3, y + 4);
-      y += 6;
-    });
-    y += 4;
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // 9. BLOCK 7 – Unterschriften
-  // ─────────────────────────────────────────────────────────────────────────
-  checkPageBreak(48);
-
-  y = sectionHeader('Unterschriften & Freigabe', y);
-  y += 6;
-
-  const sigColW = CONTENT_W / 3;
-  const sigCols = [
-    { title: 'Mitarbeiter/in',    sub: p.vorname + ' ' + p.nachname,       hint: '' },
-    { title: 'Vorgesetzte/r',     sub: 'Genehmigung',                      hint: '' },
-    { title: 'Buchhaltung',       sub: 'Geprüft & angewiesen',             hint: '' },
-  ];
-
-  sigCols.forEach((col, i) => {
-    const cx = ML + i * sigColW;
-
-    // Box
-    setFill(C_GRAY_50);
-    setDraw(C_GRAY_200);
-    doc.roundedRect(cx + 1, y, sigColW - 2, 32, 2, 2, 'FD');
-
-    // Title
+    // Spesen footer
+    checkY(8);
+    setFill('#F1F0EC');
+    doc.rect(ML, y, CW, 7, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
-    setTextC(C_GREEN_DARK);
-    doc.text(col.title.toUpperCase(), cx + 5, y + 6);
+    doc.setFontSize(8.5);
+    setTextColor('#1a1a18');
+    doc.text('Summe Spesen', ML + 2, y + 5);
+    setTextColor('#185FA5');
+    doc.text(fmtMoney(spesenSum), ML + CW - 1, y + 5, { align: 'right' });
+    y += 7;
+  }
 
-    // Date line
+  // ─── BLOCK 4: Gesamtabrechnung ────────────────────────────────────────────
+  y += 8;
+  checkY(50);
+
+  // Right-aligned bordered box
+  var boxW = 90;
+  var boxX = ML + CW - boxW;
+  var boxLines = [];
+  boxLines.push({ l: 'Erstattungs-km', v: totalErstattKm + ' km × 0,30 €', vv: fmtMoney(data.fahrtBetrag || 0), color: null });
+  if (spesenSum > 0) boxLines.push({ l: 'Spesen', v: '', vv: fmtMoney(spesenSum), color: null });
+  var boxH = 8 + boxLines.length * 7 + 12;
+
+  setFill('#E6F1FB');
+  setStroke('#185FA5');
+  doc.setLineWidth(0.4);
+  doc.roundedRect(boxX, y, boxW, boxH, 2, 2, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  setTextColor('#0C447C');
+  doc.text('GESAMTABRECHNUNG', boxX + 4, y + 5.5);
+
+  setStroke('#185FA5');
+  doc.setLineWidth(0.2);
+  doc.line(boxX + 2, y + 7.5, boxX + boxW - 2, y + 7.5);
+
+  var bly = y + 13;
+  boxLines.forEach(function(bl) {
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    setTextC(C_GRAY_500);
-    doc.text('Datum:', cx + 5, y + 13);
-    setDraw(C_GRAY_300);
-    doc.line(cx + 20, y + 13.5, cx + sigColW - 6, y + 13.5);
-
-    // Signature line
-    doc.text('Unterschrift:', cx + 5, y + 24);
-    doc.line(cx + 26, y + 24.5, cx + sigColW - 6, y + 24.5);
-
-    // Sub label
-    doc.setFontSize(6.5);
-    setTextC(C_GRAY_500);
-    doc.text(col.sub, cx + 5, y + 30);
+    doc.setFontSize(8);
+    setTextColor('#1a1a18');
+    doc.text(bl.l, boxX + 4, bly);
+    if (bl.v) {
+      setTextColor('#6b6a65');
+      doc.setFontSize(7);
+      doc.text(bl.v, boxX + 4, bly + 3.5);
+    }
+    setTextColor('#185FA5');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.text(bl.vv, boxX + boxW - 3, bly, { align: 'right' });
+    bly += 7;
   });
 
-  y += 38;
+  // Divider
+  setStroke('#185FA5');
+  doc.setLineWidth(0.3);
+  doc.line(boxX + 2, bly - 1, boxX + boxW - 2, bly - 1);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 10. Fix all footers with correct total page count
-  // ─────────────────────────────────────────────────────────────────────────
-  const total = doc.getNumberOfPages();
-  fixAllFooters(total);
+  // Total line
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  setTextColor('#185FA5');
+  doc.text('Auszahlungsbetrag', boxX + 4, bly + 6);
+  doc.text(fmtMoney(data.gesamtBetrag || 0), boxX + boxW - 3, bly + 6, { align: 'right' });
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 11. Save
-  // ─────────────────────────────────────────────────────────────────────────
-  const lastName  = (p.nachname || 'Unbekannt').replace(/\s+/g, '_');
-  const firstName = (p.vorname  || 'Unbekannt').replace(/\s+/g, '_');
-  const filename  = `Reisekosten_${lastName}_${firstName}_${data.id}.pdf`;
-  doc.save(filename);
+  // IBAN
+  if (m.iban) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    setTextColor('#6b6a65');
+    doc.text('IBAN: ' + m.iban, boxX + 4, bly + 11);
+  }
+
+  y += boxH + 8;
+
+  // Tax note (amber box)
+  checkY(18);
+  var taxNote = 'Für Ihre Steuererklärung (Anlage N): Pendelstrecke ' +
+    (pendelHR * fahrten.length) + ' km gesamt → Entfernungspauschale. ' +
+    'Verpflegungspauschalen: ab 8h 14,00 €, ab 24h 28,00 €.';
+  setFill('#FAEEDA');
+  setStroke('#EF9F27');
+  doc.setLineWidth(0.3);
+  var taxLines = doc.splitTextToSize(taxNote, CW - 6);
+  var taxH = taxLines.length * 4.5 + 6;
+  doc.roundedRect(ML, y, CW, taxH, 2, 2, 'FD');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  setTextColor('#633806');
+  doc.text(taxLines, ML + 3, y + 5);
+  y += taxH;
+
+  // ─── BLOCK 5: Belege ─────────────────────────────────────────────────────
+  if (files && files.length > 0) {
+    y += 6;
+    checkY(10 + files.length * 5);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    setTextColor('#1a1a18');
+    doc.text('Angehängte Belege (' + files.length + '):', ML, y);
+    y += 5;
+    files.forEach(function(f) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      setTextColor('#6b6a65');
+      doc.text('📄 ' + f.name, ML + 3, y);
+      y += 5;
+    });
+  }
+
+  // ─── Anmerkungen ─────────────────────────────────────────────────────────
+  if (data.anmerkungen) {
+    y += 6;
+    checkY(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    setTextColor('#1a1a18');
+    doc.text('Anmerkungen', ML, y);
+    y += 4;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    setTextColor('#6b6a65');
+    var anmLines = doc.splitTextToSize(data.anmerkungen, CW);
+    doc.text(anmLines, ML, y);
+    y += anmLines.length * 4.5;
+  }
+
+  // ─── BLOCK 6: Unterschriften ──────────────────────────────────────────────
+  var sigY = Math.max(y + 16, 240);
+  checkY(35);
+
+  var sig3 = [
+    { line: 'Datum, Unterschrift Mitarbeiter/in', sub: (m.vorname || '') + ' ' + (m.nachname || '') },
+    { line: 'Datum, Unterschrift Vorgesetzte/r', sub: 'Genehmigung' },
+    { line: 'Stempel Buchhaltung', sub: 'Geprüft & angewiesen' }
+  ];
+
+  var sigW = CW / 3 - 4;
+  var sigX = ML;
+
+  sig3.forEach(function(sig) {
+    // Underline
+    setStroke('#1a1a18');
+    doc.setLineWidth(0.4);
+    doc.line(sigX, sigY + 12, sigX + sigW, sigY + 12);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    setTextColor('#1a1a18');
+    var llines = doc.splitTextToSize(sig.line, sigW);
+    doc.text(llines, sigX, sigY + 16);
+
+    doc.setFontSize(7);
+    setTextColor('#9a9890');
+    doc.text(sig.sub, sigX, sigY + 20);
+
+    sigX += CW / 3;
+  });
+
+  // ─── Draw footer on last page ─────────────────────────────────────────────
+  drawFooter();
+
+  // ─── Save ─────────────────────────────────────────────────────────────────
+  var fn = 'Reisekosten_' + (m.nachname || 'Unbekannt') + '_' + (m.vorname || '') + '_' + (data.id || 'draft') + '.pdf';
+  doc.save(fn);
 }
