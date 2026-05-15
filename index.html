@@ -895,26 +895,35 @@ function aktualisierePendelFooter(id, r) {
   if (!el) return;
   var t = trips[id];
   if (!t) return;
-  var p = getProfil();
 
-  if (r.keinAbzug) {
+  if (r.keineKm) {
+    el.className = 'fk-pendel';
+    el.innerHTML = '<span style="color:var(--text-hint)">✏️ Bitte KM eintragen</span>';
+    return;
+  }
+
+  if (t.startTyp === 'arbeitsort') {
     el.className = 'fk-pendel p-ao';
     el.innerHTML =
       '<span>✓ Start vom Arbeitsort — kein Pendelabzug, volle Strecke erstattet</span>' +
       '<span class="p-right" style="color:var(--green-dark)">+ ' + fmt(r.gesamtKm * RATE) + '</span>';
-  } else if (!p.pendelKmEinfach) {
+    return;
+  }
+
+  if (!r.pendelEinfach) {
     el.className = 'fk-pendel p-warn';
     el.innerHTML = '<span>⚠️ Bitte zuerst Pendelstrecke im Profil berechnen.</span>';
-  } else {
-    var hinweis = t.modus === 'mehrtaegig' ? ' (nur einmal pro Reise)' : '';
-    el.className = 'fk-pendel p-warn';
-    el.innerHTML =
-      '<span>− Pendelabzug ' + fmtKm(r.pendelAbzug) + ' × 0,30 €' + hinweis +
-      ' — steuerlich absetzbar (Anlage N)</span>' +
-      '<span class="p-right" style="color:var(--red)">' +
-        fmtKm(r.pendelAbzug) + ' · −' + fmt(r.pendelAbzug * RATE) +
-      '</span>';
+    return;
   }
+
+  var hinweis = t.modus === 'mehrtaegig' ? ' (nur einmal pro Reise)' : '';
+  el.className = 'fk-pendel p-warn';
+  el.innerHTML =
+    '<span>− Pendelabzug ' + fmtKm(r.pendelAbzug) + ' × 0,30 €' + hinweis +
+    ' — steuerlich absetzbar (Anlage N)</span>' +
+    '<span class="p-right" style="color:var(--red)">' +
+      fmtKm(r.pendelAbzug) + ' · −' + fmt(r.pendelAbzug * RATE) +
+    '</span>';
 }
 
 // ─── Start-Typ ────────────────────────────────────────────────────────────────
@@ -1219,14 +1228,17 @@ function updateSummary() {
   ss('sum-erst-km',      fmtKm(erstattungGesamt));
   ss('sum-gesamt-betrag', fmt(gesamt));
 
+  var hatKm = Object.keys(trips).some(function (id) {
+    return (parseInt((document.getElementById('km-hin-' + id) || {}).value) || 0) > 0;
+  });
   var pendelEl    = document.getElementById('sum-pendel-km');
   var pendelBlock = document.getElementById('sum-pendel-block');
   if (pendelEl) {
-    pendelEl.textContent = fmtKm(pendelGesamt);
-    pendelEl.style.color = pendelGesamt > 0 ? '#A32D2D' : 'var(--text-muted)';
+    pendelEl.textContent = fmtKm(hatKm ? pendelGesamt : 0);
+    pendelEl.style.color = (pendelGesamt > 0 && hatKm) ? '#A32D2D' : 'var(--text-muted)';
   }
   if (pendelBlock) {
-    pendelBlock.style.background = pendelGesamt > 0 ? '#FCEBEB' : 'var(--gray-50)';
+    pendelBlock.style.background = (pendelGesamt > 0 && hatKm) ? '#FCEBEB' : 'var(--gray-50)';
   }
 
   var line = document.getElementById('sum-calc-line');

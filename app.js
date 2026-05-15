@@ -150,19 +150,29 @@ function getAktuellePendelKm() {
 }
 
 function berechneFahrtErstattung(modus, kmHin, kmRueck, startTyp) {
-  var pendelKm = getAktuellePendelKm() * 2;
+  var pendelEinfach = getAktuellePendelKm();
+  var pendelKm      = pendelEinfach * 2;
   var gesamtKm = 0;
   if (modus === 'einfach')    gesamtKm = parseInt(kmHin) || 0;
   if (modus === 'hinrueck')   gesamtKm = (parseInt(kmHin) || 0) * 2;
   if (modus === 'mehrtaegig') gesamtKm = (parseInt(kmHin) || 0) + (parseInt(kmRueck) || 0);
-  var pendelAbzug   = startTyp === 'arbeitsort' ? 0 : pendelKm;
-  var erstattungKm  = Math.max(0, gesamtKm - pendelAbzug);
+
+  if (gesamtKm === 0) {
+    return { gesamtKm: 0, pendelAbzug: 0, erstattungKm: 0, betrag: 0,
+             keinAbzug: true, pendelEinfach: pendelEinfach, keineKm: true };
+  }
+
+  var keinAbzug    = startTyp === 'arbeitsort' || pendelEinfach === 0;
+  var pendelAbzug  = keinAbzug ? 0 : pendelKm;
+  var erstattungKm = Math.max(0, gesamtKm - pendelAbzug);
   return {
-    gesamtKm:    gesamtKm,
-    pendelAbzug: pendelAbzug,
+    gesamtKm:     gesamtKm,
+    pendelAbzug:  pendelAbzug,
     erstattungKm: erstattungKm,
-    betrag:      erstattungKm * RATE,
-    keinAbzug:   startTyp === 'arbeitsort'
+    betrag:       erstattungKm * RATE,
+    keinAbzug:    keinAbzug,
+    pendelEinfach: pendelEinfach,
+    keineKm:      false
   };
 }
 
