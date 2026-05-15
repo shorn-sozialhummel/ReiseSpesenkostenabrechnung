@@ -43,7 +43,7 @@ function getProfil() {
     arbeitsortName: '', arbeitsortAdresse: '',
     pendelKmEinfach: 0, pendelBerechnetAm: ''
   });
-  p.pendelKmEinfach = window._tempPendelReset ? 0 : (parseInt(p.pendelKmEinfach) || 0);
+  p.pendelKmEinfach = parseInt(p.pendelKmEinfach) || 0;
   return p;
 }
 
@@ -144,8 +144,8 @@ async function mitMapsButton(btnId, origin, destination, onSuccess) {
 // Pendelabzug immer nur einmal pro Fahrt-Eintrag
 
 function getAktuellePendelKm() {
-  if (window._pendingKm != null && window._pendingKm >= 0) return parseInt(window._pendingKm);
   if (window._tempPendelReset === true) return 0;
+  if (window._pendingKm != null) return parseInt(window._pendingKm);
   return parseInt(getProfil().pendelKmEinfach) || 0;
 }
 

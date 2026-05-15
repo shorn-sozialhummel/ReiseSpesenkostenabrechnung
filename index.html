@@ -240,8 +240,6 @@ function aktualisierePendelAdresszeile() {
 }
 
 function profilSpeichern() {
-  var hadReset = !!window._tempPendelReset;
-  window._tempPendelReset = false;
   var p = getProfil();
   p.vorname   = gV('ma-vorname');
   p.nachname  = gV('ma-nachname');
@@ -253,18 +251,19 @@ function profilSpeichern() {
   p.heimOrt           = gV('heim-ort');
   p.arbeitsortName    = gV('arbeit-name');
   p.arbeitsortAdresse = gV('arbeit-adresse');
-  if (window._pendingKm) {
-    p.pendelKmEinfach   = window._pendingKm;
+  if (window._pendingKm != null) {
+    p.pendelKmEinfach   = parseInt(window._pendingKm);
     p.pendelBerechnetAm = window._pendingDatum || today();
-    window._pendingKm   = null;
-    window._pendingDatum = null;
-  } else if (hadReset) {
+  }
+  // Keine Arbeitsadresse → Pendelstrecke auf 0
+  if (!p.arbeitsortAdresse.trim()) {
     p.pendelKmEinfach   = 0;
     p.pendelBerechnetAm = '';
   }
   saveProfil(p);
-  window._tempPendelReset = false;
   window._pendingKm       = null;
+  window._pendingDatum    = null;
+  window._tempPendelReset = false;
   Object.keys(trips).forEach(function (id) { updateFahrtKarte(parseInt(id)); });
   updateSummary();
   showToast('Profil gespeichert ✓', 'ok');
