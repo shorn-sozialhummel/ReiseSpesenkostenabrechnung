@@ -11,44 +11,43 @@
 </head>
 <body>
 
-<!-- Login overlay -->
-<div id="login-overlay" class="login-wrap">
+<!-- Login -->
+<div id="login-wrap" class="login-wrap">
   <div class="login-card">
     <div class="login-icon">🐝</div>
     <h2>Admin-Bereich</h2>
     <p>Reisekostenabrechnung · Sozialhummel gGmbH</p>
-    <div class="field" style="text-align:left">
+    <div class="field" style="text-align:left;margin-bottom:4px">
       <label class="field-label" for="pw-input">Passwort</label>
       <input type="password" id="pw-input" placeholder="Passwort eingeben"
-             onkeydown="if(event.key==='Enter') doLogin()">
+             onkeydown="if(event.key==='Enter')doLogin()">
     </div>
-    <div class="login-error" id="pw-error"></div>
-    <div style="margin-top:14px">
-      <button class="btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">Anmelden</button>
-    </div>
+    <div id="pw-error" style="font-size:12px;color:var(--red);min-height:18px;margin-bottom:8px"></div>
+    <button class="btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">
+      Anmelden
+    </button>
     <div class="login-hint">Standard-Passwort: <code>sozialhummel</code> — bitte nach erstem Login ändern.</div>
   </div>
 </div>
 
-<!-- Admin UI (hidden until login) -->
+<!-- Admin UI -->
 <div id="admin-ui" style="display:none">
 
-  <!-- Topbar -->
   <div id="topbar-mount"></div>
 
   <main>
 
-    <!-- ═══ SECTION 1: Arbeitgeberdaten ════════════════════════════════════ -->
+    <!-- Section 1: Arbeitgeberdaten -->
     <div class="card">
-      <div class="section-title">🏢 Arbeitgeberdaten</div>
+      <div class="sec-title">🏢 Arbeitgeberdaten</div>
 
-      <div class="grid-2" style="gap:12px">
-        <div class="field col-span-2">
-          <label class="field-label" for="ag-name">Firmenname</label>
+      <div class="grid-2" style="gap:10px">
+        <div class="field col-2">
+          <label class="field-label" for="ag-name">Firmenname *</label>
           <input type="text" id="ag-name" placeholder="Sozialhummel gGmbH">
         </div>
-        <div class="field">
-          <label class="field-label" for="ag-strasse">Straße</label>
+        <div class="field col-2">
+          <label class="field-label" for="ag-strasse">Straße &amp; Hausnummer</label>
           <input type="text" id="ag-strasse" placeholder="Mozartstr. 10">
         </div>
         <div class="field">
@@ -69,15 +68,26 @@
         </div>
       </div>
 
-      <hr class="section-hr">
+      <hr class="sep">
 
-      <div class="field" style="margin-bottom:8px">
+      <div class="field" style="margin-bottom:6px">
         <label class="field-label" for="ag-maps-key">Google Maps API Key</label>
-        <input type="text" id="ag-maps-key" placeholder="AIzaSy…" autocomplete="off">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" id="ag-maps-key" placeholder="AIzaSy…" autocomplete="off"
+                 style="flex:1;min-width:180px">
+          <button class="btn-ghost" id="btn-test-key" onclick="testeApiKey()"
+                  style="white-space:nowrap;flex-shrink:0">API Key testen</button>
+          <span id="key-test-result" style="font-size:12px;font-weight:500;white-space:nowrap"></span>
+        </div>
       </div>
-      <div class="box-info">
-        Für automatische KM-Berechnung (Distance Matrix API). Kostenlos bis ca. 200 Anfragen/Tag.
-        Schlüssel erstellen unter: <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a>
+      <div class="info-box" style="margin-bottom:14px">
+        <span class="box-icon">ℹ️</span>
+        <span>
+          Für KM-Berechnung (Distance Matrix API). Kostenlos bis ca. 200 Anfragen/Tag.
+          Schlüssel erstellen unter:
+          <a href="https://console.cloud.google.com" target="_blank" rel="noopener"
+             style="color:var(--blue)">console.cloud.google.com</a>
+        </span>
       </div>
 
       <div class="btn-row">
@@ -85,141 +95,139 @@
       </div>
     </div>
 
-    <!-- ═══ SECTION 2: Passwort ═════════════════════════════════════════════ -->
+    <!-- Section 2: Passwort -->
     <div class="card">
-      <div class="section-title">🔐 Admin-Passwort ändern</div>
-
-      <div class="grid-2" style="gap:12px">
+      <div class="sec-title">🔐 Admin-Passwort ändern</div>
+      <div class="grid-2" style="gap:10px">
         <div class="field">
           <label class="field-label" for="new-pw">Neues Passwort</label>
-          <input type="password" id="new-pw" placeholder="Mind. 6 Zeichen" autocomplete="new-password">
+          <input type="password" id="new-pw" placeholder="Mind. 6 Zeichen"
+                 autocomplete="new-password">
         </div>
         <div class="field">
-          <label class="field-label" for="new-pw-confirm">Passwort bestätigen</label>
-          <input type="password" id="new-pw-confirm" placeholder="Wiederholen" autocomplete="new-password">
+          <label class="field-label" for="new-pw2">Passwort wiederholen</label>
+          <input type="password" id="new-pw2" placeholder="Wiederholen"
+                 autocomplete="new-password">
         </div>
       </div>
-
       <div class="btn-row">
         <button class="btn-primary" onclick="aendernPasswort()">Passwort ändern</button>
       </div>
     </div>
 
-    <!-- ═══ SECTION 3: Daten löschen ════════════════════════════════════════ -->
+    <!-- Section 3: Daten zurücksetzen -->
     <div class="danger-card">
-      <div class="section-title" style="color:#A32D2D;border-color:rgba(163,45,45,.2)">🗑 Lokale Daten löschen</div>
-
-      <p style="font-size:13px;color:#A32D2D;margin-bottom:12px">
-        Löscht alle gespeicherten <strong>Entwürfe</strong> und <strong>Profildaten</strong> aus dem Browser-Speicher.
-        Arbeitgeberdaten und Admin-Passwort bleiben erhalten.
+      <div class="sec-title" style="color:var(--red)">🗑 Daten zurücksetzen</div>
+      <p style="font-size:13px;color:var(--red);margin-bottom:12px">
+        Löscht alle <strong>Entwürfe</strong> und das <strong>Profil</strong> auf diesem Gerät.
+        Admin-Einstellungen (Arbeitgeberdaten, Passwort) bleiben erhalten.
       </p>
-
       <button class="btn-danger" onclick="loeschenDaten()">Entwürfe &amp; Profil löschen</button>
     </div>
 
   </main>
 </div>
 
-<!-- Toast container -->
-<div id="toast-container"></div>
-
+<div id="toast"></div>
 <script src="app.js"></script>
-
 <script>
 'use strict';
 
 var DEFAULT_PW = 'sozialhummel';
 
-function getAdminPw() {
-  return store.get('admin_pw', DEFAULT_PW);
-}
+function getAdminPw() { return store.get('admin_pw', DEFAULT_PW); }
 
 function doLogin() {
-  var pw = document.getElementById('pw-input').value;
-  var errEl = document.getElementById('pw-error');
-  var stored = getAdminPw();
-
-  if (pw === stored) {
-    document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('admin-ui').style.display = 'block';
-    loadAGData();
+  var pw  = document.getElementById('pw-input').value;
+  var err = document.getElementById('pw-error');
+  if (pw === getAdminPw()) {
+    document.getElementById('login-wrap').style.display = 'none';
+    document.getElementById('admin-ui').style.display   = 'block';
+    ladeAGDaten();
     document.getElementById('topbar-mount').innerHTML = renderTopbar('admin');
   } else {
-    errEl.textContent = 'Falsches Passwort. Bitte erneut versuchen.';
+    err.textContent = 'Falsches Passwort — bitte erneut versuchen.';
     document.getElementById('pw-input').value = '';
     document.getElementById('pw-input').focus();
   }
 }
 
-function loadAGData() {
+function ladeAGDaten() {
   var ag = getArbeitgeber();
-  setVal('ag-name', ag.name || '');
-  setVal('ag-strasse', ag.strasse || '');
-  setVal('ag-plz', ag.plz || '');
-  setVal('ag-ort', ag.ort || '');
-  setVal('ag-email', ag.email || '');
-  setVal('ag-tel', ag.tel || '');
-  setVal('ag-maps-key', ag.mapsKey || '');
-}
-
-function setVal(id, val) {
-  var el = document.getElementById(id);
-  if (el) el.value = val;
-}
-
-function getVal(id) {
-  var el = document.getElementById(id);
-  return el ? el.value.trim() : '';
+  setV('ag-name',     ag.name     || '');
+  setV('ag-strasse',  ag.strasse  || '');
+  setV('ag-plz',      ag.plz      || '');
+  setV('ag-ort',      ag.ort      || '');
+  setV('ag-email',    ag.email    || '');
+  setV('ag-tel',      ag.tel      || '');
+  setV('ag-maps-key', ag.mapsKey  || '');
 }
 
 function speichernAG() {
-  var ag = {
-    name: getVal('ag-name'),
-    strasse: getVal('ag-strasse'),
-    plz: getVal('ag-plz'),
-    ort: getVal('ag-ort'),
-    email: getVal('ag-email'),
-    tel: getVal('ag-tel'),
-    mapsKey: getVal('ag-maps-key')
-  };
-  store.set('ag_data', ag);
+  store.set('ag_data', {
+    name:    gV('ag-name'),
+    strasse: gV('ag-strasse'),
+    plz:     gV('ag-plz'),
+    ort:     gV('ag-ort'),
+    email:   gV('ag-email'),
+    tel:     gV('ag-tel'),
+    mapsKey: gV('ag-maps-key')
+  });
   showToast('Gespeichert ✓', 'ok');
 }
 
+async function testeApiKey() {
+  var key = gV('ag-maps-key');
+  if (!key) { showToast('Bitte zuerst einen API Key eingeben.', 'warn'); return; }
+  var btn = document.getElementById('btn-test-key');
+  var res = document.getElementById('key-test-result');
+  var orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Teste …';
+  res.textContent = '';
+  try {
+    var url = 'https://maps.googleapis.com/maps/api/geocode/json?address=Bonn,DE&key=' +
+              encodeURIComponent(key);
+    var r = await fetch(url);
+    var j = await r.json();
+    if (j.status === 'OK' || j.status === 'ZERO_RESULTS') {
+      res.textContent = '✓ Gültig';
+      res.style.color = 'var(--green-dark)';
+    } else {
+      res.textContent = '✗ Ungültig (' + j.status + ')';
+      res.style.color = 'var(--red)';
+    }
+  } catch (e) {
+    res.textContent = '✗ Fehler: ' + e.message;
+    res.style.color = 'var(--red)';
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
 function aendernPasswort() {
-  var newPw = getVal('new-pw');
-  var confirm = getVal('new-pw-confirm');
-
-  if (!newPw) {
-    showToast('Bitte neues Passwort eingeben.', 'warn');
-    return;
-  }
-  if (newPw.length < 6) {
-    showToast('Passwort muss mindestens 6 Zeichen lang sein.', 'warn');
-    return;
-  }
-  if (newPw !== confirm) {
-    showToast('Passwörter stimmen nicht überein.', 'warn');
-    return;
-  }
-
-  store.set('admin_pw', newPw);
-  setVal('new-pw', '');
-  setVal('new-pw-confirm', '');
+  var pw  = gV('new-pw');
+  var pw2 = gV('new-pw2');
+  if (!pw)           { showToast('Bitte neues Passwort eingeben.', 'warn'); return; }
+  if (pw.length < 6) { showToast('Passwort muss mindestens 6 Zeichen lang sein.', 'warn'); return; }
+  if (pw !== pw2)    { showToast('Passwörter stimmen nicht überein.', 'warn'); return; }
+  store.set('admin_pw', pw);
+  setV('new-pw', ''); setV('new-pw2', '');
   showToast('Passwort geändert ✓', 'ok');
 }
 
 function loeschenDaten() {
-  if (!confirm('Alle Entwürfe und Profildaten wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.')) return;
+  if (!confirm('Alle Entwürfe und das Profil wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.')) return;
   store.del('drafts');
   store.del('profil');
   showToast('Entwürfe und Profil gelöscht.', 'ok');
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  // Always show login overlay first
-  document.getElementById('login-overlay').style.display = 'flex';
-  document.getElementById('admin-ui').style.display = 'none';
+function setV(id, val) { var el = document.getElementById(id); if (el) el.value = val; }
+function gV(id)        { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('login-wrap').style.display = 'flex';
+  document.getElementById('admin-ui').style.display   = 'none';
   document.getElementById('pw-input').focus();
 });
 </script>

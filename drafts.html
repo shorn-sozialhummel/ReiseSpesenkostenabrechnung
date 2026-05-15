@@ -11,102 +11,94 @@
 </head>
 <body>
 
-<!-- Topbar -->
 <div id="topbar-mount"></div>
 
 <main>
   <div class="card">
-    <!-- Card header with title and action -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #E2E0DA">
-      <div class="section-title" style="margin:0;padding:0;border:none">📋 Gespeicherte Entwürfe</div>
-      <a href="index.html" class="btn-primary" style="text-decoration:none;font-size:13px;font-weight:500;background:#1D9E75;color:#fff;border-radius:10px;padding:9px 18px;display:inline-flex;align-items:center;gap:6px">
+    <div style="display:flex;align-items:center;justify-content:space-between;
+                margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--gray-200)">
+      <div class="sec-title" style="margin:0;padding:0;border:none">📋 Gespeicherte Entwürfe</div>
+      <a href="index.html" class="btn-primary" style="text-decoration:none">
         + Neue Abrechnung
       </a>
     </div>
-
-    <!-- Drafts list -->
     <div id="drafts-list"></div>
   </div>
 </main>
 
-<!-- Toast container -->
-<div id="toast-container"></div>
-
+<div id="toast"></div>
 <script src="app.js"></script>
-
 <script>
 'use strict';
 
-function init() {
-  document.getElementById('topbar-mount').innerHTML = renderTopbar('drafts');
-  renderDrafts();
-}
-
 function getDraftBetrag(d) {
   var m = d.mitarbeiter || {};
-  var pendelEinfach = m.pendelKmEinfach || 0;
-  var fahrten = d.fahrten || [];
-  var fahrtBetrag = 0;
-  fahrten.forEach(function(f) {
-    var km = +(f.kmEinfach || 0);
-    fahrtBetrag += Math.max(0, km * 2 - pendelEinfach * 2) * 0.30;
+  var pendelKm = (m.pendelKmEinfach || 0) * 2;
+  var gesamt = 0;
+  (d.fahrten || []).forEach(function (f) {
+    var kmHR   = (f.kmEinfach || 0) * 2;
+    var erstKm = f.startTyp === 'arbeitsort' ? kmHR : Math.max(0, kmHR - pendelKm);
+    gesamt += erstKm * 0.30;
   });
-  var s = d.spesen || {};
-  var spesenSum = (s.uebernacht || 0) + (s.opnv || 0) + (s.parken || 0) + (s.sonstige || 0);
-  return fahrtBetrag + spesenSum;
+  var sp = d.spesen || {};
+  gesamt += (sp.uebernacht || 0) + (sp.opnv || 0) + (sp.parken || 0) + (sp.sonstige || 0);
+  return gesamt;
 }
 
 function renderDrafts() {
   var list = document.getElementById('drafts-list');
   if (!list) return;
 
-  var drafts = getDrafts().slice().sort(function(a, b) {
+  var drafts = getDrafts().slice().sort(function (a, b) {
     return new Date(b.savedAt || 0) - new Date(a.savedAt || 0);
   });
 
   if (drafts.length === 0) {
-    list.innerHTML = [
-      '<div class="empty-state">',
-      '<div class="empty-state-icon">📂</div>',
-      '<p>Keine Entwürfe vorhanden.</p>',
-      '<a href="index.html" class="btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">',
-      '+ Neue Abrechnung erstellen',
-      '</a>',
-      '</div>'
-    ].join('');
+    list.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-state-icon">📂</div>' +
+        '<p>Keine Entwürfe vorhanden.</p>' +
+        '<a href="index.html" class="btn-primary"' +
+        ' style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">' +
+          '+ Neue Abrechnung erstellen' +
+        '</a>' +
+      '</div>';
     return;
   }
 
-  list.innerHTML = drafts.map(function(d) {
-    var m = d.mitarbeiter || {};
-    var vn = m.vorname || '';
+  list.innerHTML = drafts.map(function (d) {
+    var m  = d.mitarbeiter || {};
+    var vn = m.vorname  || '';
     var nn = m.nachname || '';
     var initials = ((vn[0] || '') + (nn[0] || '')).toUpperCase() || '?';
-    var name = [vn, nn].filter(Boolean).join(' ') || 'Unbenannt';
+    var name     = [vn, nn].filter(Boolean).join(' ') || 'Unbenannt';
     var nFahrten = (d.fahrten || []).length;
-    var betrag = getDraftBetrag(d);
-    var savedAt = d.savedAt ? fmtDateTime(d.savedAt) : '–';
+    var betrag   = getDraftBetrag(d);
+    var savedAt  = d.savedAt ? fmtDateTime(d.savedAt) : '–';
 
-    return [
-      '<div class="draft-card">',
-        '<div class="draft-avatar">' + esc(initials) + '</div>',
-        '<div class="draft-info">',
-          '<div class="draft-name">',
-            esc(name),
-            '<span class="draft-id-badge">' + esc(d.id || '–') + '</span>',
-          '</div>',
-          '<div class="draft-meta">',
-            esc(nFahrten) + ' Fahrt' + (nFahrten !== 1 ? 'en' : '') +
+    return (
+      '<div class="draft-card">' +
+        '<div class="draft-avatar">' + esc(initials) + '</div>' +
+        '<div class="draft-info">' +
+          '<div class="draft-name">' +
+            esc(name) +
+            '<span class="draft-id">' + esc(d.id || '–') + '</span>' +
+          '</div>' +
+          '<div class="draft-meta">' +
+            nFahrten + ' Fahrt' + (nFahrten !== 1 ? 'en' : '') +
             ' · Gesamt: ' + esc(fmt(betrag)) +
-            ' · Gespeichert: ' + esc(savedAt),
-          '</div>',
-        '</div>',
-        '<div class="draft-actions">',
-          '<a href="index.html?draft=' + encodeURIComponent(d.id || '') + '" class="btn-primary" style="text-decoration:none">Weiterbearbeiten</a>',
-          '<button class="btn-danger btn-icon" onclick="loeschenDraft(\'' + esc(d.id || '') + '\')" title="Entwurf löschen">🗑</button>',
-        '</div>',
+            ' · Gespeichert: ' + esc(savedAt) +
+          '</div>' +
+        '</div>' +
+        '<div class="draft-actions">' +
+          '<a href="index.html?draft=' + encodeURIComponent(d.id || '') + '"' +
+          ' class="btn-primary" style="text-decoration:none">Weiterbearbeiten</a>' +
+          '<button class="btn-danger btn-icon"' +
+          ' onclick="loeschenDraft(\'' + esc(d.id || '') + '\')"' +
+          ' title="Löschen">🗑</button>' +
+        '</div>' +
       '</div>'
-    ].join('');
+    );
   }).join('');
 }
 
@@ -117,7 +109,10 @@ function loeschenDraft(id) {
   showToast('Entwurf gelöscht.', 'ok');
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('topbar-mount').innerHTML = renderTopbar('drafts');
+  renderDrafts();
+});
 </script>
 
 </body>
