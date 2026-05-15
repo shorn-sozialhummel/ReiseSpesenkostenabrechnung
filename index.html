@@ -286,13 +286,14 @@ function doPendelBerechnen() {
   var heim = [str, (plz + ' ' + ort).trim()].filter(function (x) { return x; }).join(', ');
   var arb  = gV('arbeit-adresse');
   mitMapsButton('pendel-btn', heim, arb, function (km) {
-    window._pendingKm    = km;
-    window._pendingDatum = today();
     zeigeErgebnis(km);
   });
 }
 
 function zeigeErgebnis(km) {
+  window._pendingKm       = km;
+  window._pendingDatum    = today();
+  window._tempPendelReset = false;
   zeigePendelB(km, today());
   if (typeof updateAllPendelRows === 'function') updateAllPendelRows();
   if (typeof updateSummary      === 'function') updateSummary();

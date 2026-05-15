@@ -144,8 +144,8 @@ async function mitMapsButton(btnId, origin, destination, onSuccess) {
 // Pendelabzug immer nur einmal pro Fahrt-Eintrag
 
 function getAktuellePendelKm() {
-  if (window._tempPendelReset) return 0;
-  if (window._pendingKm != null) return window._pendingKm;
+  if (window._pendingKm != null && window._pendingKm >= 0) return parseInt(window._pendingKm);
+  if (window._tempPendelReset === true) return 0;
   return parseInt(getProfil().pendelKmEinfach) || 0;
 }
 
