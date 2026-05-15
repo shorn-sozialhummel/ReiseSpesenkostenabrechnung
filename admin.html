@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="config.js"></script>
 </head>
 <body>
 
@@ -87,6 +88,10 @@
           Schlüssel erstellen unter:
           <a href="https://console.cloud.google.com" target="_blank" rel="noopener"
              style="color:var(--blue)">console.cloud.google.com</a>
+          <br>
+          Der API Key aus <code>config.js</code> ist aktiv, solange hier kein abweichender Key
+          gespeichert wurde. Hier eingetragene Werte überschreiben <code>config.js</code> nur
+          auf diesem Gerät.
         </span>
       </div>
 
@@ -135,7 +140,7 @@
 
 var DEFAULT_PW = 'sozialhummel';
 
-function getAdminPw() { return store.get('admin_pw', DEFAULT_PW); }
+function getAdminPw() { return store.get('admin_pw', null) || APP_CONFIG.adminPw; }
 
 function doLogin() {
   var pw  = document.getElementById('pw-input').value;

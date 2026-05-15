@@ -29,15 +29,9 @@ const store = {
 // ─── Arbeitgeberdaten ─────────────────────────────────────────────────────────
 
 function getArbeitgeber() {
-  return store.get('ag_data', {
-    name: 'Sozialhummel gGmbH',
-    strasse: 'Mozartstr. 10',
-    plz: '53819',
-    ort: 'Neunkirchen-Seelscheid',
-    email: '',
-    tel: '',
-    mapsKey: ''
-  });
+  const stored = store.get('ag_data', null);
+  if (stored && stored.name) return stored;
+  return APP_CONFIG.arbeitgeber;
 }
 
 // ─── Profil ───────────────────────────────────────────────────────────────────
@@ -85,14 +79,19 @@ function newAntragId() {
 
 // ─── Google Maps ──────────────────────────────────────────────────────────────
 
-function ladeMapsApi(key) {
+async function ladeMapsApi() {
+  const ag = getArbeitgeber();
+  const key = ag.mapsKey || '';
+  if (!key || key === 'HIER_DEN_API_KEY_EINTRAGEN') {
+    throw new Error('Kein Google Maps API Key hinterlegt. Bitte in config.js eintragen.');
+  }
   return new Promise((resolve, reject) => {
     if (window.google && window.google.maps) { resolve(); return; }
     const timeout = setTimeout(() => reject(new Error('Timeout beim Laden der Maps API')), 10000);
     window._mapsCallback = () => { clearTimeout(timeout); window._mapsReady = true; resolve(); };
     const s = document.createElement('script');
     s.src = 'https://maps.googleapis.com/maps/api/js?key=' + key + '&loading=async&callback=_mapsCallback';
-    s.onerror = () => { clearTimeout(timeout); reject(new Error('Maps konnte nicht geladen werden')); };
+    s.onerror = () => { clearTimeout(timeout); reject(new Error('Maps API konnte nicht geladen werden')); };
     document.head.appendChild(s);
   });
 }
@@ -119,15 +118,13 @@ async function berechnKm(origin, destination) {
 }
 
 async function mitMapsButton(btnId, origin, destination, onSuccess) {
-  const ag = getArbeitgeber();
-  if (!ag.mapsKey) { showToast('Bitte API Key im Admin-Bereich hinterlegen.', 'warn'); return; }
   if (!origin || origin.trim().length < 5) { showToast('Bitte Startadresse eingeben.', 'warn'); return; }
   if (!destination || destination.trim().length < 5) { showToast('Bitte Zieladresse eingeben.', 'warn'); return; }
   const btn = document.getElementById(btnId);
   const origText = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = 'Berechne …'; }
   try {
-    if (!window.google || !window.google.maps) await ladeMapsApi(ag.mapsKey);
+    if (!window.google || !window.google.maps) await ladeMapsApi();
     const km = await berechnKm(origin, destination);
     onSuccess(km);
   } catch (e) {
