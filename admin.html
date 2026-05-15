@@ -145,11 +145,29 @@ function doLogin() {
     document.getElementById('admin-ui').style.display   = 'block';
     ladeAGDaten();
     document.getElementById('topbar-mount').innerHTML = renderTopbar('admin');
+    // "Abmelden"-Button rechts in die Topbar-Nav einfügen
+    var nav = document.querySelector('#topbar-mount .topbar-nav');
+    if (nav) {
+      var btn = document.createElement('button');
+      btn.className = 'btn-ghost';
+      btn.style.cssText = 'font-size:12px;padding:4px 12px;margin-left:4px';
+      btn.textContent = 'Abmelden';
+      btn.onclick = doLogout;
+      nav.appendChild(btn);
+    }
   } else {
     err.textContent = 'Falsches Passwort — bitte erneut versuchen.';
     document.getElementById('pw-input').value = '';
     document.getElementById('pw-input').focus();
   }
+}
+
+function doLogout() {
+  document.getElementById('admin-ui').style.display   = 'none';
+  document.getElementById('login-wrap').style.display = 'flex';
+  document.getElementById('pw-error').textContent = '';
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-input').focus();
 }
 
 function ladeAGDaten() {

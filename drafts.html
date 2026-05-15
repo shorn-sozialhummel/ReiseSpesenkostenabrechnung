@@ -32,17 +32,37 @@
 'use strict';
 
 function getDraftBetrag(d) {
-  var m = d.mitarbeiter || {};
+  var m        = d.mitarbeiter || {};
   var pendelKm = (m.pendelKmEinfach || 0) * 2;
-  var gesamt = 0;
+  var gesamt   = 0;
   (d.fahrten || []).forEach(function (f) {
-    var kmHR   = (f.kmEinfach || 0) * 2;
-    var erstKm = f.startTyp === 'arbeitsort' ? kmHR : Math.max(0, kmHR - pendelKm);
+    var modus   = f.modus || 'hinrueck';
+    var kmHin   = parseInt(f.kmHin)   || 0;
+    var kmRueck = parseInt(f.kmRueck) || 0;
+    var gesamtKm;
+    if      (modus === 'einfach')    gesamtKm = kmHin;
+    else if (modus === 'hinrueck')   gesamtKm = kmHin * 2;
+    else                             gesamtKm = kmHin + kmRueck;
+    var keinAbzug = f.startTyp === 'arbeitsort';
+    var erstKm    = keinAbzug ? gesamtKm : Math.max(0, gesamtKm - pendelKm);
     gesamt += erstKm * 0.30;
   });
   var sp = d.spesen || {};
-  gesamt += (sp.uebernacht || 0) + (sp.opnv || 0) + (sp.parken || 0) + (sp.sonstige || 0);
+  gesamt += (sp.uebernachtung || 0) + (sp.opnv || 0) + (sp.parken || 0) + (sp.sonstige || 0);
   return gesamt;
+}
+
+function getModusUebersicht(fahrten) {
+  var counts = {};
+  (fahrten || []).forEach(function (f) {
+    var mod = f.modus || 'hinrueck';
+    counts[mod] = (counts[mod] || 0) + 1;
+  });
+  var parts = [];
+  if (counts.einfach)    parts.push(counts.einfach    + '× Einfach');
+  if (counts.hinrueck)   parts.push(counts.hinrueck   + '× H+R');
+  if (counts.mehrtaegig) parts.push(counts.mehrtaegig + '× Mehrtägig');
+  return parts.join(', ') || '–';
 }
 
 function renderDrafts() {
@@ -67,13 +87,14 @@ function renderDrafts() {
   }
 
   list.innerHTML = drafts.map(function (d) {
-    var m  = d.mitarbeiter || {};
-    var vn = m.vorname  || '';
-    var nn = m.nachname || '';
+    var m        = d.mitarbeiter || {};
+    var vn       = m.vorname  || '';
+    var nn       = m.nachname || '';
     var initials = ((vn[0] || '') + (nn[0] || '')).toUpperCase() || '?';
     var name     = [vn, nn].filter(Boolean).join(' ') || 'Unbenannt';
     var nFahrten = (d.fahrten || []).length;
     var betrag   = getDraftBetrag(d);
+    var modi     = getModusUebersicht(d.fahrten);
     var savedAt  = d.savedAt ? fmtDateTime(d.savedAt) : '–';
 
     return (
@@ -86,7 +107,8 @@ function renderDrafts() {
           '</div>' +
           '<div class="draft-meta">' +
             nFahrten + ' Fahrt' + (nFahrten !== 1 ? 'en' : '') +
-            ' · Gesamt: ' + esc(fmt(betrag)) +
+            ' (' + esc(modi) + ')' +
+            ' · Gesamt: <strong>' + esc(fmt(betrag)) + '</strong>' +
             ' · Gespeichert: ' + esc(savedAt) +
           '</div>' +
         '</div>' +
