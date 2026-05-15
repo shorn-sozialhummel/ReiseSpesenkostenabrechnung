@@ -8,7 +8,7 @@ const APP_CONFIG = {
     ort:     'Neunkirchen-Seelscheid',
     email:   '',
     tel:     '',
-    mapsKey: 'HIER_DEN_API_KEY_EINTRAGEN' // ← Hier den echten API Key eintragen (z. B. AIzaSy...)
+    mapsKey: 'AIzaSyC9gF0xt4CZJ6QTxP5_FQ06u3mwyltRGb4'
   },
   adminPw: 'sozialhummel'
 };
