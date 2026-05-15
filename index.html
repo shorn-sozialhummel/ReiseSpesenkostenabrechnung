@@ -380,3 +380,419 @@ function zeigeDraftBar(id) {
   document.getElementById('draft-bar-id').textContent = id;
 }
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     ABSCHNITT 3: Dienstliche Fahrten
+════════════════════════════════════════════════════════════════════════════ -->
+<style>
+  .fahrt-card { border:1px solid var(--gray-200); border-radius:14px; overflow:hidden; margin-bottom:10px; }
+  .fk-header  { background:var(--gray-50); border-bottom:1px solid var(--gray-200); padding:10px 14px;
+                display:flex; align-items:center; gap:8px; }
+  .fk-nr      { width:22px; height:22px; border-radius:50%; background:var(--green); color:#fff;
+                font-size:11px; font-weight:600; display:flex; align-items:center; justify-content:center;
+                flex-shrink:0; }
+  .fk-art-badge { font-size:11px; font-weight:500; padding:2px 9px; border-radius:20px; white-space:nowrap; }
+  .fk-datum   { font-size:12px; color:var(--text-muted); margin-left:auto; }
+  .fk-del     { background:none; border:none; cursor:pointer; font-size:14px; color:var(--text-hint);
+                padding:2px 4px; border-radius:6px; transition:color .15s,background .15s;
+                font-family:inherit; }
+  .fk-del:hover { color:var(--red); background:var(--red-light); }
+
+  .fk-body    { padding:12px 14px; display:flex; flex-direction:column; gap:10px; }
+
+  .fk-start-row { display:flex; align-items:flex-start; gap:10px; }
+  .fk-start-lbl { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em;
+                  color:var(--text-muted); width:48px; flex-shrink:0; padding-top:8px; }
+  .fk-start-btns { display:flex; gap:5px; flex-wrap:wrap; }
+  .fk-start-block { display:flex; flex-direction:column; gap:4px; flex:1; }
+  .fk-start-addr  { font-size:11px; color:var(--text-muted); padding-left:2px; min-height:14px; }
+
+  .fsk { border-radius:20px; font-size:11px; font-weight:500; padding:4px 10px;
+         border:1px solid var(--gray-200); background:var(--gray-50);
+         cursor:pointer; font-family:inherit; transition:all .15s; }
+  .fsk:hover { background:var(--gray-100); }
+  .fsk.active-zh { background:#E6F1FB; color:#0C447C; border-color:#85B7EB; }
+  .fsk.active-ao { background:var(--green-light); color:var(--green-dark); border-color:#5DCAA5; }
+  .fsk.active-an { background:#EEEDFE; color:#3C3489; border-color:#AFA9EC; }
+
+  .fk-grid    { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .fk-span2   { grid-column:span 2; }
+
+  .fk-km-row  { background:var(--gray-50); border-radius:10px; padding:10px 12px;
+                display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .fk-km-row .km-inp  { width:70px; font-size:14px; font-weight:500; text-align:center; }
+  .fk-km-lbl  { font-size:12px; color:var(--text-muted); }
+  .fk-km-sep  { font-size:12px; color:var(--text-hint); }
+  .fk-km-val  { font-size:18px; font-weight:500; }
+  .fk-km-val.green { color:var(--green-dark); }
+  .fk-km-val.blue  { color:var(--blue); }
+
+  .fk-pendel { border-top:1px solid var(--gray-200); padding:7px 14px; font-size:11px;
+               display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .fk-pendel.p-ao  { background:var(--green-light); color:var(--green-dark); }
+  .fk-pendel.p-warn{ background:var(--amber-light); color:#633806; }
+  .fk-pendel .p-right { font-weight:500; white-space:nowrap; flex-shrink:0; }
+</style>
+
+<div class="card" id="fahrten-card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div class="sec-title" style="margin:0">🚗 Dienstliche Fahrten
+      (<span id="fahrten-count">0</span>)
+    </div>
+  </div>
+
+  <div id="fahrten-container"></div>
+
+  <button class="btn-add" onclick="fahrtHinzufuegen()">+ Fahrt hinzufügen</button>
+
+  <div class="ok-box" style="margin-top:12px">
+    <span class="box-icon">📍</span>
+    <span>
+      <strong>Startpunkt wählen:</strong> Zuhause und Arbeitsort werden automatisch aus dem Profil übernommen.
+      Andere Startpunkte: „Andere" wählen und Adresse eingeben.
+      KM als einfache Strecke — Hin- &amp; Rückweg wird verdoppelt.
+    </span>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ─── Fahrten State ────────────────────────────────────────────────────────────
+
+var tripCounter = 0;
+var trips = {};
+
+// ─── Art-Badge Farben ─────────────────────────────────────────────────────────
+
+var ART_BADGE = {
+  teamtreffen:   { bg:'#E1F5EE', fg:'#085041' },
+  urlaubsbegl:   { bg:'#E6F1FB', fg:'#0C447C' },
+  helfertreffen: { bg:'#FBEAF0', fg:'#72243E' },
+  fortbildung:   { bg:'#EEEDFE', fg:'#3C3489' },
+  kundenbesuch:  { bg:'#E1F5EE', fg:'#085041' },
+  sonstiges:     { bg:'#F1F0EC', fg:'#5F5E5A' }
+};
+
+// ─── Karte erstellen ──────────────────────────────────────────────────────────
+
+function fahrtHinzufuegen(data) {
+  data = data || {};
+  tripCounter++;
+  var id = tripCounter;
+  trips[id] = {
+    startTyp:      data.startTyp      || 'zuhause',
+    km:            data.km            || data.kmEinfach || 0,
+    ziel:          data.ziel          || '',
+    datum:         data.datum         || todayISO(),
+    art:           data.art           || '',
+    zweck:         data.zweck         || '',
+    andereAdresse: data.andereAdresse || ''
+  };
+  renderFahrtKarte(id);
+  updateFahrtKarte(id);
+  aktualisiereFahrtenCount();
+}
+
+function renderFahrtKarte(id) {
+  var t = trips[id];
+
+  var artOpts = REISEARTEN.map(function (r) {
+    return '<option value="' + esc(r.v) + '"' + (t.art === r.v ? ' selected' : '') + '>' + esc(r.l) + '</option>';
+  }).join('');
+
+  var html =
+    '<div class="fahrt-card" id="fahrt-card-' + id + '">' +
+
+    // Header
+    '<div class="fk-header">' +
+      '<div class="fk-nr">' + id + '</div>' +
+      '<div class="fk-art-badge" id="art-badge-' + id + '">– Art wählen –</div>' +
+      '<span class="fk-datum">' +
+        '<input type="date" id="dat-' + id + '" value="' + esc(t.datum) + '"' +
+        ' style="border:none;background:transparent;font-family:inherit;font-size:12px;' +
+        'color:var(--text-muted);cursor:pointer;outline:none;padding:0"' +
+        ' oninput="updateSummary()">' +
+      '</span>' +
+      '<button class="fk-del" onclick="fahrtLoeschen(' + id + ')" title="Fahrt löschen">✕</button>' +
+    '</div>' +
+
+    // Body
+    '<div class="fk-body">' +
+
+      // Start
+      '<div class="fk-start-row">' +
+        '<div class="fk-start-lbl">START</div>' +
+        '<div class="fk-start-block">' +
+          '<div class="fk-start-btns">' +
+            '<button class="fsk" id="sb-zh-' + id + '" onclick="setStartTyp(' + id + ',\'zuhause\')">🏠 Zuhause</button>' +
+            '<button class="fsk" id="sb-ao-' + id + '" onclick="setStartTyp(' + id + ',\'arbeitsort\')">🏢 Arbeitsort</button>' +
+            '<button class="fsk" id="sb-an-' + id + '" onclick="setStartTyp(' + id + ',\'andere\')">✏️ Andere</button>' +
+          '</div>' +
+          '<div class="fk-start-addr" id="start-addr-' + id + '"></div>' +
+          '<div id="start-andere-wrap-' + id + '" style="display:none;margin-top:4px">' +
+            '<input type="text" id="start-andere-' + id + '"' +
+            ' placeholder="Startadresse eingeben …" autocomplete="new-password"' +
+            ' value="' + esc(t.andereAdresse) + '"' +
+            ' oninput="updateSummary()">' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      // Felder-Grid
+      '<div class="fk-grid">' +
+        '<div class="field">' +
+          '<label class="field-label">Ziel / Adresse *</label>' +
+          '<input type="text" id="ziel-' + id + '" placeholder="Zieladresse"' +
+          ' value="' + esc(t.ziel) + '" oninput="updateSummary()">' +
+        '</div>' +
+        '<div class="field">' +
+          '<label class="field-label">Datum</label>' +
+          '<input type="date" id="dat2-' + id + '" value="' + esc(t.datum) + '"' +
+          ' style="display:none">' +
+        '</div>' +
+        '<div class="field fk-span2">' +
+          '<label class="field-label">Zweck / Beschreibung</label>' +
+          '<input type="text" id="zweck-' + id + '"' +
+          ' placeholder="z. B. Klient Hr. Maier, Teamtreffen …"' +
+          ' value="' + esc(t.zweck) + '" oninput="updateSummary()">' +
+        '</div>' +
+        '<div class="field fk-span2">' +
+          '<label class="field-label">Art der Reise</label>' +
+          '<select id="art-' + id + '" onchange="onArtChange(' + id + ')">' + artOpts + '</select>' +
+        '</div>' +
+      '</div>' +
+
+      // KM-Zeile
+      '<div class="fk-km-row">' +
+        '<div style="display:flex;align-items:center;gap:5px">' +
+          '<input type="number" class="km-inp" id="km-' + id + '"' +
+          ' min="0" step="1" placeholder="0" value="' + esc(t.km || '') + '"' +
+          ' oninput="updateFahrtKarte(' + id + ');updateSummary()">' +
+          '<span class="fk-km-lbl">km</span>' +
+        '</div>' +
+        '<span class="fk-km-sep">× 2 =</span>' +
+        '<div style="display:flex;flex-direction:column;align-items:center">' +
+          '<span class="fk-km-lbl" style="font-size:9px">Hin &amp; Zurück</span>' +
+          '<span class="fk-km-val" id="km-hr-' + id + '">0 km</span>' +
+        '</div>' +
+        '<span class="fk-km-sep">→</span>' +
+        '<div style="display:flex;flex-direction:column;align-items:center">' +
+          '<span class="fk-km-lbl" style="font-size:9px">Erstattungs-km</span>' +
+          '<span class="fk-km-val green" id="km-erst-' + id + '">0 km</span>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;align-items:center">' +
+          '<span class="fk-km-lbl" style="font-size:9px">Betrag</span>' +
+          '<span class="fk-km-val blue" id="betrag-' + id + '">0,00 €</span>' +
+        '</div>' +
+        '<button class="btn-primary btn-icon" id="maps-' + id + '"' +
+        ' style="margin-left:auto;font-size:12px;padding:7px 11px"' +
+        ' onclick="doFahrtMaps(' + id + ')">📍 via Maps</button>' +
+      '</div>' +
+
+    '</div>' + // fk-body
+
+    // Pendel-Footer
+    '<div class="fk-pendel" id="fk-pendel-' + id + '"></div>' +
+
+    '</div>'; // fahrt-card
+
+  var container = document.getElementById('fahrten-container');
+  var tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  container.appendChild(tmp.firstElementChild);
+
+  // Art-Badge Initialzustand
+  onArtChange(id);
+  // Start-Button Zustand
+  aktualisiereStartButtons(id);
+}
+
+// ─── Karte aktualisieren ──────────────────────────────────────────────────────
+
+function updateFahrtKarte(id) {
+  var t  = trips[id];
+  if (!t) return;
+  var km = parseInt(document.getElementById('km-' + id) && document.getElementById('km-' + id).value) || 0;
+  var r  = berechneFahrtErstattung(km, t.startTyp);
+  trips[id].km = km;
+
+  var hrEl   = document.getElementById('km-hr-'   + id);
+  var erstEl = document.getElementById('km-erst-' + id);
+  var betEl  = document.getElementById('betrag-'  + id);
+  if (hrEl)   hrEl.textContent   = fmtKm(r.kmHR);
+  if (erstEl) erstEl.textContent = fmtKm(r.erstattungKm);
+  if (betEl)  betEl.textContent  = fmt(r.betrag);
+
+  aktualisierePendelFooter(id, r);
+  aktualisiereStartAdresszeile(id);
+}
+
+function aktualisierePendelFooter(id, r) {
+  var t   = trips[id];
+  if (!t) return;
+  var el  = document.getElementById('fk-pendel-' + id);
+  if (!el) return;
+  var p   = getProfil();
+  var pendelKm = (window._pendingKm !== null && window._pendingKm !== undefined)
+    ? window._pendingKm
+    : (p.pendelKmEinfach || 0);
+
+  if (t.startTyp === 'arbeitsort') {
+    el.className = 'fk-pendel p-ao';
+    el.innerHTML =
+      '<span>✓ Start vom Arbeitsort — kein Pendelabzug, volle Strecke erstattet</span>' +
+      '<span class="p-right" style="color:var(--green-dark)">+ ' + fmt(r.betrag) + '</span>';
+  } else if (pendelKm === 0) {
+    el.className = 'fk-pendel p-warn';
+    el.innerHTML = '<span>⚠️ Bitte zuerst Pendelstrecke im Profil berechnen.</span>';
+  } else {
+    el.className = 'fk-pendel p-warn';
+    el.innerHTML =
+      '<span>− Pendelabzug ' + fmtKm(pendelKm * 2) + ' × 0,30 € — steuerlich absetzbar (Anlage N)</span>' +
+      '<span class="p-right" style="color:var(--red)">' +
+        fmtKm(pendelKm * 2) + ' · − ' + fmt(pendelKm * 2 * RATE) +
+      '</span>';
+  }
+}
+
+function aktualisiereStartAdresszeile(id) {
+  var t  = trips[id];
+  if (!t) return;
+  var p  = getProfil();
+  var el = document.getElementById('start-addr-' + id);
+  var wr = document.getElementById('start-andere-wrap-' + id);
+  if (!el) return;
+
+  if (t.startTyp === 'zuhause') {
+    el.textContent = [p.heimStrasse, (p.heimPlz + ' ' + p.heimOrt).trim()].filter(Boolean).join(', ') || '(Heimadresse aus Profil)';
+    if (wr) wr.style.display = 'none';
+  } else if (t.startTyp === 'arbeitsort') {
+    el.textContent = [p.arbeitsortName, p.arbeitsortAdresse].filter(Boolean).join(', ') || '(Arbeitsadresse aus Profil)';
+    if (wr) wr.style.display = 'none';
+  } else {
+    el.textContent = '';
+    if (wr) wr.style.display = '';
+  }
+}
+
+function aktualisiereStartButtons(id) {
+  var t = trips[id];
+  if (!t) return;
+  var map = { zuhause: 'zh', arbeitsort: 'ao', andere: 'an' };
+  ['zh', 'ao', 'an'].forEach(function (k) {
+    var btn = document.getElementById('sb-' + k + '-' + id);
+    if (!btn) return;
+    btn.className = 'fsk' + (map[t.startTyp] === k ? ' active-' + k : '');
+  });
+}
+
+function onArtChange(id) {
+  var sel  = document.getElementById('art-' + id);
+  var badge = document.getElementById('art-badge-' + id);
+  if (!sel || !badge) return;
+  var val  = sel.value;
+  var conf = ART_BADGE[val];
+  var lbl  = REISEARTEN.find(function (r) { return r.v === val; });
+  if (conf) {
+    badge.style.background = conf.bg;
+    badge.style.color      = conf.fg;
+    badge.textContent      = lbl ? lbl.l : val;
+  } else {
+    badge.style.background = '#F1F0EC';
+    badge.style.color      = '#5F5E5A';
+    badge.textContent      = '– Art wählen –';
+  }
+  updateSummary();
+}
+
+// ─── Aktionen ─────────────────────────────────────────────────────────────────
+
+function setStartTyp(id, typ) {
+  if (!trips[id]) return;
+  trips[id].startTyp = typ;
+  aktualisiereStartButtons(id);
+  updateFahrtKarte(id);
+  updateSummary();
+}
+
+function getStartAdresse(id) {
+  var t = trips[id];
+  var p = getProfil();
+  if (t.startTyp === 'zuhause')
+    return [p.heimStrasse, (p.heimPlz + ' ' + p.heimOrt).trim()].filter(Boolean).join(', ');
+  if (t.startTyp === 'arbeitsort')
+    return p.arbeitsortAdresse || '';
+  var inp = document.getElementById('start-andere-' + id);
+  return inp ? inp.value.trim() : '';
+}
+
+function getZielAdresse(id) {
+  var el = document.getElementById('ziel-' + id);
+  return el ? el.value.trim() : '';
+}
+
+function setKm(id, km) {
+  trips[id].km = km;
+  var inp = document.getElementById('km-' + id);
+  if (inp) inp.value = km;
+}
+
+function doFahrtMaps(id) {
+  var start = getStartAdresse(id);
+  var ziel  = getZielAdresse(id);
+  mitMapsButton('maps-' + id, start, ziel, function (km) {
+    setKm(id, km);
+    updateFahrtKarte(id);
+    updateSummary();
+    showToast(km + ' km ✓', 'ok');
+  });
+}
+
+function fahrtLoeschen(id) {
+  if (Object.keys(trips).length <= 1) {
+    showToast('Mindestens eine Fahrt erforderlich.', 'warn');
+    return;
+  }
+  delete trips[id];
+  var card = document.getElementById('fahrt-card-' + id);
+  if (card) card.remove();
+  aktualisiereFahrtenCount();
+  updateSummary();
+}
+
+function aktualisiereFahrtenCount() {
+  var el = document.getElementById('fahrten-count');
+  if (el) el.textContent = Object.keys(trips).length;
+}
+
+function updateAllPendelRows() {
+  Object.keys(trips).forEach(function (id) { updateFahrtKarte(parseInt(id)); });
+}
+
+// updateSummary() — Platzhalter bis Teil 3 eintrifft
+function updateSummary() {
+  /* wird in Teil 3 (Zusammenfassung) vollständig implementiert */
+}
+
+// ─── Fahrten beim Draft-Load wiederherstellen ─────────────────────────────────
+
+var _origLadeDraft = ladeDraft;
+ladeDraft = function (d) {
+  _origLadeDraft(d);
+  // Fahrten leeren und neu aufbauen
+  document.getElementById('fahrten-container').innerHTML = '';
+  trips = {};
+  tripCounter = 0;
+  (d.fahrten || []).forEach(function (f) { fahrtHinzufuegen(f); });
+  if (Object.keys(trips).length === 0) fahrtHinzufuegen();
+  updateSummary();
+};
+
+// Beim ersten Seitenload: eine leere Fahrt anlegen
+document.addEventListener('DOMContentLoaded', function () {
+  // Nur wenn kein Draft geladen wird
+  var params = new URLSearchParams(location.search);
+  if (!params.get('draft')) fahrtHinzufuegen();
+});
+</script>
