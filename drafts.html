@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Entwürfe – Reisekostenabrechnung</title>
+  <title>Entwürfe – Reisekostenabrechnung Sozialhummel gGmbH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <div class="header-inner">
-    <h1>
-      🚗 Reisekostenabrechnung
-      <span class="subtitle">Sozialhummel gGmbH</span>
-    </h1>
+<!-- ─── Topbar ─────────────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="logo">🐝 Sozialhummel gGmbH</span>
     <nav>
       <a href="index.html">Neue Abrechnung</a>
       <a href="drafts.html" class="active">Entwürfe</a>
@@ -24,37 +24,148 @@
 
 <main>
 
-  <div class="card">
-    <h2>💾 Gespeicherte Entwürfe</h2>
-
-    <div id="draft-list">
-      <!-- rendered by JS -->
+  <div class="section">
+    <div class="section-title" style="justify-content:space-between; flex-wrap:wrap; gap:8px;">
+      <span>📋 Gespeicherte Entwürfe</span>
+      <a href="index.html" class="btn btn-primary btn-sm">+ Neue Abrechnung</a>
     </div>
 
-    <div class="action-bar" style="margin-top:20px">
-      <a href="index.html" class="btn btn-primary">+ Neue Abrechnung</a>
-      <button class="btn btn-danger btn-sm" onclick="clearAllDrafts()">Alle löschen</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>ℹ️ Hinweise</h2>
-    <ul style="padding-left:20px; font-size:0.9rem; line-height:2">
-      <li>Entwürfe werden <strong>lokal in Ihrem Browser</strong> gespeichert (localStorage).</li>
-      <li>Beim Löschen des Browser-Verlaufs gehen Entwürfe verloren.</li>
-      <li>Bitte laden Sie wichtige Abrechnungen als PDF herunter.</li>
-      <li>Entwürfe können bearbeitet werden: auf <strong>Laden</strong> klicken, dann im Formular anpassen und erneut als PDF exportieren.</li>
-    </ul>
+    <div id="drafts-container"></div>
   </div>
 
 </main>
 
-<!-- jsPDF CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- ─── Toast Root ─────────────────────────────────────────────────── -->
+<div class="toast-root"></div>
+
 <script src="app.js"></script>
-<script src="pdf-gen.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', initDrafts);
+'use strict';
+
+// ─── Amount Calculation ───────────────────────────────────────────────────────
+function calcDraftBetrag(draft) {
+  const pendelKm    = parseFloat(draft.pendelKm)    || 0;
+  const arbeitstage = parseInt(draft.arbeitstage)   || 0;
+  const fahrten     = draft.fahrten                 || [];
+  const spesen      = draft.spesen                  || {};
+
+  const totalKm     = fahrten.reduce((sum, f) => sum + ((parseFloat(f.km) || 0) * 2), 0);
+  const pendelGes   = pendelKm * 2 * arbeitstage;
+  const erstattKm   = Math.max(0, totalKm - pendelGes);
+
+  const totalSpesen = (parseFloat(spesen.uebernachtung) || 0)
+                    + (parseFloat(spesen.oepnv)          || 0)
+                    + (parseFloat(spesen.parken)          || 0)
+                    + (parseFloat(spesen.sonstige)        || 0);
+
+  const betrag = erstattKm * 0.30 + totalSpesen;
+  return betrag;
+}
+
+// ─── Format saved date ────────────────────────────────────────────────────────
+function fmtSavedAt(iso) {
+  if (!iso) return '–';
+  try {
+    const d = new Date(iso);
+    const dd   = String(d.getDate()).padStart(2, '0');
+    const mm   = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const hh   = String(d.getHours()).padStart(2, '0');
+    const min  = String(d.getMinutes()).padStart(2, '0');
+    return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
+  } catch {
+    return iso;
+  }
+}
+
+// ─── Initials ─────────────────────────────────────────────────────────────────
+function initials(vorname, nachname) {
+  const a = (vorname  || '').trim()[0] || '';
+  const b = (nachname || '').trim()[0] || '';
+  return (a + b).toUpperCase() || '?';
+}
+
+// ─── Escape HTML ──────────────────────────────────────────────────────────────
+function escH(str) {
+  return String(str || '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ─── Render Drafts ────────────────────────────────────────────────────────────
+function renderDrafts() {
+  const drafts    = getDrafts();
+  const container = document.getElementById('drafts-container');
+  if (!container) return;
+
+  if (drafts.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <span class="empty-icon">📂</span>
+        <p>Keine Entwürfe vorhanden.</p>
+        <a href="index.html" class="btn btn-primary">+ Neue Abrechnung erstellen</a>
+      </div>
+    `;
+    return;
+  }
+
+  // Sort by savedAt desc
+  const sorted = [...drafts].sort((a, b) => {
+    const ta = a.savedAt ? new Date(a.savedAt).getTime() : 0;
+    const tb = b.savedAt ? new Date(b.savedAt).getTime() : 0;
+    return tb - ta;
+  });
+
+  const grid = document.createElement('div');
+  grid.className = 'drafts-grid';
+
+  sorted.forEach(draft => {
+    const p      = draft.profil  || {};
+    const name   = `${p.vorname || ''} ${p.nachname || ''}`.trim() || draft.id;
+    const betrag = calcDraftBetrag(draft);
+    const fahrtenCount = (draft.fahrten || []).length;
+    const meta   = `${fahrtenCount} Fahrt${fahrtenCount !== 1 ? 'en' : ''} · Gesamt: ${fmt(betrag)} · Gespeichert: ${fmtSavedAt(draft.savedAt)}`;
+    const zeitraum = draft.zeitraum ? ` · ${draft.zeitraum}` : '';
+
+    const card = document.createElement('div');
+    card.className = 'draft-card';
+    card.innerHTML = `
+      <div class="draft-avatar">${escH(initials(p.vorname, p.nachname))}</div>
+      <div class="draft-info">
+        <div class="draft-name">${escH(name)}</div>
+        <div class="draft-meta">${escH(meta)}${escH(zeitraum)}</div>
+      </div>
+      <div class="draft-actions">
+        <span class="draft-badge">${escH(draft.id)}</span>
+        <a href="index.html?draft=${encodeURIComponent(draft.id)}"
+           class="btn btn-primary btn-sm">Weiterbearbeiten</a>
+        <button class="btn btn-danger btn-sm" onclick="loescheDraft('${escH(draft.id)}')">Löschen</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  container.innerHTML = '';
+  container.appendChild(grid);
+}
+
+// ─── Delete Draft ─────────────────────────────────────────────────────────────
+function loescheDraft(id) {
+  const drafts = getDrafts();
+  const draft  = drafts.find(d => d.id === id);
+  const name   = draft ? `${draft.profil?.vorname || ''} ${draft.profil?.nachname || ''}`.trim() || id : id;
+
+  if (!confirm(`Entwurf "${name}" (${id}) wirklich löschen?`)) return;
+
+  deleteDraft(id);
+  toast(`Entwurf "${name}" gelöscht.`, 'success');
+  renderDrafts();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', renderDrafts);
 </script>
 
 </body>

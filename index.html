@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reisekostenabrechnung – Sozialhummel gGmbH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <div class="header-inner">
-    <h1>
-      🚗 Reisekostenabrechnung
-      <span class="subtitle">Sozialhummel gGmbH</span>
-    </h1>
+<!-- ─── Topbar ─────────────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="logo">🐝 Sozialhummel gGmbH</span>
     <nav>
       <a href="index.html" class="active">Neue Abrechnung</a>
       <a href="drafts.html">Entwürfe</a>
@@ -22,181 +22,905 @@
   </div>
 </header>
 
+<!-- ─── Draft Bar ──────────────────────────────────────────────────── -->
+<div id="draft-bar" class="draft-bar hidden">
+  <span>📝 Entwurf: <strong id="draft-bar-name">–</strong></span>
+  <span id="draft-bar-id" style="font-size:0.8rem; opacity:0.8;"></span>
+  <div class="draft-bar-actions">
+    <button class="btn btn-sm btn-ghost" onclick="speicherEntwurf()">💾 Speichern</button>
+    <a href="drafts.html" class="btn btn-sm btn-ghost">📋 Alle Entwürfe</a>
+  </div>
+</div>
+
 <main>
 
-  <!-- Mitarbeiterdaten -->
-  <div class="card">
-    <h2>👤 Mitarbeiter/in</h2>
-    <div class="form-row">
+  <!-- ─── Section 1: Mitarbeiter/in ──────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">👤 Mitarbeiter/in</div>
+
+    <div class="form-grid form-grid-2 mb-12">
       <div class="form-group">
-        <label for="firstName">Vorname</label>
-        <input type="text" id="firstName" placeholder="Erika" autocomplete="given-name">
+        <label for="vorname">Vorname *</label>
+        <input type="text" id="vorname" placeholder="Max" oninput="updateSummary()">
       </div>
       <div class="form-group">
-        <label for="lastName">Nachname</label>
-        <input type="text" id="lastName" placeholder="Mustermann" autocomplete="family-name">
-      </div>
-    </div>
-    <div class="form-row three">
-      <div class="form-group">
-        <label for="empStreet">Straße &amp; Hausnummer</label>
-        <input type="text" id="empStreet" placeholder="Musterstraße 1" autocomplete="street-address">
-      </div>
-      <div class="form-group">
-        <label for="empZip">PLZ</label>
-        <input type="text" id="empZip" placeholder="12345" autocomplete="postal-code" maxlength="5">
-      </div>
-      <div class="form-group">
-        <label for="empCity">Ort</label>
-        <input type="text" id="empCity" placeholder="Musterstadt" autocomplete="address-level2">
+        <label for="nachname">Nachname *</label>
+        <input type="text" id="nachname" placeholder="Mustermann" oninput="updateSummary()">
       </div>
     </div>
-    <div class="form-row">
+
+    <div class="form-grid form-grid-3 mb-12">
+      <div class="form-group" style="grid-column: span 2;">
+        <label for="strasse">Straße & Hausnummer *</label>
+        <input type="text" id="strasse" placeholder="Musterstraße 12">
+      </div>
       <div class="form-group">
-        <label for="empTeam">Team / Bereich</label>
-        <select id="empTeam">
-          <option value="">Bitte wählen …</option>
+        <label for="plz">PLZ</label>
+        <input type="text" id="plz" placeholder="53111" maxlength="10">
+      </div>
+    </div>
+
+    <div class="form-grid form-grid-2 mb-12">
+      <div class="form-group">
+        <label for="ort">Ort</label>
+        <input type="text" id="ort" placeholder="Bonn">
+      </div>
+      <div class="form-group">
+        <label for="iban">IBAN (für Erstattung)</label>
+        <input type="text" id="iban" placeholder="DE12 3456 7890 1234 5678 90">
+      </div>
+    </div>
+
+    <div class="form-grid form-grid-2 mb-12">
+      <div class="form-group">
+        <label for="rolle">Funktion / Rolle *</label>
+        <select id="rolle" onchange="rolleChanged()">
+          <option value="">– bitte wählen –</option>
+          <option value="assistenz">Assistenz</option>
+          <option value="tk">Teamkoordination</option>
+          <option value="andere">Andere</option>
         </select>
       </div>
-      <div class="form-group">
-        <label for="empIban">IBAN (für Erstattung)</label>
-        <input type="text" id="empIban" placeholder="DE12 3456 7890 1234 5678 90" autocomplete="off">
+    </div>
+
+    <!-- Assistenz block -->
+    <div id="block-assistenz" class="hidden">
+      <div class="form-grid form-grid-2 mb-12">
+        <div class="form-group">
+          <label for="empTeam">Team *</label>
+          <select id="empTeam" onchange="teamChanged()">
+            <option value="">– Team wählen –</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="teamAdresse">Adresse des Teams (= Arbeitsort für Pendelabzug)</label>
+          <input type="text" id="teamAdresse" readonly placeholder="Wird automatisch befüllt">
+        </div>
       </div>
+    </div>
+
+    <!-- TK block -->
+    <div id="block-tk" class="hidden">
+      <div class="form-grid form-grid-2 mb-12">
+        <div class="form-group">
+          <label for="bereich">Bereich / Region</label>
+          <input type="text" id="bereich" placeholder="z.B. Rhein-Sieg-Kreis">
+        </div>
+        <div class="form-group">
+          <label for="arbeitsortTk">Arbeitsort-Adresse (für Pendelabzug)</label>
+          <input type="text" id="arbeitsortTk" placeholder="z.B. Schlossstr. 12, 53721 Siegburg">
+          <span style="font-size:0.75rem; color:var(--gray-500); margin-top:3px;">Wird für den Pendelabzug verwendet</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Andere block -->
+    <div id="block-andere" class="hidden">
+      <div class="form-grid form-grid-2 mb-12">
+        <div class="form-group">
+          <label for="rolleText">Funktionsbezeichnung</label>
+          <input type="text" id="rolleText" placeholder="z.B. Verwaltung, Honorarkraft …">
+        </div>
+      </div>
+    </div>
+
+    <div class="action-row" style="margin-top:8px;">
+      <button class="btn btn-ghost btn-sm" onclick="profilMerken()">💾 Profil merken</button>
     </div>
   </div>
 
-  <!-- Abrechnungszeitraum & Pendelstrecke -->
-  <div class="card">
-    <h2>📅 Abrechnungszeitraum &amp; Pendelstrecke</h2>
-    <div class="form-row">
+  <!-- ─── Section 2: Zeitraum & Pendel ───────────────────────────── -->
+  <div class="section">
+    <div class="section-title">📅 Zeitraum &amp; Pendelstrecke</div>
+
+    <div class="form-grid form-grid-2 mb-12">
       <div class="form-group">
-        <label for="period">Abrechnungszeitraum</label>
-        <input type="text" id="period" placeholder="z.B. Mai 2025 oder 01.05.–31.05.2025">
+        <label for="zeitraum">Abrechnungszeitraum *</label>
+        <input type="text" id="zeitraum" placeholder="z.B. Mai 2026">
+      </div>
+      <div class="form-group">
+        <label for="arbeitstage">Anzahl Arbeitstage (im Zeitraum)</label>
+        <input type="number" id="arbeitstage" min="0" max="31" value="20" oninput="updateSummary()">
       </div>
     </div>
-    <div class="form-row">
+
+    <div class="form-grid form-grid-2 mb-12">
       <div class="form-group">
-        <label for="commuteKm">Pendelstrecke (km, einfach)</label>
-        <input type="number" id="commuteKm" min="0" step="1" placeholder="0"
-               title="Einfache Strecke Wohnort → Hauptarbeitsort (wird pro Dienstfahrt abgezogen)">
+        <label for="pendelKm">Pendelstrecke km (einfach)</label>
+        <input type="number" id="pendelKm" min="0" step="0.1" value="0" oninput="updateSummary()">
       </div>
       <div class="form-group">
-        <label for="commuteTrips">Anzahl Arbeitstage im Zeitraum</label>
-        <input type="number" id="commuteTrips" min="0" step="1" placeholder="0"
-               title="Wie viele Tage haben Sie die Pendelstrecke zurückgelegt?">
+        <label>&nbsp;</label>
+        <button class="btn btn-ghost" id="btn-pendel-maps" onclick="berechnePendel()" title="Berechnet Wohnort → Arbeitsort via Google Maps">
+          📍 via Maps berechnen
+        </button>
       </div>
     </div>
-    <div class="info-box">
-      <strong>ℹ️ Hinweis zur Pendelstrecke</strong>
-      Die einfache Strecke × Anzahl Arbeitstage wird vom Erstattungsbetrag abgezogen.
-      Diese Kosten können Sie aber als <strong>Entfernungspauschale (Anlage N)</strong> in der Steuererklärung geltend machen.
+
+    <div class="info-box blue">
+      <strong>Pendelabzug</strong>
+      Die einfache Pendelstrecke × 2 × Arbeitstage wird vom Gesamterstattungsbetrag abgezogen.
+      Beispiel: 15 km × 2 × 20 Tage = 600 km werden nicht erstattet (übliche Wegstrecke Wohnung ↔ Arbeitsort).
     </div>
   </div>
 
-  <!-- Fahrten -->
-  <div class="card">
-    <h2>🗺️ Dienstliche Fahrten</h2>
+  <!-- ─── Section 3: Dienstliche Fahrten ─────────────────────────── -->
+  <div class="section">
+    <div class="section-title">🚗 Dienstliche Fahrten</div>
 
-    <div style="overflow-x:auto">
+    <div class="info-box green mb-12">
+      📍 KM als <strong>einfache Strecke</strong> eingeben – die Hin- und Rückfahrt wird automatisch verdoppelt.
+      Der angezeigte Betrag pro Zeile = km × 2 × 0,30 €.
+    </div>
+
+    <div class="trip-wrap">
       <table class="trip-table">
         <thead>
           <tr>
             <th>Datum</th>
             <th>Von</th>
             <th>Nach</th>
-            <th>Zweck</th>
-            <th>km</th>
-            <th style="text-align:right">Betrag</th>
+            <th>Art der Fahrt</th>
+            <th>Zweck / Beschreibung</th>
+            <th>KM (einfach)</th>
+            <th>Betrag</th>
             <th></th>
           </tr>
         </thead>
-        <tbody id="trip-tbody">
-          <!-- rows inserted by JS -->
-        </tbody>
+        <tbody id="fahrt-body"></tbody>
       </table>
     </div>
 
-    <button class="add-row-btn" onclick="addTripRow()">
-      + Fahrt hinzufügen
-    </button>
-
-    <div class="info-box" style="margin-top:12px">
-      <strong>📍 Kilometer per Google Maps berechnen</strong>
-      Klicken Sie auf das 📍-Symbol in der km-Spalte um die Entfernung automatisch zu berechnen.
-      Dafür ist ein Google Maps API Key im Admin-Bereich erforderlich.
-    </div>
+    <button class="add-trip-btn" onclick="addFahrtRow()">+ Fahrt hinzufügen</button>
   </div>
 
-  <!-- Anmerkungen -->
-  <div class="card">
-    <h2>📝 Anmerkungen</h2>
+  <!-- ─── Section 4: Spesen & Auslagen ───────────────────────────── -->
+  <div class="section">
+    <div class="section-title">🧾 Spesen &amp; Auslagen</div>
+
+    <div class="info-box amber mb-12">
+      <strong>Verpflegungspauschalen (steuerlich absetzbar)</strong>
+      Ab 8 Std. Abwesenheit: 14,00 € / ab 24 Std.: 28,00 €. Diese werden hier <em>nicht</em> direkt ausgezahlt,
+      sind aber in der Steuererklärung (Anlage N) als Werbungskosten absetzbar.
+    </div>
+
+    <div class="form-grid form-grid-2 mb-12">
+      <div class="form-group">
+        <label for="s-uebernacht">Übernachtungskosten (€)</label>
+        <input type="number" id="s-uebernacht" min="0" step="0.01" value="0" oninput="updateSummary()">
+      </div>
+      <div class="form-group">
+        <label for="s-oepnv">ÖPNV / Bahn / Taxi (€)</label>
+        <input type="number" id="s-oepnv" min="0" step="0.01" value="0" oninput="updateSummary()">
+      </div>
+    </div>
+
+    <div class="form-grid form-grid-2 mb-12">
+      <div class="form-group">
+        <label for="s-parken">Parkgebühren / Maut (€)</label>
+        <input type="number" id="s-parken" min="0" step="0.01" value="0" oninput="updateSummary()">
+      </div>
+      <div class="form-group">
+        <label for="s-sonstige">Sonstige Auslagen (€)</label>
+        <input type="number" id="s-sonstige" min="0" step="0.01" value="0" oninput="updateSummary()">
+      </div>
+    </div>
+
+    <div class="form-group mb-12">
+      <label for="s-sonstige-text">Beschreibung sonstige Auslagen</label>
+      <textarea id="s-sonstige-text" placeholder="Bitte sonstige Auslagen kurz beschreiben …"></textarea>
+    </div>
+
     <div class="form-group">
-      <label for="notes">Hinweise / Begründungen (optional)</label>
-      <textarea id="notes" placeholder="z.B. Besonderheiten, Parkgebühren, Fahrtgrund …"></textarea>
+      <label>Belege (PDF, JPG, PNG)</label>
+      <div id="upload-zone" class="upload-zone"
+           onclick="document.getElementById('file-input').click()"
+           ondragover="event.preventDefault(); this.classList.add('dragover')"
+           ondragleave="this.classList.remove('dragover')"
+           ondrop="handleDrop(event)">
+        <span class="upload-icon">📎</span>
+        <strong>Klicken oder Dateien hierher ziehen</strong>
+        <div style="font-size:0.8rem; margin-top:4px;">PDF, JPG, PNG – max. 10 MB pro Datei</div>
+      </div>
+      <input type="file" id="file-input" accept="application/pdf,image/jpeg,image/png" multiple
+             style="display:none" onchange="handleFileInput(this.files)">
     </div>
-    <div class="info-box">
-      <strong>💡 Verpflegungspauschalen</strong>
-      Ab <strong>8 Std. Abwesenheit: 14,00 €</strong> / ab <strong>24 Std.: 28,00 €</strong> –
-      diese können über die Steuererklärung geltend gemacht werden.
+    <div id="file-chips" class="file-chips"></div>
+  </div>
+
+  <!-- ─── Section 5: Anmerkungen ─────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">💬 Anmerkungen</div>
+
+    <div class="form-group mb-12">
+      <label for="anmerkungen">Anmerkungen (optional)</label>
+      <textarea id="anmerkungen" placeholder="Besondere Hinweise, Erklärungen zu einzelnen Fahrten …" style="min-height:100px;"></textarea>
+    </div>
+
+    <div class="info-box green">
+      <strong>Verpflegungspauschalen – Info für die Steuererklärung</strong>
+      Ab 8 Std.: 14,00 € / ab 24 Std.: 28,00 € → Eintragen in Anlage N als Werbungskosten.
     </div>
   </div>
 
-  <!-- Zusammenfassung -->
-  <div class="card">
-    <h2>💶 Zusammenfassung</h2>
-    <div class="summary-box">
-      <div class="summary-item">
-        <span class="label">Gesamt km</span>
-        <span class="value" id="sumTotalKm">0 km</span>
+  <!-- ─── Section 6: Zusammenfassung & Aktionen ──────────────────── -->
+  <div class="section">
+    <div class="section-title">📊 Zusammenfassung</div>
+
+    <div class="summary-strip mb-12">
+      <div class="sum-block">
+        <span class="sum-label">Gesamt km</span>
+        <span class="sum-value" id="sum-gesamt-km">0 km</span>
       </div>
-      <div class="summary-item">
-        <span class="label">Abzug Pendel</span>
-        <span class="value" id="sumCommuteKm">0 km</span>
+      <div class="sum-block">
+        <span class="sum-label">Abzug Pendel</span>
+        <span class="sum-value" id="sum-pendel-km">0 km</span>
       </div>
-      <div class="summary-item">
-        <span class="label">Erstattungs-km</span>
-        <span class="value" id="sumReimburseKm">0 km</span>
+      <div class="sum-block">
+        <span class="sum-label">Erstattungs-km</span>
+        <span class="sum-value" id="sum-erstatt-km">0 km</span>
       </div>
-      <div class="summary-item total">
-        <span class="label">Gesamtbetrag</span>
-        <span class="value" id="sumTotal">0,00 €</span>
+      <div class="sum-block">
+        <span class="sum-label">Gesamtbetrag</span>
+        <span class="sum-value" id="sum-gesamt-betrag">0,00 €</span>
       </div>
     </div>
 
-    <div class="action-bar">
-      <button class="btn btn-primary" onclick="generatePDFFromForm()">
-        📄 PDF erstellen &amp; herunterladen
-      </button>
-      <button class="btn btn-outline" onclick="saveDraft()">
-        💾 Entwurf speichern
-      </button>
-      <button class="btn btn-secondary" onclick="resetForm()">
-        🗑️ Formular leeren
-      </button>
+    <div class="status-bar">
+      ✓ Genehmigungsweg: Vorgesetzte/r → Buchhaltung → Auszahlung mit nächster Gehaltsabrechnung
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="pdfErstellen()">📄 PDF erstellen &amp; herunterladen</button>
+      <button class="btn btn-ghost" onclick="speicherEntwurf()">💾 Entwurf speichern</button>
+      <button class="btn btn-ghost" onclick="formLeeren()" style="margin-left:auto; color:var(--red); border-color:var(--red-light);">🗑 Formular leeren</button>
     </div>
   </div>
 
 </main>
 
-<!-- jsPDF CDN -->
+<!-- ─── Toast Root ─────────────────────────────────────────────────── -->
+<div class="toast-root"></div>
+
+<!-- ─── Scripts ───────────────────────────────────────────────────── -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="app.js"></script>
 <script src="pdf-gen.js"></script>
 <script>
-  function resetForm() {
-    if (!confirm('Alle Eingaben verwerfen?')) return;
-    document.getElementById('period').value = '';
-    document.getElementById('commuteKm').value = '';
-    document.getElementById('commuteTrips').value = '';
-    document.getElementById('notes').value = '';
-    document.getElementById('trip-tbody').innerHTML = '';
-    tripRows = [];
-    rowCounter = 0;
-    addTripRow();
-    updateSummary();
+'use strict';
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let fahrten       = [];
+let fahrtCounter  = 0;
+let uploadedFiles = [];
+let currentDraftId = null;
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+function init() {
+  ladeProfilAusStorage();
+  populateTeamDropdown();
+  rolleChanged();
+
+  // Check for ?draft=ID
+  const params = new URLSearchParams(window.location.search);
+  const draftId = params.get('draft');
+  if (draftId) {
+    loadDraft(draftId);
+  } else {
+    addFahrtRow();
   }
 
-  document.addEventListener('DOMContentLoaded', initIndex);
+  // Pre-fill Zeitraum with current month
+  const jetzt = new Date();
+  const monate = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  const zeitraumEl = document.getElementById('zeitraum');
+  if (zeitraumEl && !zeitraumEl.value) {
+    zeitraumEl.value = `${monate[jetzt.getMonth()]} ${jetzt.getFullYear()}`;
+  }
+
+  updateSummary();
+  checkMapsButton();
+}
+
+// ─── Populate Team Dropdown ───────────────────────────────────────────────────
+function populateTeamDropdown() {
+  const sel = document.getElementById('empTeam');
+  if (!sel) return;
+  const teams = getTeams();
+  sel.innerHTML = '<option value="">– Team wählen –</option>';
+  teams.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.name;
+    opt.dataset.adresse = t.adresse || '';
+    sel.appendChild(opt);
+  });
+}
+
+// ─── Load Draft ───────────────────────────────────────────────────────────────
+function loadDraft(id) {
+  const drafts = getDrafts();
+  const draft  = drafts.find(d => d.id === id);
+  if (!draft) {
+    toast('Entwurf nicht gefunden.', 'error');
+    addFahrtRow();
+    return;
+  }
+
+  currentDraftId = draft.id;
+
+  // Profil
+  const p = draft.profil || {};
+  setValue('vorname',    p.vorname    || '');
+  setValue('nachname',   p.nachname   || '');
+  setValue('strasse',    p.strasse    || '');
+  setValue('plz',        p.plz        || '');
+  setValue('ort',        p.ort        || '');
+  setValue('iban',       p.iban       || '');
+  setValue('rolle',      p.rolle      || '');
+  rolleChanged();
+
+  if (p.rolle === 'assistenz') {
+    setValue('empTeam', p.teamId || '');
+    teamChanged();
+    if (p.teamAdresse) setValue('teamAdresse', p.teamAdresse);
+  } else if (p.rolle === 'tk') {
+    setValue('bereich',     p.bereich     || '');
+    setValue('arbeitsortTk', p.arbeitsortTk || '');
+  } else if (p.rolle === 'andere') {
+    setValue('rolleText', p.rolleText || '');
+  }
+
+  // Zeitraum
+  setValue('zeitraum',    draft.zeitraum    || '');
+  setValue('arbeitstage', draft.arbeitstage !== undefined ? draft.arbeitstage : 20);
+  setValue('pendelKm',    draft.pendelKm    !== undefined ? draft.pendelKm    : 0);
+
+  // Fahrten
+  fahrten = [];
+  const tbody = document.getElementById('fahrt-body');
+  tbody.innerHTML = '';
+  (draft.fahrten || []).forEach(f => addFahrtRow(f));
+  if (fahrten.length === 0) addFahrtRow();
+
+  // Spesen
+  const sp = draft.spesen || {};
+  setValue('s-uebernacht',   sp.uebernachtung || 0);
+  setValue('s-oepnv',        sp.oepnv         || 0);
+  setValue('s-parken',       sp.parken         || 0);
+  setValue('s-sonstige',     sp.sonstige       || 0);
+  setValue('s-sonstige-text', sp.sonstigeText  || '');
+
+  setValue('anmerkungen', draft.anmerkungen || '');
+
+  // Files (names only from draft)
+  uploadedFiles = [];
+  renderFileChips();
+
+  showDraftBar(draft.id, `${p.vorname || ''} ${p.nachname || ''}`.trim() || draft.id);
+  updateSummary();
+}
+
+function setValue(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+}
+
+// ─── Rolle Changed ────────────────────────────────────────────────────────────
+function rolleChanged() {
+  const rolle = document.getElementById('rolle').value;
+  document.getElementById('block-assistenz').classList.toggle('hidden', rolle !== 'assistenz');
+  document.getElementById('block-tk').classList.toggle('hidden',        rolle !== 'tk');
+  document.getElementById('block-andere').classList.toggle('hidden',    rolle !== 'andere');
+}
+
+// ─── Team Changed ─────────────────────────────────────────────────────────────
+function teamChanged() {
+  const sel = document.getElementById('empTeam');
+  const opt = sel.selectedOptions[0];
+  const adresse = opt ? (opt.dataset.adresse || '') : '';
+  const addrField = document.getElementById('teamAdresse');
+  if (addrField) addrField.value = adresse;
+}
+
+// ─── Berechne Pendel ──────────────────────────────────────────────────────────
+async function berechnePendel() {
+  const ort      = document.getElementById('ort').value.trim();
+  const strasse  = document.getElementById('strasse').value.trim();
+  const plz      = document.getElementById('plz').value.trim();
+  const rolle    = document.getElementById('rolle').value;
+
+  let wohnort = [strasse, plz, ort].filter(Boolean).join(', ');
+  if (!wohnort) {
+    toast('Bitte Wohnort (Straße, PLZ, Ort) angeben.', 'warning');
+    return;
+  }
+
+  let arbeitsort = '';
+  if (rolle === 'assistenz') {
+    arbeitsort = document.getElementById('teamAdresse').value.trim();
+  } else if (rolle === 'tk') {
+    arbeitsort = document.getElementById('arbeitsortTk').value.trim();
+  }
+
+  if (!arbeitsort) {
+    toast('Bitte zuerst den Arbeitsort angeben (Team oder TK-Arbeitsort).', 'warning');
+    return;
+  }
+
+  const btn = document.getElementById('btn-pendel-maps');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Berechne …'; }
+
+  try {
+    const km = await berechnKm(wohnort, arbeitsort);
+    document.getElementById('pendelKm').value = km;
+    updateSummary();
+    toast(`Pendelstrecke berechnet: ${km} km`, 'success');
+  } catch (err) {
+    toast(err.message || 'Fehler bei Maps-Berechnung.', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📍 via Maps berechnen'; }
+  }
+}
+
+// ─── Add Fahrt Row ────────────────────────────────────────────────────────────
+function addFahrtRow(data = {}) {
+  fahrtCounter++;
+  const id = 'f' + fahrtCounter;
+  const row = {
+    id,
+    datum: data.datum || todayISO(),
+    von:   data.von   || '',
+    nach:  data.nach  || '',
+    art:   data.art   || 'Teamtreffen',
+    zweck: data.zweck || '',
+    km:    data.km    !== undefined ? data.km : ''
+  };
+  fahrten.push(row);
+
+  const tbody = document.getElementById('fahrt-body');
+  const tr = document.createElement('tr');
+  tr.id = `row-${id}`;
+  tr.innerHTML = `
+    <td><input type="date" id="datum-${id}" value="${row.datum}" onchange="updateFahrtBetrag('${id}')"></td>
+    <td><input type="text" id="von-${id}" value="${escHtml(row.von)}" placeholder="Startort" style="min-width:100px;"></td>
+    <td><input type="text" id="nach-${id}" value="${escHtml(row.nach)}" placeholder="Zielort" style="min-width:100px;"></td>
+    <td>
+      <select id="art-${id}" onchange="updateFahrtBetrag('${id}')">
+        <option value="Teamtreffen"${row.art==='Teamtreffen'?' selected':''}>Teamtreffen / Dienstbesprechung</option>
+        <option value="Urlaubsbegleitung"${row.art==='Urlaubsbegleitung'?' selected':''}>Urlaubsbegleitung</option>
+        <option value="Helfertreffen"${row.art==='Helfertreffen'?' selected':''}>Helfertreffen</option>
+        <option value="Kundenbesuch"${row.art==='Kundenbesuch'?' selected':''}>Kundenbesuch / Klientenbegleitung</option>
+        <option value="Fortbildung"${row.art==='Fortbildung'?' selected':''}>Fortbildung / Schulung</option>
+        <option value="Sonstiges"${row.art==='Sonstiges'?' selected':''}>Sonstiges</option>
+      </select>
+    </td>
+    <td><input type="text" id="zweck-${id}" value="${escHtml(row.zweck)}" placeholder="Beschreibung" style="min-width:120px;"></td>
+    <td>
+      <div class="km-input-cell">
+        <input type="number" id="km-${id}" value="${row.km}" min="0" step="0.1" placeholder="0"
+               style="width:70px;" oninput="updateFahrtBetrag('${id}')">
+        <button class="btn btn-ghost btn-icon btn-sm" title="Via Maps berechnen"
+                onclick="berechnFahrtKm('${id}')">📍</button>
+      </div>
+    </td>
+    <td><span id="betrag-${id}" style="font-weight:600; color:var(--green-dark);">0,00 €</span></td>
+    <td>
+      <button class="btn btn-icon btn-sm" id="del-${id}"
+              style="color:var(--red); background:var(--red-light); border:none;"
+              onclick="removeFahrtRow('${id}')" title="Zeile löschen">✕</button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+  updateFahrtBetrag(id);
+  updateDeleteButtons();
+}
+
+// ─── Remove Fahrt Row ─────────────────────────────────────────────────────────
+function removeFahrtRow(id) {
+  if (fahrten.length <= 1) {
+    toast('Mindestens eine Fahrt muss vorhanden sein.', 'warning');
+    return;
+  }
+  fahrten = fahrten.filter(f => f.id !== id);
+  const row = document.getElementById(`row-${id}`);
+  if (row) row.remove();
+  updateDeleteButtons();
+  updateSummary();
+}
+
+function updateDeleteButtons() {
+  fahrten.forEach(f => {
+    const btn = document.getElementById(`del-${f.id}`);
+    if (btn) btn.disabled = fahrten.length <= 1;
+  });
+}
+
+// ─── Berechne Fahrt KM via Maps ───────────────────────────────────────────────
+async function berechnFahrtKm(id) {
+  const von  = document.getElementById(`von-${id}`)?.value.trim();
+  const nach = document.getElementById(`nach-${id}`)?.value.trim();
+  if (!von || !nach) {
+    toast('Bitte Von und Nach für diese Zeile angeben.', 'warning');
+    return;
+  }
+
+  const btn = document.querySelector(`#row-${id} .btn-icon`);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+
+  try {
+    const km = await berechnKm(von, nach);
+    const inp = document.getElementById(`km-${id}`);
+    if (inp) { inp.value = km; }
+    updateFahrtBetrag(id);
+    toast(`Strecke berechnet: ${km} km`, 'success');
+  } catch (err) {
+    toast(err.message || 'Fehler bei Maps-Berechnung.', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📍'; }
+  }
+}
+
+// ─── Update Fahrt Betrag ──────────────────────────────────────────────────────
+function updateFahrtBetrag(id) {
+  const km  = parseFloat(document.getElementById(`km-${id}`)?.value) || 0;
+  const betrag = km * 2 * RATE_PER_KM;
+  const el = document.getElementById(`betrag-${id}`);
+  if (el) el.textContent = fmt(betrag);
+  updateSummary();
+}
+
+// ─── Update Summary ───────────────────────────────────────────────────────────
+function updateSummary() {
+  let totalKm = 0;
+  fahrten.forEach(f => {
+    const km = parseFloat(document.getElementById(`km-${f.id}`)?.value) || 0;
+    totalKm += km * 2;
+  });
+
+  const pendelKm    = parseFloat(document.getElementById('pendelKm')?.value) || 0;
+  const arbeitstage = parseInt(document.getElementById('arbeitstage')?.value) || 0;
+  const pendelGes   = pendelKm * 2 * arbeitstage;
+  const erstattKm   = Math.max(0, totalKm - pendelGes);
+
+  const spesen = (parseFloat(document.getElementById('s-uebernacht')?.value) || 0)
+               + (parseFloat(document.getElementById('s-oepnv')?.value)      || 0)
+               + (parseFloat(document.getElementById('s-parken')?.value)      || 0)
+               + (parseFloat(document.getElementById('s-sonstige')?.value)    || 0);
+
+  const betragGes = erstattKm * RATE_PER_KM + spesen;
+
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setEl('sum-gesamt-km',    fmtKm(totalKm));
+  setEl('sum-pendel-km',    fmtKm(pendelGes));
+  setEl('sum-erstatt-km',   fmtKm(erstattKm));
+  setEl('sum-gesamt-betrag', fmt(betragGes));
+}
+
+// ─── Collect Data ─────────────────────────────────────────────────────────────
+function collectData() {
+  const rolle = document.getElementById('rolle').value;
+
+  const profil = {
+    vorname:      document.getElementById('vorname').value.trim(),
+    nachname:     document.getElementById('nachname').value.trim(),
+    strasse:      document.getElementById('strasse').value.trim(),
+    plz:          document.getElementById('plz').value.trim(),
+    ort:          document.getElementById('ort').value.trim(),
+    iban:         document.getElementById('iban').value.trim(),
+    rolle,
+    rolleText:    document.getElementById('rolleText')?.value.trim() || '',
+    teamId:       '',
+    teamName:     '',
+    teamAdresse:  '',
+    bereich:      '',
+    arbeitsortTk: ''
+  };
+
+  if (rolle === 'assistenz') {
+    const sel = document.getElementById('empTeam');
+    profil.teamId      = sel?.value || '';
+    profil.teamName    = sel?.selectedOptions[0]?.textContent || '';
+    profil.teamAdresse = document.getElementById('teamAdresse')?.value.trim() || '';
+    profil.rolleText   = 'Assistenz';
+  } else if (rolle === 'tk') {
+    profil.bereich      = document.getElementById('bereich')?.value.trim() || '';
+    profil.arbeitsortTk = document.getElementById('arbeitsortTk')?.value.trim() || '';
+    profil.rolleText    = 'Teamkoordination';
+  }
+
+  const fahrtData = fahrten.map(f => ({
+    datum: document.getElementById(`datum-${f.id}`)?.value || '',
+    von:   document.getElementById(`von-${f.id}`)?.value.trim()   || '',
+    nach:  document.getElementById(`nach-${f.id}`)?.value.trim()  || '',
+    art:   document.getElementById(`art-${f.id}`)?.value          || 'Sonstiges',
+    zweck: document.getElementById(`zweck-${f.id}`)?.value.trim() || '',
+    km:    parseFloat(document.getElementById(`km-${f.id}`)?.value) || 0
+  }));
+
+  return {
+    id:          currentDraftId || newAntragId(),
+    savedAt:     new Date().toISOString(),
+    zeitraum:    document.getElementById('zeitraum').value.trim(),
+    arbeitstage: parseInt(document.getElementById('arbeitstage').value) || 0,
+    pendelKm:    parseFloat(document.getElementById('pendelKm').value) || 0,
+    profil,
+    fahrten:     fahrtData,
+    spesen: {
+      uebernachtung: parseFloat(document.getElementById('s-uebernacht').value) || 0,
+      oepnv:         parseFloat(document.getElementById('s-oepnv').value)      || 0,
+      parken:        parseFloat(document.getElementById('s-parken').value)      || 0,
+      sonstige:      parseFloat(document.getElementById('s-sonstige').value)    || 0,
+      sonstigeText:  document.getElementById('s-sonstige-text').value.trim()
+    },
+    anmerkungen: document.getElementById('anmerkungen').value.trim(),
+    belegNamen:  uploadedFiles.map(f => f.name)
+  };
+}
+
+// ─── Speicher Entwurf ─────────────────────────────────────────────────────────
+function speicherEntwurf() {
+  const data = collectData();
+  if (!currentDraftId) currentDraftId = data.id;
+  else data.id = currentDraftId;
+  saveDraft(data);
+  const name = `${data.profil.vorname} ${data.profil.nachname}`.trim() || data.id;
+  showDraftBar(data.id, name);
+  toast('Entwurf gespeichert.', 'success');
+}
+
+// ─── PDF Erstellen ────────────────────────────────────────────────────────────
+async function pdfErstellen() {
+  const data = collectData();
+
+  // Validierung
+  if (!data.profil.vorname || !data.profil.nachname) {
+    toast('Bitte Vor- und Nachname angeben.', 'error');
+    return;
+  }
+  if (!data.zeitraum) {
+    toast('Bitte Abrechnungszeitraum angeben.', 'error');
+    return;
+  }
+  if (!data.profil.iban) {
+    toast('Bitte IBAN für die Erstattung angeben.', 'error');
+    return;
+  }
+  if (data.fahrten.length === 0 || data.fahrten.every(f => f.km <= 0)) {
+    toast('Bitte mindestens eine Fahrt mit KM-Angabe eintragen.', 'warning');
+    return;
+  }
+
+  if (!currentDraftId) currentDraftId = data.id;
+  saveDraft(data);
+
+  try {
+    const btn = document.querySelector('.btn-primary');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Erstelle PDF …'; }
+    await generiereUndLadePDF(data, uploadedFiles);
+    toast('PDF erfolgreich erstellt und heruntergeladen!', 'success');
+  } catch (err) {
+    console.error(err);
+    toast('Fehler beim PDF-Erstellen: ' + (err.message || err), 'error');
+  } finally {
+    const btn = document.querySelector('.btn-primary');
+    if (btn) { btn.disabled = false; btn.textContent = '📄 PDF erstellen & herunterladen'; }
+  }
+}
+
+// ─── Formular Leeren ──────────────────────────────────────────────────────────
+function formLeeren() {
+  if (!confirm('Formular wirklich leeren? Alle nicht gespeicherten Daten gehen verloren.')) return;
+
+  ['vorname','nachname','strasse','plz','ort','iban',
+   'zeitraum','anmerkungen','s-sonstige-text',
+   'bereich','arbeitsortTk','rolleText'].forEach(id => setValue(id, ''));
+
+  setValue('rolle', '');
+  rolleChanged();
+  setValue('arbeitstage', 20);
+  setValue('pendelKm', 0);
+  setValue('s-uebernacht', 0);
+  setValue('s-oepnv', 0);
+  setValue('s-parken', 0);
+  setValue('s-sonstige', 0);
+
+  fahrten = [];
+  fahrtCounter = 0;
+  document.getElementById('fahrt-body').innerHTML = '';
+  addFahrtRow();
+
+  uploadedFiles = [];
+  renderFileChips();
+
+  currentDraftId = null;
+  document.getElementById('draft-bar').classList.add('hidden');
+
+  updateSummary();
+  toast('Formular geleert.', 'success');
+}
+
+// ─── File Handling ────────────────────────────────────────────────────────────
+function handleDrop(event) {
+  event.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  handleFiles(event.dataTransfer.files);
+}
+
+function handleFileInput(files) {
+  handleFiles(files);
+}
+
+function handleFiles(files) {
+  const allowed = ['application/pdf', 'image/jpeg', 'image/png'];
+  const maxSize = 10 * 1024 * 1024;
+
+  Array.from(files).forEach(file => {
+    if (!allowed.includes(file.type)) {
+      toast(`"${file.name}" – Dateityp nicht unterstützt (nur PDF, JPG, PNG).`, 'warning');
+      return;
+    }
+    if (file.size > maxSize) {
+      toast(`"${file.name}" – Datei zu groß (max. 10 MB).`, 'warning');
+      return;
+    }
+    // Check duplicate
+    if (uploadedFiles.find(f => f.name === file.name && f.size === file.size)) {
+      toast(`"${file.name}" – bereits hinzugefügt.`, 'warning');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      uploadedFiles.push({ name: file.name, size: file.size, type: file.type, dataUrl: e.target.result });
+      renderFileChips();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Reset file input so same file can be added again if removed
+  const fi = document.getElementById('file-input');
+  if (fi) fi.value = '';
+}
+
+function removeFile(idx) {
+  uploadedFiles.splice(idx, 1);
+  renderFileChips();
+}
+
+function renderFileChips() {
+  const container = document.getElementById('file-chips');
+  if (!container) return;
+  container.innerHTML = '';
+  uploadedFiles.forEach((f, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'file-chip';
+    const sizeKb = (f.size / 1024).toFixed(0);
+    chip.innerHTML = `
+      <span>📄 ${escHtml(f.name)}</span>
+      <span style="color:var(--gray-400); font-size:0.75rem;">${sizeKb} KB</span>
+      <button class="chip-remove" onclick="removeFile(${i})" title="Entfernen">×</button>
+    `;
+    container.appendChild(chip);
+  });
+}
+
+// ─── Profil merken ────────────────────────────────────────────────────────────
+function profilMerken() {
+  const rolle = document.getElementById('rolle').value;
+  const profil = {
+    vorname:      document.getElementById('vorname').value.trim(),
+    nachname:     document.getElementById('nachname').value.trim(),
+    strasse:      document.getElementById('strasse').value.trim(),
+    plz:          document.getElementById('plz').value.trim(),
+    ort:          document.getElementById('ort').value.trim(),
+    iban:         document.getElementById('iban').value.trim(),
+    rolle,
+    rolleText:    document.getElementById('rolleText')?.value.trim() || '',
+    teamId:       document.getElementById('empTeam')?.value          || '',
+    bereich:      document.getElementById('bereich')?.value.trim()    || '',
+    arbeitsortTk: document.getElementById('arbeitsortTk')?.value.trim() || ''
+  };
+  store.set('profil', profil);
+  toast('Profil gespeichert.', 'success');
+}
+
+// ─── Profil laden ─────────────────────────────────────────────────────────────
+function ladeProfilAusStorage() {
+  const p = getProfile();
+  if (!p || !p.vorname) return;
+
+  setValue('vorname',  p.vorname  || '');
+  setValue('nachname', p.nachname || '');
+  setValue('strasse',  p.strasse  || '');
+  setValue('plz',      p.plz      || '');
+  setValue('ort',      p.ort      || '');
+  setValue('iban',     p.iban     || '');
+  setValue('rolle',    p.rolle    || '');
+
+  rolleChanged();
+
+  if (p.rolle === 'assistenz') {
+    // Team dropdown may not be populated yet; populate then set
+    populateTeamDropdown();
+    setValue('empTeam', p.teamId || '');
+    teamChanged();
+  } else if (p.rolle === 'tk') {
+    setValue('bereich',      p.bereich      || '');
+    setValue('arbeitsortTk', p.arbeitsortTk || '');
+  } else if (p.rolle === 'andere') {
+    setValue('rolleText', p.rolleText || '');
+  }
+}
+
+// ─── Show Draft Bar ───────────────────────────────────────────────────────────
+function showDraftBar(id, name) {
+  const bar = document.getElementById('draft-bar');
+  if (!bar) return;
+  bar.classList.remove('hidden');
+  const nameEl = document.getElementById('draft-bar-name');
+  const idEl   = document.getElementById('draft-bar-id');
+  if (nameEl) nameEl.textContent = name || id;
+  if (idEl)   idEl.textContent   = id;
+}
+
+// ─── Check Maps Button ────────────────────────────────────────────────────────
+function checkMapsButton() {
+  const ag  = getAG();
+  const btn = document.getElementById('btn-pendel-maps');
+  if (!btn) return;
+  if (!ag.mapsKey || ag.mapsKey === 'YOUR_API_KEY') {
+    btn.disabled = true;
+    btn.title = 'Google Maps API-Key in Admin-Einstellungen hinterlegen';
+  }
+}
+
+// ─── Escape HTML helper ───────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ─── Kick off ─────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+<!-- ─── Google Maps Loader ──────────────────────────────────────────── -->
+<script>
+(function(){
+  var ag = (function(){ try { return JSON.parse(localStorage.getItem('ag_data')) || {}; } catch(e) { return {}; } })();
+  var key = ag.mapsKey || '';
+  if (key && key !== 'YOUR_API_KEY') {
+    var s = document.createElement('script');
+    s.id  = 'gmaps-js';
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&libraries=places';
+    s.async = true;
+    document.head.appendChild(s);
+  }
+})();
 </script>
 
 </body>
