@@ -796,3 +796,390 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!params.get('draft')) fahrtHinzufuegen();
 });
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     ABSCHNITT 4: Spesen
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="card">
+  <div class="sec-title" style="display:flex;align-items:center;gap:8px">
+    💶 Spesen &amp; weitere Auslagen
+    <span style="font-size:10px;font-weight:500;background:var(--gray-100);
+                 color:var(--text-muted);padding:2px 8px;border-radius:12px;
+                 text-transform:none;letter-spacing:0">optional</span>
+  </div>
+
+  <div class="warn-box" style="margin-bottom:14px">
+    <span class="box-icon">💡</span>
+    <span>
+      <strong>Verpflegungspauschalen</strong> (ab 8h: 14 €, ab 24h: 28 €) sind steuerlich absetzbar →
+      vorrangig über Steuererklärung (Anlage N) geltend machen.
+      Der AG erstattet nur tatsächliche Auslagen gegen Beleg.
+    </span>
+  </div>
+
+  <div class="grid-2" style="gap:10px;margin-bottom:10px">
+    <div class="field">
+      <label class="field-label" for="sp-uebernachtung">Übernachtungskosten gesamt (€)</label>
+      <input type="number" id="sp-uebernachtung" min="0" step="0.01" placeholder="0,00"
+             oninput="updateSummary()">
+      <span style="font-size:11px;color:var(--text-hint)">Tatsächliche Kosten laut Belegen</span>
+    </div>
+    <div class="field">
+      <label class="field-label" for="sp-opnv">ÖPNV / Bahn / Taxi (€)</label>
+      <input type="number" id="sp-opnv" min="0" step="0.01" placeholder="0,00"
+             oninput="updateSummary()">
+      <span style="font-size:11px;color:var(--text-hint)">Nur gegen Beleg</span>
+    </div>
+    <div class="field">
+      <label class="field-label" for="sp-parken">Parkgebühren / Maut (€)</label>
+      <input type="number" id="sp-parken" min="0" step="0.01" placeholder="0,00"
+             oninput="updateSummary()">
+    </div>
+    <div class="field">
+      <label class="field-label" for="sp-sonstige">Sonstige Auslagen (€)</label>
+      <input type="number" id="sp-sonstige" min="0" step="0.01" placeholder="0,00"
+             oninput="updateSummary()">
+    </div>
+    <div class="field" style="grid-column:span 2">
+      <label class="field-label" for="sp-sonstige-text">Beschreibung sonstige Auslagen</label>
+      <input type="text" id="sp-sonstige-text"
+             placeholder="z. B. Eintrittsgebühr, Arbeitsmaterial …">
+    </div>
+  </div>
+
+  <!-- Upload -->
+  <div class="field-label" style="margin-bottom:6px">Belege (PDF, JPG, PNG · max. 10 MB)</div>
+  <div id="upload-zone"
+       style="border:1.5px dashed var(--gray-200);border-radius:14px;padding:20px;
+              text-align:center;font-size:12px;color:var(--text-hint);cursor:pointer;
+              transition:border-color .15s,background .15s"
+       onclick="document.getElementById('file-input').click()"
+       ondragover="handleDragOver(event)"
+       ondragleave="handleDragLeave(event)"
+       ondrop="handleDrop(event)">
+    📎 Dateien hierher ziehen oder klicken · PDF, JPG, PNG · max. 10 MB
+  </div>
+  <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png"
+         style="display:none" onchange="handleFiles(this.files)">
+  <div id="file-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     ABSCHNITT 5: Anmerkungen
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="card">
+  <div class="sec-title">✏️ Anmerkungen</div>
+  <div class="field">
+    <textarea id="anmerkung" style="min-height:70px"
+              placeholder="z. B. Besonderheiten, Erläuterungen …"></textarea>
+  </div>
+  <div class="info-box" style="margin-top:10px">
+    <span class="box-icon">ℹ️</span>
+    <span>
+      Verpflegungspauschalen: ab 8 Std. Abwesenheit 14,00 € / ab 24 Std. 28,00 €
+      → über Steuererklärung (Anlage N) geltend machen.
+    </span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     ABSCHNITT 6: Zusammenfassung
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="card">
+  <div class="sec-title">💶 Zusammenfassung</div>
+
+  <div class="sum-strip" style="margin-bottom:12px">
+    <div class="sum-block">
+      <div class="sum-label">Gesamt km (hin &amp; zurück)</div>
+      <div class="sum-value" id="sum-gesamt-km">0 km</div>
+    </div>
+    <div class="sum-block deduct">
+      <div class="sum-label">Pendelabzug gesamt</div>
+      <div class="sum-value" id="sum-pendel-km">0 km</div>
+    </div>
+    <div class="sum-block highlight">
+      <div class="sum-label">Erstattungs-km</div>
+      <div class="sum-value" id="sum-erst-km">0 km</div>
+    </div>
+  </div>
+
+  <div id="sum-calc-line"
+       style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
+    0 km × 0,30 € = <strong>0,00 €</strong>
+    = <span id="sum-gesamt-betrag"
+            style="font-size:18px;font-weight:500;color:var(--blue)">0,00 €</span>
+  </div>
+
+  <div class="ok-box" style="margin-bottom:14px">
+    <span class="box-icon">✅</span>
+    <span>
+      <strong>Genehmigungsweg:</strong>
+      Vorgesetzte/r → Buchhaltung → Auszahlung mit nächster Gehaltsabrechnung
+    </span>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-primary" onclick="antragEinreichen()">
+      📄 PDF erstellen &amp; herunterladen
+    </button>
+    <button class="btn-ghost" onclick="entwurfSpeichern()">💾 Entwurf speichern</button>
+    <button class="btn-ghost" onclick="formularLeeren()"
+            style="margin-left:auto;color:var(--red)">🔄 Formular leeren</button>
+  </div>
+</div>
+
+</main>
+
+<script src="pdf-gen.js"></script>
+<script>
+'use strict';
+
+// ─── Datei-Upload State ───────────────────────────────────────────────────────
+
+var uploadedFiles = [];
+
+// ─── updateSummary (echte Implementierung) ────────────────────────────────────
+
+function updateSummary() {
+  var totalKmHR = 0, pendelGesamt = 0, erstattungGesamt = 0;
+  Object.keys(trips).forEach(function (id) {
+    var inp = document.getElementById('km-' + id);
+    var km  = parseInt(inp ? inp.value : 0) || 0;
+    var r   = berechneFahrtErstattung(km, trips[id].startTyp);
+    totalKmHR       += r.kmHR;
+    pendelGesamt    += r.pendelAbzug;
+    erstattungGesamt += r.erstattungKm;
+    // Karte ebenfalls live aktualisieren
+    updateFahrtKarte(parseInt(id));
+  });
+
+  var fahrtBetrag = erstattungGesamt * RATE;
+  var spesenIds   = ['sp-uebernachtung', 'sp-opnv', 'sp-parken', 'sp-sonstige'];
+  var spesen = spesenIds.reduce(function (s, sid) {
+    var el = document.getElementById(sid);
+    return s + (parseFloat(el ? el.value : 0) || 0);
+  }, 0);
+  var gesamt = fahrtBetrag + spesen;
+
+  var setSafe = function (id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+
+  setSafe('sum-gesamt-km',   fmtKm(totalKmHR));
+  setSafe('sum-pendel-km',   fmtKm(pendelGesamt));
+  setSafe('sum-erst-km',     fmtKm(erstattungGesamt));
+  setSafe('sum-gesamt-betrag', fmt(gesamt));
+
+  // Rechenzeile
+  var line = document.getElementById('sum-calc-line');
+  if (line) {
+    var parts = fmtKm(erstattungGesamt) + ' × 0,30 € = <strong>' + fmt(fahrtBetrag) + '</strong>';
+    if (spesen > 0) parts += ' + <strong>' + fmt(spesen) + ' Spesen</strong>';
+    parts += ' = <span id="sum-gesamt-betrag" style="font-size:18px;font-weight:500;color:var(--blue)">' + fmt(gesamt) + '</span>';
+    line.innerHTML = parts;
+  }
+}
+
+// ─── collectData() ────────────────────────────────────────────────────────────
+
+function collectData() {
+  var p = getProfil();
+  var fahrten = Object.keys(trips).map(function (id) {
+    var idn  = parseInt(id);
+    var km   = parseInt((document.getElementById('km-' + idn) || {}).value) || 0;
+    var art  = (document.getElementById('art-' + idn) || {}).value || '';
+    var artEl = document.getElementById('art-' + idn);
+    var artLabel = artEl ? artEl.options[artEl.selectedIndex].text : art;
+    var r    = berechneFahrtErstattung(km, trips[idn].startTyp);
+    return {
+      datum:        (document.getElementById('dat-'   + idn) || {}).value || '',
+      startTyp:     trips[idn].startTyp,
+      startAdresse: getStartAdresse(idn),
+      ziel:         (document.getElementById('ziel-'  + idn) || {}).value || '',
+      art:          art,
+      artLabel:     artLabel,
+      zweck:        (document.getElementById('zweck-' + idn) || {}).value || '',
+      kmEinfach:    km,
+      kmHR:         r.kmHR,
+      pendelAbzug:  r.pendelAbzug,
+      erstattungKm: r.erstattungKm,
+      betrag:       r.betrag,
+      andereAdresse: trips[idn].startTyp === 'andere'
+        ? ((document.getElementById('start-andere-' + idn) || {}).value || '')
+        : ''
+    };
+  });
+
+  var spWert = function (sid) {
+    return parseFloat((document.getElementById(sid) || {}).value) || 0;
+  };
+  var spesen = {
+    uebernachtung: spWert('sp-uebernachtung'),
+    opnv:          spWert('sp-opnv'),
+    parken:        spWert('sp-parken'),
+    sonstige:      spWert('sp-sonstige'),
+    sonstigeText:  (document.getElementById('sp-sonstige-text') || {}).value || ''
+  };
+  var spesenSum = spesen.uebernachtung + spesen.opnv + spesen.parken + spesen.sonstige;
+
+  var erstattungGesamt = fahrten.reduce(function (s, f) { return s + f.erstattungKm; }, 0);
+  var fahrtBetrag = erstattungGesamt * RATE;
+
+  return {
+    id:          currentId || newAntragId(),
+    arbeitgeber: getArbeitgeber(),
+    mitarbeiter: {
+      vorname:           gV('ma-vorname'),
+      nachname:          gV('ma-nachname'),
+      iban:              gV('ma-iban'),
+      rolle:             gV('ma-rolle'),
+      rolleText:         gV('ma-rolle-text'),
+      heimStrasse:       gV('heim-strasse'),
+      heimPlz:           gV('heim-plz'),
+      heimOrt:           gV('heim-ort'),
+      arbeitsortName:    gV('arbeit-name'),
+      arbeitsortAdresse: gV('arbeit-adresse'),
+      pendelKmEinfach:   p.pendelKmEinfach || 0,
+      pendelBerechnetAm: p.pendelBerechnetAm || ''
+    },
+    zeitraum:    gV('zeitraum'),
+    fahrten:     fahrten,
+    spesen:      spesen,
+    spesenSum:   spesenSum,
+    fahrtBetrag: fahrtBetrag,
+    gesamt:      fahrtBetrag + spesenSum,
+    anmerkung:   (document.getElementById('anmerkung') || {}).value || ''
+  };
+}
+
+// ─── Aktionen ─────────────────────────────────────────────────────────────────
+
+function entwurfSpeichern() {
+  var data = collectData();
+  currentId = data.id;
+  saveDraft(data);
+  zeigeDraftBar(data.id);
+  showToast('Entwurf gespeichert ✓', 'ok');
+}
+
+function antragEinreichen() {
+  if (!gV('ma-vorname') || !gV('ma-nachname')) {
+    showToast('Bitte Vor- und Nachname eingeben.', 'warn');
+    return;
+  }
+  var data = collectData();
+  currentId = data.id;
+  saveDraft(data);
+  zeigeDraftBar(data.id);
+  try {
+    generiereUndLadePDF(data, uploadedFiles);
+    showToast('PDF wird erstellt …', 'ok');
+  } catch (e) {
+    console.error('PDF Fehler:', e);
+    showToast('PDF-Fehler: ' + e.message, 'warn');
+  }
+}
+
+function neuerAntrag() {
+  currentId = newAntragId();
+  document.getElementById('draft-bar').style.display = 'none';
+  window.history.replaceState({}, '', 'index.html');
+  formularLeeren(true);
+}
+
+function formularLeeren(skipConfirm) {
+  if (!skipConfirm && !confirm('Formular leeren? Nicht gespeicherte Daten gehen verloren.')) return;
+  setV('zeitraum', '');
+  ['sp-uebernachtung','sp-opnv','sp-parken','sp-sonstige','sp-sonstige-text','anmerkung']
+    .forEach(function (id) { setV(id, ''); });
+  document.getElementById('fahrten-container').innerHTML = '';
+  Object.keys(trips).forEach(function (k) { delete trips[k]; });
+  tripCounter = 0;
+  uploadedFiles = [];
+  document.getElementById('file-list').innerHTML = '';
+  fahrtHinzufuegen();
+  updateSummary();
+}
+
+// ─── ladeDraft Erweiterung: Spesen + Anmerkung ────────────────────────────────
+
+var _origLadeDraft2 = ladeDraft;
+ladeDraft = function (d) {
+  _origLadeDraft2(d);
+  var sp = d.spesen || {};
+  setV('sp-uebernachtung',  sp.uebernachtung || '');
+  setV('sp-opnv',           sp.opnv          || '');
+  setV('sp-parken',         sp.parken         || '');
+  setV('sp-sonstige',       sp.sonstige       || '');
+  setV('sp-sonstige-text',  sp.sonstigeText   || '');
+  setV('anmerkung',         d.anmerkung       || '');
+  updateSummary();
+};
+
+// ─── Datei-Upload ─────────────────────────────────────────────────────────────
+
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').style.borderColor = 'var(--green)';
+  document.getElementById('upload-zone').style.background  = 'var(--green-light)';
+}
+
+function handleDragLeave() {
+  document.getElementById('upload-zone').style.borderColor = '';
+  document.getElementById('upload-zone').style.background  = '';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  handleDragLeave();
+  handleFiles(e.dataTransfer.files);
+}
+
+function handleFiles(files) {
+  Array.from(files).forEach(function (file) {
+    if (file.size > 10 * 1024 * 1024) {
+      showToast(file.name + ': max. 10 MB erlaubt.', 'warn');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      uploadedFiles.push({ name: file.name, size: file.size, dataUrl: e.target.result });
+      renderFileList();
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('file-input').value = '';
+}
+
+function renderFileList() {
+  var list = document.getElementById('file-list');
+  if (!list) return;
+  list.innerHTML = uploadedFiles.map(function (f, i) {
+    var size = f.size < 1024 * 1024
+      ? Math.round(f.size / 1024) + ' KB'
+      : (f.size / 1024 / 1024).toFixed(1) + ' MB';
+    return '<div style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;' +
+           'background:var(--gray-100);border-radius:20px;font-size:11px;color:var(--text-muted)">' +
+           '📎 <span>' + esc(f.name) + ' (' + size + ')</span>' +
+           '<button onclick="removeFile(' + i + ')" ' +
+           'style="background:none;border:none;cursor:pointer;color:var(--text-hint);' +
+           'font-size:12px;padding:0;font-family:inherit;line-height:1">✕</button>' +
+           '</div>';
+  }).join('');
+}
+
+function removeFile(i) {
+  uploadedFiles.splice(i, 1);
+  renderFileList();
+}
+
+// ─── Finaler DOMContentLoaded ─────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', function () {
+  updateSummary();
+});
+</script>
+
+</body>
+</html>
