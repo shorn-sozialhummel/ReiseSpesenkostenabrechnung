@@ -205,18 +205,48 @@ async function berechnKm(origin, destination) {
   });
 }
 
-// ─── Google Maps Script Loader ────────────────────────────────────────────────
+// ─── Google Maps Script Loader (Promise-based) ───────────────────────────────
+function ladeMapsApi(key) {
+  return new Promise((resolve, reject) => {
+    // Already loaded
+    if (window.google && window.google.maps && window.google.maps.DistanceMatrixService) {
+      resolve();
+      return;
+    }
+    // Script tag already injected — wait for it
+    if (document.getElementById('gmaps-script')) {
+      const poll = setInterval(() => {
+        if (window.google && window.google.maps && window.google.maps.DistanceMatrixService) {
+          clearInterval(poll);
+          clearTimeout(timer);
+          resolve();
+        }
+      }, 150);
+      const timer = setTimeout(() => {
+        clearInterval(poll);
+        reject(new Error('Timeout: Google Maps API konnte nicht geladen werden.'));
+      }, 12000);
+      return;
+    }
+    // Inject script
+    const script = document.createElement('script');
+    script.id = 'gmaps-script';
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&libraries=places';
+    script.async = true;
+    const timer = setTimeout(() => {
+      reject(new Error('Timeout: Google Maps API konnte nicht geladen werden.'));
+    }, 12000);
+    script.onload = () => { clearTimeout(timer); resolve(); };
+    script.onerror = () => { clearTimeout(timer); reject(new Error('Google Maps API konnte nicht geladen werden. API Key prüfen.')); };
+    document.head.appendChild(script);
+  });
+}
+
+// Thin wrapper kept for backward compat (non-Promise path used at page load)
 function loadGoogleMapsScript() {
   const ag = getArbeitgeber();
-  if (!ag.mapsKey) return; // No key – skip loading
-  if (document.getElementById('gmaps-script')) return; // Already loading/loaded
-
-  const script = document.createElement('script');
-  script.id = 'gmaps-script';
-  script.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(ag.mapsKey) + '&libraries=&v=weekly';
-  script.async = true;
-  script.defer = true;
-  document.body.appendChild(script);
+  if (!ag.mapsKey || document.getElementById('gmaps-script')) return;
+  ladeMapsApi(ag.mapsKey).catch(() => {});
 }
 
 // ─── Topbar Logo SVG ──────────────────────────────────────────────────────────

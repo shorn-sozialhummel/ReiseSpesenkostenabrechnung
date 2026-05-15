@@ -89,11 +89,13 @@
     <div class="grid-2" style="gap:12px">
       <div class="field">
         <label class="field-label" for="arbeitsortName">Teamname / Bezeichnung</label>
-        <input type="text" id="arbeitsortName" placeholder="z. B. Team Stegemann, WG Sonnenhof, Büro Siegburg">
+        <input type="text" id="arbeitsortName" placeholder="z. B. Team Stegemann, WG Sonnenhof, Büro Siegburg"
+               name="teambezeichnung" autocomplete="off">
       </div>
       <div class="field">
         <label class="field-label" for="arbeitsortAdresse">Adresse des Arbeitsortes *</label>
         <input type="text" id="arbeitsortAdresse" placeholder="Vollständige Adresse — für Google Maps Berechnung"
+               name="arbeitsort-adresse" autocomplete="new-password"
                oninput="updatePendelDisplay()">
       </div>
     </div>
@@ -428,38 +430,55 @@ function updatePendelDisplay() {
 }
 
 // ─── Compute Pendel via Google Maps ───────────────────────────────────────────
-function berechnePendelMaps() {
+async function berechnePendelMaps() {
+  // 1. API Key prüfen
+  var ag = getArbeitgeber();
+  var key = ag.mapsKey || '';
+  if (!key || key === 'YOUR_API_KEY') {
+    showToast('Bitte zuerst den Google Maps API Key im Admin-Bereich hinterlegen.', 'warn');
+    return;
+  }
+
+  // 2. Adressen prüfen
   var hs = getVal('heimStrasse');
   var hp = getVal('heimPlz');
   var ho = getVal('heimOrt');
   var aa = getVal('arbeitsortAdresse');
 
-  if (!hs || !ho || !aa) {
-    showToast('Bitte Heimadresse und Arbeitsort vollständig eintragen.', 'warn');
+  if (!hs || !ho) {
+    showToast('Bitte Straße und Ort der Heimadresse eintragen.', 'warn');
+    return;
+  }
+  if (!aa || aa.trim().length < 5) {
+    showToast('Bitte die vollständige Adresse des Arbeitsortes eintragen.', 'warn');
     return;
   }
 
-  var heimAdresse = hs + ', ' + hp + ' ' + ho;
+  var heimAdresse = [hs, hp, ho].filter(Boolean).join(', ');
 
+  // 3. Button sperren
   var btn = document.getElementById('btn-berechn-pendel');
-  var origText = '';
-  if (btn) { origText = btn.textContent; btn.textContent = '⏳ Berechne …'; btn.disabled = true; }
+  var origHTML = btn ? btn.innerHTML : '';
+  if (btn) { btn.innerHTML = '⏳ Berechne …'; btn.disabled = true; }
 
-  berechnKm(heimAdresse, aa).then(function(km) {
+  try {
+    // 4. Maps API on-demand laden (wartet bis bereit)
+    await ladeMapsApi(key);
+
+    // 5. Distanz berechnen
+    var km = await berechnKm(heimAdresse, aa);
     pendelKmEinfach = km;
     pendelBerechnetAm = today();
-    // Save into profile immediately
-    var p = getProfil();
-    p.pendelKmEinfach = pendelKmEinfach;
-    p.pendelBerechnetAm = pendelBerechnetAm;
-    saveProfil(p);
     updatePendelDisplay();
-    showToast('Pendelstrecke berechnet: ' + km + ' km einfach', 'ok');
-  }).catch(function(err) {
+    updateAllSubRows();
+    updateSummary();
+    showToast('Pendelstrecke: ' + km + ' km einfach ✓', 'ok');
+  } catch (err) {
     showToast(err.message, 'warn');
-  }).finally(function() {
-    if (btn) { btn.textContent = origText || '📍 Jetzt via Google Maps berechnen'; btn.disabled = false; }
-  });
+  } finally {
+    // IMMER zurücksetzen — verhindert Dauerschleife
+    if (btn) { btn.innerHTML = origHTML || '📍 Jetzt via Google Maps berechnen'; btn.disabled = false; }
+  }
 }
 
 // ─── Save Profile ─────────────────────────────────────────────────────────────
@@ -511,7 +530,7 @@ function addFahrtRow(data) {
       '<input type="number" min="0" step="1" placeholder="0" value="' + esc(data.kmEinfach || '') + '"',
       ' style="width:52px" oninput="updateRowBetrag(\'' + id + '\')" id="km-' + id + '">',
       '<button class="btn-ghost btn-icon" style="padding:5px 7px;font-size:12px;flex-shrink:0"',
-      ' title="Via Google Maps berechnen" onclick="berechnFahrtKm(\'' + id + '\')">📍</button>',
+      ' id="mapsbtn-' + id + '" title="Via Google Maps berechnen" onclick="berechnFahrtKm(\'' + id + '\')">📍</button>',
     '</div></td>',
     '<td class="betrag-cell" id="betrag-' + id + '">0,00 €</td>',
     '<td><button class="btn-danger btn-icon" style="padding:5px 7px;font-size:13px"',
@@ -618,7 +637,14 @@ function updateAllSubRows() {
 }
 
 // ─── Google Maps per trip ─────────────────────────────────────────────────────
-function berechnFahrtKm(id) {
+async function berechnFahrtKm(id) {
+  var ag = getArbeitgeber();
+  var key = ag.mapsKey || '';
+  if (!key || key === 'YOUR_API_KEY') {
+    showToast('Bitte zuerst den Google Maps API Key im Admin-Bereich hinterlegen.', 'warn');
+    return;
+  }
+
   var inputs = getRowInputs(id);
   if (!inputs) return;
   var von = inputs.von;
@@ -629,19 +655,20 @@ function berechnFahrtKm(id) {
     return;
   }
 
-  var btn = document.querySelector('#main-' + id + ' button[title="Via Google Maps berechnen"]');
+  var btn = document.getElementById('mapsbtn-' + id);
   if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
 
-  berechnKm(von, nach).then(function(km) {
+  try {
+    await ladeMapsApi(key);
+    var km = await berechnKm(von, nach);
     var kmInput = document.getElementById('km-' + id);
-    if (kmInput) kmInput.value = km;
-    updateRowBetrag(id);
-    showToast('Strecke berechnet: ' + km + ' km', 'ok');
-  }).catch(function(err) {
+    if (kmInput) { kmInput.value = km; updateRowBetrag(id); }
+    showToast('Strecke berechnet: ' + km + ' km ✓', 'ok');
+  } catch (err) {
     showToast(err.message, 'warn');
-  }).finally(function() {
+  } finally {
     if (btn) { btn.textContent = '📍'; btn.disabled = false; }
-  });
+  }
 }
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
