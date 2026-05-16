@@ -151,7 +151,16 @@ function getAktuellePendelKm() {
 
 function berechneFahrtErstattung(modus, kmHin, kmRueck, startTyp) {
   var pendelEinfach = getAktuellePendelKm();
-  var pendelKm      = pendelEinfach * 2;
+  // Pendelabzug je nach Modus korrekt berechnen:
+  // Einfache Fahrt → nur einfacher Pendelweg
+  // Hin & Zurück   → doppelter Pendelweg
+  // Mehrtägig      → nur einfacher Pendelweg (einmalig)
+  var pendelKm;
+  if (modus === 'hinrueck') {
+    pendelKm = pendelEinfach * 2;
+  } else {
+    pendelKm = pendelEinfach;
+  }
   var gesamtKm = 0;
   if (modus === 'einfach')    gesamtKm = parseInt(kmHin) || 0;
   if (modus === 'hinrueck')   gesamtKm = (parseInt(kmHin) || 0) * 2;
