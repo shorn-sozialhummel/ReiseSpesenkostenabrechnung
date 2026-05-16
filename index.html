@@ -955,8 +955,9 @@ function aktualisierePendelFooter(id, r) {
   }
 
   if (!r.pendelEinfach) {
-    el.className = 'fk-pendel p-warn';
-    el.innerHTML = '<span>⚠️ Bitte zuerst Pendelstrecke im Profil berechnen.</span>';
+    el.className = 'fk-pendel p-ao';
+    el.innerHTML = '<span>✓ Pendelstrecke 0 km — volle Strecke wird erstattet</span>' +
+      '<span class="p-right" style="color:var(--green-dark)">+ ' + fmt(r.gesamtKm * RATE) + '</span>';
     return;
   }
 
