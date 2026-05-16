@@ -10,29 +10,29 @@ function generiereUndLadePDF(data, files) {
   var MB = 18;           // bottom margin (above footer)
 
   // ── Colours ──────────────────────────────────────────────────────────────────
-  var GREEN       = [29,  158, 117];
-  var GREEN_DARK  = [8,   80,  65 ];
-  var GREEN_BG    = [225, 245, 238];
+  var ORANGE      = [245, 166, 35 ];  // #F5A623 — Sozialhummel Orange
+  var ORANGE_DARK = [44,  44,  42 ];  // #2C2C2A — Dunkelgrau
+  var ORANGE_BG   = [254, 243, 220];  // #FEF3DC — Helles Orange
   var BLUE        = [24,  95,  165];
   var BLUE_BG     = [230, 241, 251];
   var AMBER       = [133, 79,  11 ];
   var AMBER_BG    = [250, 238, 218];
   var PURPLE      = [60,  52,  137];
   var RED         = [163, 45,  45 ];
-  var GRAY_50     = [248, 248, 246];
-  var GRAY_100    = [241, 240, 236];
+  var GRAY_50     = [255, 253, 247];  // #FFFDF7 — Warmweiß
+  var GRAY_100    = [241, 240, 236];  // #F1F0EC — Hellgrau
   var GRAY_200    = [226, 224, 218];
-  var TEXT        = [26,  26,  24 ];
+  var TEXT        = [44,  44,  42 ];  // #2C2C2A — Dunkelgrau
   var MUTED       = [107, 106, 101];
   var WHITE       = [255, 255, 255];
 
   var ART_COLOR = {
-    teamtreffen:   { fg: GREEN_DARK, bg: GREEN_BG   },
-    urlaubsbegl:   { fg: BLUE,       bg: BLUE_BG    },
-    helfertreffen: { fg: [114,36,62],bg: [251,220,235]},
-    fortbildung:   { fg: PURPLE,     bg: [238,237,254]},
-    kundenbesuch:  { fg: GREEN_DARK, bg: GREEN_BG   },
-    sonstiges:     { fg: MUTED,      bg: GRAY_100   }
+    teamtreffen:   { fg: ORANGE_DARK, bg: ORANGE_BG  },
+    urlaubsbegl:   { fg: BLUE,        bg: BLUE_BG    },
+    helfertreffen: { fg: [114,36,62], bg: [251,220,235]},
+    fortbildung:   { fg: PURPLE,      bg: [238,237,254]},
+    kundenbesuch:  { fg: ORANGE_DARK, bg: ORANGE_BG  },
+    sonstiges:     { fg: MUTED,       bg: GRAY_100   }
   };
 
   var ag      = data.arbeitgeber || {};
@@ -90,17 +90,17 @@ function generiereUndLadePDF(data, files) {
   // ─────────────────────────────────────────────────────────────────────────────
   // HEADER
   // ─────────────────────────────────────────────────────────────────────────────
-  fc(GREEN); doc.rect(0, 0, PW, 14, 'F');
+  fc(ORANGE_DARK); doc.rect(0, 0, PW, 14, 'F');
 
   sf('bold', 9.5); tc(WHITE);
   txt((ag.name || 'Sozialhummel gGmbH').toUpperCase(), ML, 7);
 
-  sf('normal', 7); tc([180, 230, 210]);
+  sf('normal', 7); tc([170, 165, 155]);
   var agAddr = [ag.strasse, ((ag.plz || '') + ' ' + (ag.ort || '')).trim()]
     .filter(Boolean).join(' · ');
   txt(agAddr, ML, 12);
 
-  sf('bold', 10); tc(WHITE);
+  sf('bold', 10); tc(ORANGE);
   txt('REISEKOSTENABRECHNUNG', PW - MR, 9, { align: 'right' });
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -153,8 +153,8 @@ function generiereUndLadePDF(data, files) {
 
   // Pendel bar
   if (m.pendelKmEinfach > 0) {
-    box(ML, y, CW, 8, GREEN_BG);
-    sf('normal', 7.5); tc(GREEN_DARK);
+    box(ML, y, CW, 8, ORANGE_BG);
+    sf('normal', 7.5); tc(ORANGE_DARK);
     txt(
       'Pendelstrecke: ' + m.pendelKmEinfach + ' km einfach' +
       '   |   Abzug pro Fahrt (Start Zuhause): ' + (m.pendelKmEinfach * 2) + ' km × 0,30 €' +
@@ -257,7 +257,7 @@ function generiereUndLadePDF(data, files) {
 
     // Col 2: Modus badge text
     if (modus === 'einfach') {
-      tc(GREEN_DARK); sf('bold', 7); txt('-> Einfach', C[2].x + 1.5, ry);
+      tc(ORANGE_DARK); sf('bold', 7); txt('-> Einfach', C[2].x + 1.5, ry);
     } else if (modus === 'hinrueck') {
       tc(BLUE);       sf('bold', 7); txt('<-> H+R',    C[2].x + 1.5, ry);
     } else {
@@ -287,7 +287,7 @@ function generiereUndLadePDF(data, files) {
 
     // Col 6: −Pendel
     if (keinAbzug) {
-      tc(GREEN_DARK); txt('–', C[6].x + C[6].w - 1.5, ry, { align: 'right' });
+      tc(ORANGE_DARK); txt('–', C[6].x + C[6].w - 1.5, ry, { align: 'right' });
     } else {
       tc(RED); txt(fmtKm(pendelAbzug), C[6].x + C[6].w - 1.5, ry, { align: 'right' });
     }
@@ -303,7 +303,7 @@ function generiereUndLadePDF(data, files) {
 
     // "Start Arbeitsort" micro-label
     if (keinAbzug) {
-      sf('normal', 5.5); tc(GREEN_DARK);
+      sf('normal', 5.5); tc(ORANGE_DARK);
       txt('Start Arbeitsort', C[4].x + 1.5, y + ROW_H - 1);
       sf('normal', 7.5); tc(TEXT);
     }
@@ -313,13 +313,13 @@ function generiereUndLadePDF(data, files) {
 
   // Sum row
   needPage(8);
-  box(ML, y, CW, 8, GREEN_BG);
-  sf('bold', 8); tc(GREEN_DARK);
+  box(ML, y, CW, 8, ORANGE_BG);
+  sf('bold', 8); tc(ORANGE_DARK);
   txt('Summe', ML + 1.5, y + 5.5);
   txt(fmtKm(totGes),    C[5].x + C[5].w - 1.5, y + 5.5, { align: 'right' });
   tc(RED);
   txt(fmtKm(totPendel), C[6].x + C[6].w - 1.5, y + 5.5, { align: 'right' });
-  tc(GREEN_DARK);
+  tc(ORANGE_DARK);
   txt(fmtKm(totErst),   C[7].x + C[7].w - 1.5, y + 5.5, { align: 'right' });
   txt(fmtE(totBetrag),  C[8].x + C[8].w - 1.5, y + 5.5, { align: 'right' });
   y += 10;
