@@ -963,12 +963,21 @@ function aktualisierePendelFooter(id, r) {
 
   var hinweis = t.modus === 'mehrtaegig' ? ' (nur einmal pro Reise)' : '';
   el.className = 'fk-pendel p-warn';
-  el.innerHTML =
-    '<span>− Pendelabzug ' + fmtKm(r.pendelAbzug) + ' × 0,30 €' + hinweis +
-    ' — steuerlich absetzbar (Anlage N)</span>' +
-    '<span class="p-right" style="color:var(--red)">' +
-      fmtKm(r.pendelAbzug) + ' · −' + fmt(r.pendelAbzug * RATE) +
-    '</span>';
+
+  if (r.erstattungKm === 0 && r.gesamtKm > 0) {
+    el.innerHTML =
+      '<span>⚠️ Pendelabzug ' + fmtKm(r.pendelAbzug) +
+      ' übersteigt gefahrene Strecke — keine Erstattung.' +
+      ' Die ' + fmtKm(r.gesamtKm) + ' können als Entfernungspauschale (Anlage N) ' +
+      'in der Steuererklärung angegeben werden.</span>';
+  } else {
+    el.innerHTML =
+      '<span>− Pendelabzug ' + fmtKm(r.pendelAbzug) + ' × 0,30 €' + hinweis +
+      ' — steuerlich absetzbar (Anlage N)</span>' +
+      '<span class="p-right" style="color:var(--red)">' +
+        fmtKm(r.pendelAbzug) + ' · −' + fmt(r.pendelAbzug * RATE) +
+      '</span>';
+  }
 }
 
 // ─── Start-Typ ────────────────────────────────────────────────────────────────
