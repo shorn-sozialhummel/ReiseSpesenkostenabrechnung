@@ -22,6 +22,7 @@
 
 <!-- Topbar -->
 <div id="topbar-mount"></div>
+<div id="hilfe-app"></div>
 
 <main>
 
@@ -29,7 +30,13 @@
      ABSCHNITT 1: Meine Daten
 ════════════════════════════════════════════════════════════════════════════ -->
 <div class="card">
-  <div class="sec-title">👤 Meine Daten</div>
+  <div class="sec-label">
+    <div class="sec-title" style="margin:0">👤 Meine Daten</div>
+    <button class="hilfe-btn" data-hilfe="hilfe-profil"
+      onclick="toggleHilfe('hilfe-profil', this)"
+      aria-expanded="false" aria-controls="hilfe-profil">? Hilfe</button>
+  </div>
+  <div id="hilfe-profil"></div>
 
   <!-- Zeile 1: Name -->
   <div class="grid-2" style="gap:10px;margin-bottom:10px">
@@ -113,9 +120,15 @@
   <!-- Pendelstrecken-Box -->
   <div style="background:var(--gray-50);border:1px solid var(--gray-200);
               border-radius:10px;padding:12px;margin-top:10px">
-    <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px">
-      📍 Pendelstrecke (Wohnort → Arbeitsort)
+    <div class="sec-label" style="margin-bottom:10px">
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted)">
+        📍 Pendelstrecke (Wohnort → Arbeitsort)
+      </div>
+      <button class="hilfe-btn" data-hilfe="hilfe-pendel"
+        onclick="toggleHilfe('hilfe-pendel', this)"
+        aria-expanded="false" aria-controls="hilfe-pendel">? Hilfe</button>
     </div>
+    <div id="hilfe-pendel"></div>
 
     <!-- Zustand A -->
     <div id="pendel-a">
@@ -200,6 +213,10 @@ var currentId = newAntragId();
 
 document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('topbar-mount').innerHTML = renderTopbar('index');
+  var nav = document.querySelector('#topbar-mount .topbar-nav');
+  if (nav) nav.insertAdjacentHTML('beforeend', buildHilfeBtn('hilfe-app', 'Was kann diese App?'));
+  var appEl = document.getElementById('hilfe-app');
+  if (appEl) appEl.outerHTML = buildHilfePanel('hilfe-app', HILFE.app);
 });
 
 // ─── Profil: Laden & Speichern ────────────────────────────────────────────────
@@ -456,6 +473,13 @@ function zeigeDraftBar(id) {
   .fk-km-row  { background:var(--gray-50); border-radius:10px; padding:10px 12px;
                 display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 
+  /* Sec-Label mit Hilfe-Button */
+  .sec-label { display:flex; align-items:center; justify-content:space-between;
+               margin-bottom:12px; gap:8px; }
+
+  /* Maps-Button-Gruppe mit Hilfe-Button */
+  .maps-btn-group { display:flex; gap:4px; align-items:center; }
+
   /* KM-Block */
   .km-row { background:var(--gray-50); border-radius:10px; padding:10px 12px;
             display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -476,11 +500,15 @@ function zeigeDraftBar(id) {
 </style>
 
 <div class="card" id="fahrten-card">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+  <div class="sec-label">
     <div class="sec-title" style="margin:0">🚗 Dienstliche Fahrten
       (<span id="fahrten-count">0</span>)
     </div>
+    <button class="hilfe-btn" data-hilfe="hilfe-fahrten"
+      onclick="toggleHilfe('hilfe-fahrten', this)"
+      aria-expanded="false" aria-controls="hilfe-fahrten">? Hilfe</button>
   </div>
+  <div id="hilfe-fahrten"></div>
 
   <div id="fahrten-container"></div>
 
@@ -544,6 +572,8 @@ function fahrtHinzufuegen(data) {
     andereAdresse: data.andereAdresse || ''
   };
   renderFahrtKarte(id);
+  var mapsPlEl = document.getElementById('hilfe-maps-' + id);
+  if (mapsPlEl) mapsPlEl.outerHTML = buildHilfePanel('hilfe-maps-' + id, HILFE.maps);
   updateFahrtKarte(id);
   aktualisiereFahrtenCount();
 }
@@ -639,6 +669,7 @@ function renderFahrtKarte(id) {
       '<div id="km-block-' + id + '">' +
         buildKmBlock(id, modus) +
       '</div>' +
+      '<div id="hilfe-maps-' + id + '"></div>' +
 
     '</div>' + // fk-body
 
@@ -748,9 +779,14 @@ function buildKmBlock(id, modus) {
           '<div class="km-block-lbl">Betrag</div>' +
           '<div class="km-betrag-val" id="betrag-' + id + '">0,00 €</div>' +
         '</div>' +
-        '<button class="btn-ghost btn-icon" id="maps-hin-' + id + '"' +
-        ' style="margin-left:auto;font-size:12px;white-space:nowrap"' +
-        ' onclick="doFahrtMapsHin(' + id + ')">📍 via Maps</button>' +
+        '<div class="maps-btn-group" style="margin-left:auto">' +
+          '<button class="btn-ghost btn-icon" id="maps-hin-' + id + '"' +
+          ' style="font-size:12px;white-space:nowrap"' +
+          ' onclick="doFahrtMapsHin(' + id + ')">📍 via Maps</button>' +
+          '<button class="hilfe-btn" data-hilfe="hilfe-maps-' + id + '"' +
+          ' onclick="toggleHilfe(\'hilfe-maps-' + id + '\', this)"' +
+          ' aria-expanded="false" style="padding:4px 8px">?</button>' +
+        '</div>' +
       '</div>'
     );
   }
@@ -780,9 +816,14 @@ function buildKmBlock(id, modus) {
           '<div class="km-block-lbl">Betrag</div>' +
           '<div class="km-betrag-val" id="betrag-' + id + '">0,00 €</div>' +
         '</div>' +
-        '<button class="btn-ghost btn-icon" id="maps-hin-' + id + '"' +
-        ' style="margin-left:auto;font-size:12px;white-space:nowrap"' +
-        ' onclick="doFahrtMapsHin(' + id + ')">📍 via Maps</button>' +
+        '<div class="maps-btn-group" style="margin-left:auto">' +
+          '<button class="btn-ghost btn-icon" id="maps-hin-' + id + '"' +
+          ' style="font-size:12px;white-space:nowrap"' +
+          ' onclick="doFahrtMapsHin(' + id + ')">📍 via Maps</button>' +
+          '<button class="hilfe-btn" data-hilfe="hilfe-maps-' + id + '"' +
+          ' onclick="toggleHilfe(\'hilfe-maps-' + id + '\', this)"' +
+          ' aria-expanded="false" style="padding:4px 8px">?</button>' +
+        '</div>' +
       '</div>'
     );
   }
@@ -795,9 +836,14 @@ function buildKmBlock(id, modus) {
         '<input type="number" id="km-hin-' + id + '" min="0" step="1" placeholder="0"' +
         ' value="' + esc(kmHin) + '" style="width:65px" oninput="' + onHin + '">' +
         '<span style="font-size:12px;color:var(--text-muted)">km</span>' +
-        '<button class="btn-ghost btn-icon" id="maps-hin-' + id + '"' +
-        ' style="font-size:11px;margin-left:auto;white-space:nowrap"' +
-        ' onclick="doFahrtMapsHin(' + id + ')">📍 Maps hin</button>' +
+        '<div class="maps-btn-group" style="margin-left:auto">' +
+          '<button class="btn-ghost btn-icon" id="maps-hin-' + id + '"' +
+          ' style="font-size:11px;white-space:nowrap"' +
+          ' onclick="doFahrtMapsHin(' + id + ')">📍 Maps hin</button>' +
+          '<button class="hilfe-btn" data-hilfe="hilfe-maps-' + id + '"' +
+          ' onclick="toggleHilfe(\'hilfe-maps-' + id + '\', this)"' +
+          ' aria-expanded="false" style="padding:4px 8px">?</button>' +
+        '</div>' +
       '</div>' +
       '<div class="km-mehrtaegig-row">' +
         '<span class="km-rueck-lbl">← Rückfahrt km</span>' +
@@ -1068,12 +1114,18 @@ function updateAllPendelRows() {
      ABSCHNITT 4: Spesen
 ════════════════════════════════════════════════════════════════════════════ -->
 <div class="card">
-  <div class="sec-title" style="display:flex;align-items:center;gap:8px">
-    💶 Spesen &amp; weitere Auslagen
-    <span style="font-size:10px;font-weight:500;background:var(--gray-100);
-                 color:var(--text-muted);padding:2px 8px;border-radius:12px;
-                 text-transform:none;letter-spacing:0">optional</span>
+  <div class="sec-label">
+    <div class="sec-title" style="margin:0;display:flex;align-items:center;gap:8px">
+      💶 Spesen &amp; weitere Auslagen
+      <span style="font-size:10px;font-weight:500;background:var(--gray-100);
+                   color:var(--text-muted);padding:2px 8px;border-radius:12px;
+                   text-transform:none;letter-spacing:0">optional</span>
+    </div>
+    <button class="hilfe-btn" data-hilfe="hilfe-spesen"
+      onclick="toggleHilfe('hilfe-spesen', this)"
+      aria-expanded="false" aria-controls="hilfe-spesen">? Hilfe</button>
   </div>
+  <div id="hilfe-spesen"></div>
 
   <div class="warn-box" style="margin-bottom:14px">
     <span class="box-icon">💡</span>
@@ -1153,7 +1205,13 @@ function updateAllPendelRows() {
      ABSCHNITT 6: Zusammenfassung
 ════════════════════════════════════════════════════════════════════════════ -->
 <div class="card">
-  <div class="sec-title">💶 Zusammenfassung</div>
+  <div class="sec-label">
+    <div class="sec-title" style="margin:0">💶 Zusammenfassung</div>
+    <button class="hilfe-btn" data-hilfe="hilfe-pdf"
+      onclick="toggleHilfe('hilfe-pdf', this)"
+      aria-expanded="false" aria-controls="hilfe-pdf">? PDF &amp; Einreichen</button>
+  </div>
+  <div id="hilfe-pdf"></div>
 
   <div class="sum-strip" style="margin-bottom:12px">
     <div class="sum-block">
@@ -1184,6 +1242,14 @@ function updateAllPendelRows() {
       Vorgesetzte/r → Buchhaltung → Auszahlung mit nächster Gehaltsabrechnung
     </span>
   </div>
+
+  <div class="sec-label" style="margin-top:4px;margin-bottom:0">
+    <span style="font-size:13px;color:var(--text-muted)">📋 Steuererklärung &amp; häufige Fragen</span>
+    <button class="hilfe-btn" data-hilfe="hilfe-steuer"
+      onclick="toggleHilfe('hilfe-steuer', this)"
+      aria-expanded="false" aria-controls="hilfe-steuer">? Hilfe</button>
+  </div>
+  <div id="hilfe-steuer"></div>
 
   <div class="btn-row">
     <button class="btn-primary" onclick="antragEinreichen()">
@@ -1470,6 +1536,19 @@ function removeFile(i) {
 // ─── DOMContentLoaded ─────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', function () {
+  // Statische Hilfe-Panels einbauen
+  [
+    ['hilfe-profil',  HILFE.profil],
+    ['hilfe-pendel',  HILFE.pendel],
+    ['hilfe-fahrten', HILFE.fahrten],
+    ['hilfe-spesen',  HILFE.spesen],
+    ['hilfe-pdf',     HILFE.pdf],
+    ['hilfe-steuer',  HILFE.steuer]
+  ].forEach(function (item) {
+    var el = document.getElementById(item[0]);
+    if (el) el.outerHTML = buildHilfePanel(item[0], item[1]);
+  });
+
   ladeProfilFelder();
 
   // Adressfelder überwachen — Pendelstrecke sofort invalidieren
