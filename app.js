@@ -292,3 +292,323 @@ function renderTopbar(active) {
   <nav class="topbar-nav">${navLinks}</nav>
 </div>`;
 }
+
+// ─── Hilfe-System ─────────────────────────────────────────────────────────────
+
+const HILFE = {
+
+  app: {
+    titel: 'Was kann diese App?',
+    html: `
+      <p>Mit dieser App können Mitarbeiterinnen und Mitarbeiter
+      ihre <strong>Reisekosten einfach und korrekt abrechnen</strong>
+      — direkt im Browser, keine Installation nötig.</p>
+      <ul class="help-list">
+        <li><strong>Pendelstrecke berechnen</strong> — Google Maps
+            ermittelt den Abzug automatisch</li>
+        <li><strong>Mehrere Fahrten</strong> — Einfach, Hin & Zurück
+            oder mehrtägig pro Abrechnung</li>
+        <li><strong>PDF erstellen</strong> — Fertig zum Ausdrucken
+            und Einreichen</li>
+        <li><strong>Entwurf speichern</strong> — Jederzeit
+            unterbrechen und weitermachen</li>
+      </ul>
+      <div class="help-info">
+        Alle Daten werden <strong>lokal auf Ihrem Gerät</strong>
+        gespeichert — kein Login, keine Cloud. Fertige Abrechnungen
+        immer als PDF herunterladen und aufbewahren.
+      </div>`
+  },
+
+  profil: {
+    titel: 'Profil einrichten',
+    html: `
+      <p>Das Profil wird <strong>einmalig ausgefüllt</strong> und
+      gespeichert. Bei Teamwechsel oder Umzug einfach aktualisieren.</p>
+      <ul class="help-list">
+        <li><strong>IBAN</strong> — Ihr Bankkonto für die Erstattung</li>
+        <li><strong>Heimadresse</strong> — Basis für die
+            Pendelberechnung</li>
+        <li><strong>Arbeitsadresse</strong> — Ihr üblicher Einsatzort
+            (z. B. WG Sonnenblume, Gartenstr. 8)</li>
+      </ul>
+      <div class="help-warn">
+        Nach Adressänderung unbedingt die Pendelstrecke
+        <strong>neu berechnen</strong> und dann
+        <strong>Profil speichern</strong> klicken —
+        sonst gilt die alte Strecke weiter.
+      </div>`
+  },
+
+  pendel: {
+    titel: 'Was ist der Pendelabzug?',
+    html: `
+      <p>Der AG erstattet nur die Strecke, die
+      <strong>über den normalen Arbeitsweg hinausgeht</strong>.
+      Die Pendelstrecke (Wohnort → Arbeitsort) wird daher
+      pro Fahrt automatisch abgezogen.</p>
+      <div class="help-example">
+        <div class="help-example-title">Beispielrechnung</div>
+        <div class="help-example-row">
+          <span>Gefahrene km (hin & zurück)</span><span>104 km</span>
+        </div>
+        <div class="help-example-row red">
+          <span>Pendelabzug (17 km × 2)</span><span>− 34 km</span>
+        </div>
+        <div class="help-example-row total">
+          <span>Erstattungs-km</span><span>70 km = 21,00 €</span>
+        </div>
+      </div>
+      <div class="help-tip">
+        Die abgezogenen km können als
+        <strong>Entfernungspauschale (Anlage N)</strong>
+        in der Steuererklärung angegeben werden.
+      </div>`
+  },
+
+  fahrten: {
+    titel: 'Fahrt eintragen',
+    html: `
+      <p><strong>Fahrtmodus wählen:</strong></p>
+      <ul class="help-list">
+        <li><strong>Einfache Fahrt</strong> — nur Hinfahrt,
+            z. B. Mitarbeiter/in fährt mit Klienten in den Urlaub.
+            Rückfahrt separat eintragen.</li>
+        <li><strong>Hin & Rückfahrt (gleicher Tag)</strong> —
+            z. B. Teamtreffen. KM wird automatisch ×2 gerechnet.</li>
+        <li><strong>Mehrtägig</strong> — Hin- und Rückfahrt an
+            verschiedenen Tagen. KM für beide Richtungen separat.
+            Pendelabzug wird nur einmal pro Reise berechnet.</li>
+      </ul>
+      <p><strong>Startpunkt:</strong></p>
+      <ul class="help-list">
+        <li><strong>Zuhause</strong> — Pendelabzug wird berechnet</li>
+        <li><strong>Arbeitsort</strong> — kein Abzug, volle Strecke
+            erstattet (z. B. Fahrt direkt vom Klienten weiter)</li>
+        <li><strong>Andere</strong> — freie Adresse,
+            Pendelabzug trotzdem berechnet</li>
+      </ul>
+      <div class="help-example">
+        <div class="help-example-title">Beispiel: Urlaubsbegleitung Holland (mehrtägig)</div>
+        <div class="help-example-row">
+          <span>Hinfahrt 248 km + Rückfahrt 248 km</span><span>496 km</span>
+        </div>
+        <div class="help-example-row red">
+          <span>Pendelabzug (einmalig pro Reise)</span><span>− 34 km</span>
+        </div>
+        <div class="help-example-row total">
+          <span>Erstattung (462 km × 0,30 €)</span><span>138,60 €</span>
+        </div>
+      </div>
+      <div class="help-example" style="margin-top:6px">
+        <div class="help-example-title">Beispiel: Helfertreffen mit Bewirtungsbeleg</div>
+        <div class="help-example-row">
+          <span>Hin & Rückfahrt 24 km × 2</span><span>48 km</span>
+        </div>
+        <div class="help-example-row red">
+          <span>Pendelabzug 34 km</span><span>− 10,20 €</span>
+        </div>
+        <div class="help-example-row">
+          <span>Fahrtkosten + Bewirtungsbeleg 38,50 €</span><span>43,30 €</span>
+        </div>
+      </div>
+      <div class="help-warn">
+        KM immer als <strong>einfache Strecke</strong> eingeben —
+        bei Hin & Rückfahrt verdoppelt die App automatisch.
+      </div>`
+  },
+
+  maps: {
+    titel: 'Strecke via Google Maps berechnen',
+    html: `
+      <ol class="help-steps">
+        <li><strong>Zieladresse eintragen</strong> —
+            vollständige Adresse im Feld "Zieladresse"
+            (z. B. "Strandweg 12, Noordwijk, Holland")</li>
+        <li><strong>"via Maps berechnen" klicken</strong> —
+            Google Maps berechnet die Strecke vom gewählten
+            Startpunkt automatisch</li>
+        <li><strong>KM wird automatisch eingetragen</strong> —
+            Erstattungsbetrag und Pendelabzug werden sofort
+            neu berechnet</li>
+      </ol>
+      <div class="help-tip">
+        Der Startpunkt (Zuhause / Arbeitsort / Andere) wird
+        automatisch übernommen — nicht extra eingeben.
+      </div>
+      <div class="help-warn">
+        Ergebnis ist immer die <strong>einfache Strecke</strong> —
+        bei "Hin & Rückfahrt" verdoppelt die App automatisch.
+      </div>`
+  },
+
+  spesen: {
+    titel: 'Was kann ich als Spesen einreichen?',
+    html: `
+      <p>Folgende Auslagen werden
+      <strong>gegen Beleg</strong> erstattet:</p>
+      <ul class="help-list">
+        <li><strong>Übernachtung</strong> — Hotelrechnung anhängen</li>
+        <li><strong>ÖPNV / Bahn / Taxi</strong> — Ticket oder
+            Quittung</li>
+        <li><strong>Parkgebühren & Maut</strong> — Kassenbon</li>
+        <li><strong>Sonstiges</strong> — z. B. Bewirtungsbeleg
+            mit Beschreibung</li>
+      </ul>
+      <div class="help-warn">
+        <strong>Verpflegungspauschalen</strong> erstattet der AG
+        nicht. Diese sind aber steuerlich absetzbar —
+        ab 8 Std. 14 €, ab 24 Std. 28 € (Anlage N).
+      </div>`
+  },
+
+  pdf: {
+    titel: 'PDF erstellen & einreichen',
+    html: `
+      <p>Wenn alle Fahrten eingetragen sind, auf
+      <strong>"PDF erstellen & herunterladen"</strong> klicken.
+      Das PDF enthält alle Daten, eine Rechenübersicht
+      und eine Unterschriftenzeile.</p>
+      <ol class="help-steps">
+        <li><strong>PDF erstellen & herunterladen</strong></li>
+        <li><strong>Ausdrucken & unterschreiben</strong></li>
+        <li><strong>Vorgesetzte/r genehmigt</strong></li>
+        <li><strong>An Buchhaltung weitergeben</strong> —
+            Auszahlung mit nächster Gehaltsabrechnung</li>
+      </ol>
+      <div class="help-tip">
+        <strong>"Entwurf speichern"</strong> sichert den Stand
+        im Browser — jederzeit unterbrechen und weitermachen.
+      </div>
+      <div class="help-info">
+        Das PDF enthält automatisch einen
+        <strong>Steuerhinweis</strong> mit den abzugsfähigen
+        Beträgen für die Anlage N.
+      </div>`
+  },
+
+  steuer: {
+    titel: 'Steuererklärung (Anlage N) & häufige Fragen',
+    html: `
+      <p><strong>Was kann ich als Werbungskosten angeben?</strong></p>
+      <ul class="help-list">
+        <li><strong>Entfernungspauschale</strong> — der Pendelabzug:
+            0,30 €/km (bis 20 km), 0,38 €/km (ab 21 km)</li>
+        <li><strong>Verpflegungspauschale</strong> —
+            ab 8 Std.: 14 €, ab 24 Std.: 28 €.
+            Bei mehrtägigen Reisen: An- und Abreisetag je 14 €,
+            volle Tage 28 €.</li>
+        <li><strong>Übernachtungskosten</strong> —
+            nicht erstattete Anteile mit Beleg</li>
+        <li><strong>Fahrtkosten</strong> —
+            nicht erstattete Anteile (0,30 €/km)</li>
+      </ul>
+      <div class="help-warn">
+        Verpflegungspauschalen können nur geltend gemacht werden,
+        wenn der AG sie <strong>nicht</strong> erstattet hat.
+        Beides zusammen ist nicht möglich.
+        Pauschalen gelten max. 3 Monate an derselben Tätigkeitsstätte.
+      </div>
+      <hr class="help-divider">
+      <p><strong>Häufige Fragen:</strong></p>
+      <div class="help-faq">
+        <div class="help-faq-item">
+          <div class="help-faq-q" onclick="toggleFaq(this)">
+            Ich habe einen neuen Arbeitsort — was tun?
+            <span class="faq-chevron">▾</span>
+          </div>
+          <div class="help-faq-a">
+            Im Profil neue Adresse eintragen,
+            "Jetzt via Google Maps berechnen" klicken
+            und dann "Profil speichern".
+            Die neue Pendelstrecke gilt sofort.
+          </div>
+        </div>
+        <div class="help-faq-item">
+          <div class="help-faq-q" onclick="toggleFaq(this)">
+            Mehrtägige Begleitung — wie eintragen?
+            <span class="faq-chevron">▾</span>
+          </div>
+          <div class="help-faq-a">
+            Fahrtmodus "Mehrtägig" wählen, Datum für
+            Hinfahrt und Rückfahrt eintragen, KM für beide
+            Richtungen separat eingeben.
+            Pendelabzug wird nur einmal berechnet.
+          </div>
+        </div>
+        <div class="help-faq-item">
+          <div class="help-faq-q" onclick="toggleFaq(this)">
+            Ich starte direkt beim Klienten — welchen Startpunkt?
+            <span class="faq-chevron">▾</span>
+          </div>
+          <div class="help-faq-a">
+            "Arbeitsort" wählen — volle Strecke wird erstattet,
+            kein Pendelabzug.
+          </div>
+        </div>
+        <div class="help-faq-item">
+          <div class="help-faq-q" onclick="toggleFaq(this)">
+            Bewirtungsbeleg — wo eingeben?
+            <span class="faq-chevron">▾</span>
+          </div>
+          <div class="help-faq-a">
+            Unter "Spesen & Auslagen" → "Sonstige Auslagen" —
+            Betrag und Beschreibung eingeben,
+            Beleg unter "Belege hochladen" als Foto anhängen.
+            Ohne Beleg keine Erstattung.
+          </div>
+        </div>
+        <div class="help-faq-item">
+          <div class="help-faq-q" onclick="toggleFaq(this)">
+            Meine Daten sind nach Browser-Update weg?
+            <span class="faq-chevron">▾</span>
+          </div>
+          <div class="help-faq-a">
+            Die App speichert lokal im Browser. Wird der Cache
+            geleert, gehen Entwürfe verloren. Fertige Abrechnungen
+            immer als PDF herunterladen.
+          </div>
+        </div>
+      </div>
+      <div class="help-info" style="margin-top:8px">
+        Allgemeine Informationen (Stand 2026). Bei Steuerfragen
+        bitte Steuerberater oder Finanzamt kontaktieren.
+      </div>`
+  }
+};
+
+function toggleHilfe(panelId, btnEl) {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  const isOpen = panel.classList.toggle('hilfe-open');
+  if (btnEl) {
+    btnEl.classList.toggle('hilfe-btn-active', isOpen);
+    btnEl.setAttribute('aria-expanded', String(isOpen));
+  }
+  document.querySelectorAll('.hilfe-panel').forEach(function (p) {
+    if (p.id !== panelId) {
+      p.classList.remove('hilfe-open');
+      const btn = document.querySelector('[data-hilfe="' + p.id + '"]');
+      if (btn) { btn.classList.remove('hilfe-btn-active'); btn.setAttribute('aria-expanded', 'false'); }
+    }
+  });
+}
+
+function toggleFaq(el) {
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+}
+
+function buildHilfePanel(id, inhalt) {
+  return '<div class="hilfe-panel" id="' + id + '" role="region" aria-label="Hilfe: ' + inhalt.titel + '">' +
+    '<div class="hilfe-header">' +
+      '<span class="hilfe-titel">' + inhalt.titel + '</span>' +
+      '<button class="hilfe-close" onclick="toggleHilfe(\'' + id + '\', document.querySelector(\'[data-hilfe=' + id + ']\')" aria-label="Hilfe schließen">&times;</button>' +
+    '</div>' +
+    '<div class="hilfe-body">' + inhalt.html + '</div>' +
+  '</div>';
+}
+
+function buildHilfeBtn(panelId, label) {
+  return '<button class="hilfe-btn" data-hilfe="' + panelId + '" onclick="toggleHilfe(\'' + panelId + '\', this)" aria-expanded="false" aria-controls="' + panelId + '">? ' + (label || 'Hilfe') + '</button>';
+}
