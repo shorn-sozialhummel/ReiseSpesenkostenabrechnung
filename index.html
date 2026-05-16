@@ -1534,19 +1534,6 @@ function removeFile(i) {
 // ─── DOMContentLoaded ─────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', function () {
-  // Statische Hilfe-Panels einbauen
-  [
-    ['hilfe-profil',  HILFE.profil],
-    ['hilfe-pendel',  HILFE.pendel],
-    ['hilfe-fahrten', HILFE.fahrten],
-    ['hilfe-spesen',  HILFE.spesen],
-    ['hilfe-pdf',     HILFE.pdf],
-    ['hilfe-steuer',  HILFE.steuer]
-  ].forEach(function (item) {
-    var el = document.getElementById(item[0]);
-    if (el) el.outerHTML = buildHilfePanel(item[0], item[1]);
-  });
-
   ladeProfilFelder();
 
   // Adressfelder überwachen — Pendelstrecke sofort invalidieren
