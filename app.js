@@ -612,3 +612,36 @@ function buildHilfePanel(id, inhalt) {
 function buildHilfeBtn(panelId, label) {
   return '<button class="hilfe-btn" data-hilfe="' + panelId + '" onclick="toggleHilfe(\'' + panelId + '\', this)" aria-expanded="false" aria-controls="' + panelId + '">? ' + (label || 'Hilfe') + '</button>';
 }
+// ─── Hilfe-Panels initialisieren ──────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', function () {
+
+  // Alle Hilfe-Panel-Platzhalter befüllen
+  var platzhalter = [
+    { id: 'hilfe-app',     inhalt: HILFE.app     },
+    { id: 'hilfe-profil',  inhalt: HILFE.profil  },
+    { id: 'hilfe-pendel',  inhalt: HILFE.pendel  },
+    { id: 'hilfe-fahrten', inhalt: HILFE.fahrten },
+    { id: 'hilfe-maps',    inhalt: HILFE.maps    },
+    { id: 'hilfe-spesen',  inhalt: HILFE.spesen  },
+    { id: 'hilfe-pdf',     inhalt: HILFE.pdf     },
+    { id: 'hilfe-steuer',  inhalt: HILFE.steuer  },
+  ];
+
+  platzhalter.forEach(function (p) {
+    var el = document.getElementById(p.id);
+    if (el) el.outerHTML = buildHilfePanel(p.id, p.inhalt);
+  });
+
+  // Klick außerhalb schließt offene Hilfe-Panels
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.hilfe-panel') && !e.target.closest('.hilfe-btn')) {
+      document.querySelectorAll('.hilfe-panel.hilfe-open').forEach(function (panel) {
+        panel.classList.remove('hilfe-open');
+        var btn = document.querySelector('[data-hilfe="' + panel.id + '"]');
+        if (btn) { btn.classList.remove('hilfe-btn-active'); btn.setAttribute('aria-expanded', 'false'); }
+      });
+    }
+  });
+
+});
