@@ -215,8 +215,6 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('topbar-mount').innerHTML = renderTopbar('index');
   var nav = document.querySelector('#topbar-mount .topbar-nav');
   if (nav) nav.insertAdjacentHTML('beforeend', buildHilfeBtn('hilfe-app', 'Was kann diese App?'));
-  var appEl = document.getElementById('hilfe-app');
-  if (appEl) appEl.outerHTML = buildHilfePanel('hilfe-app', HILFE.app);
 });
 
 // ─── Profil: Laden & Speichern ────────────────────────────────────────────────
