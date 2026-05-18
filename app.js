@@ -324,11 +324,15 @@ const HILFE = {
             und Einreichen</li>
         <li><strong>Entwurf speichern</strong> — Jederzeit
             unterbrechen und weitermachen</li>
+        <li><strong>Admin-Bereich</strong> — Erstattungssatz und
+            Buchhaltungs-E-Mail anpassen (Zugang über Topbar)</li>
       </ul>
       <div class="help-info">
         Alle Daten werden <strong>lokal auf Ihrem Gerät</strong>
         gespeichert — kein Login, keine Cloud. Fertige Abrechnungen
         immer als PDF herunterladen und aufbewahren.
+            Der <strong>Erstattungssatz</strong> (€/km) wird vom
+            Admin festgelegt und gilt für alle Abrechnungen.
       </div>`
   },
 
@@ -501,6 +505,9 @@ const HILFE = {
         <li><strong>Vorgesetzte/r genehmigt</strong></li>
         <li><strong>An Buchhaltung weitergeben</strong> —
             Auszahlung mit nächster Gehaltsabrechnung</li>
+        <li><strong>Per E-Mail einreichen</strong> — öffnet direkt
+            Ihr E-Mail-Programm mit vorausgefülltem Empfänger
+            (Buchhaltung) und Betreff. PDF manuell anhängen.</li>
       </ol>
       <div class="help-tip">
         <strong>"Entwurf speichern"</strong> sichert den Stand
