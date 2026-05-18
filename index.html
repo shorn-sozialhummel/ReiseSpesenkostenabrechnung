@@ -1213,11 +1213,20 @@ function updateAllPendelRows() {
        ondragover="handleDragOver(event)"
        ondragleave="handleDragLeave(event)"
        ondrop="handleDrop(event)">
-    📎 Dateien hierher ziehen oder klicken · PDF, JPG, PNG · max. 10 MB
+    📎 Dateien hierher ziehen oder klicken · JPG, PNG werden direkt ins PDF eingebettet · PDF-Belege werden als Hinweis aufgeführt · max. 10 MB
   </div>
   <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png"
          style="display:none" onchange="handleFiles(this.files)">
   <div id="file-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+<div class="info-box" style="margin-top:8px">
+  <span class="box-icon">📎</span>
+  <span>
+    <strong>JPG und PNG</strong> werden automatisch als extra Seiten
+    ins PDF eingebettet — alles in einer Datei für die Buchhaltung.
+    <strong>PDF-Belege</strong> werden im PDF namentlich aufgeführt
+    und müssen separat eingereicht werden.
+  </span>
+</div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
