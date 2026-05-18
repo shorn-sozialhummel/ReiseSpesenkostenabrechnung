@@ -1377,6 +1377,32 @@ function updateAllPendelRows() {
       </div>
     </div>
 
+    <div class="signature-section" id="signature-section">
+      <div class="signature-header">
+        <label for="signature-canvas">
+          Unterschrift <span class="required">*</span>
+        </label>
+        <button type="button" class="hilfe-btn" data-hilfe="hilfe-signature"
+                onclick="toggleHilfe('hilfe-signature', this)"
+                aria-expanded="false" aria-controls="hilfe-signature">? Unterschrift</button>
+      </div>
+      <div id="hilfe-signature"></div>
+      <p class="signature-hint">Mit Maus, Trackpad oder Finger unterschreiben</p>
+
+      <div class="signature-canvas-wrapper">
+        <canvas id="signature-canvas" width="600" height="160"
+                aria-label="Unterschriftenfeld"></canvas>
+        <div class="signature-baseline" aria-hidden="true"></div>
+      </div>
+
+      <div class="signature-footer">
+        <span class="signature-status" id="signature-status" aria-live="polite"></span>
+        <button type="button" id="signature-clear" class="signature-clear-btn">
+          Löschen
+        </button>
+      </div>
+    </div>
+
     <button class="btn-primary" id="btn-pdf" onclick="antragEinreichen()"
             disabled style="opacity:.4;cursor:not-allowed">
       📄 PDF erstellen &amp; herunterladen

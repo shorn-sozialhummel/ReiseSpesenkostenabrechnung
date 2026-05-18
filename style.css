@@ -940,3 +940,109 @@ hr.sep { border: none; border-top: 1px solid var(--gray-200); margin: 16px 0; }
   .pendel-b .sum-strip { flex-direction: column; }
 
 }
+
+/* ─── Digitales Unterschriftenfeld ───────────────────────────────────────── */
+
+.signature-section {
+  background: #fff;
+  border: 1px solid #E5E5E0;
+  border-radius: 6px;
+  padding: 14px;
+  margin: 16px 0;
+}
+
+.signature-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.signature-header label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2C2C2A;
+}
+
+.signature-header .required {
+  color: #C0392B;
+}
+
+.signature-hint {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  color: #5F5E5A;
+}
+
+.signature-canvas-wrapper {
+  position: relative;
+  background: #FAFAF7;
+  border: 1.5px dashed #B4B2A9;
+  border-radius: 4px;
+  overflow: hidden;
+  height: 160px;
+}
+
+#signature-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.signature-baseline {
+  position: absolute;
+  bottom: 24px;
+  left: 10%;
+  right: 10%;
+  border-bottom: 1px dotted #B4B2A9;
+  pointer-events: none;
+}
+
+.signature-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  min-height: 28px;
+}
+
+.signature-status {
+  font-size: 12px;
+  color: #639922;
+}
+
+.signature-status:empty {
+  display: none;
+}
+
+.signature-clear-btn {
+  background: transparent;
+  border: 1px solid #B4B2A9;
+  color: #5F5E5A;
+  padding: 5px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.signature-clear-btn:hover {
+  background: #F1EFE8;
+}
+
+.signature-clear-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .signature-canvas-wrapper {
+    height: 180px;
+  }
+
+  .signature-clear-btn {
+    padding: 8px 14px;
+    min-height: 36px;
+  }
+}
