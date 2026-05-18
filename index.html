@@ -246,6 +246,11 @@ function ladeProfilFelder() {
   setV('ma-nachname',  p.nachname  || '');
   setV('ma-rolle',     p.rolle     || '');
   setV('ma-iban',      p.iban      || '');
+  var cbLohn = document.getElementById('cb-lohnkonto');
+  if (cbLohn) {
+    cbLohn.checked = (p.lohnkonto !== false);
+    toggleLohnkonto(cbLohn.checked);
+  }
   setV('ma-rolle-text',p.rolleText || '');
   setV('heim-strasse', p.heimStrasse || '');
   setV('heim-plz',     p.heimPlz    || '');
@@ -282,7 +287,9 @@ function profilSpeichern() {
   p.nachname  = gV('ma-nachname');
   p.rolle     = gV('ma-rolle');
   p.rolleText = gV('ma-rolle-text');
-  p.iban      = gV('ma-iban');
+  var lohnkonto = document.getElementById('cb-lohnkonto');
+  p.lohnkonto = lohnkonto ? lohnkonto.checked : true;
+  p.iban = p.lohnkonto ? '' : gV('ma-iban');
   p.heimStrasse       = gV('heim-strasse');
   p.heimPlz           = gV('heim-plz');
   p.heimOrt           = gV('heim-ort');
