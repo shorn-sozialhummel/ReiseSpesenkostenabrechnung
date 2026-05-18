@@ -1485,6 +1485,8 @@ function antragEinreichen() {
 }
 
 function neuerAntrag() {
+  var cbErkl = document.getElementById('cb-erklaerung');
+  if (cbErkl) { cbErkl.checked = false; toggleErklaerung(false); }
   currentId = null;
   document.getElementById('draft-bar').style.display = 'none';
   window.history.replaceState({}, '', 'index.html');
@@ -1501,6 +1503,8 @@ function formularLeeren() {
   tripCounter = 0;
   uploadedFiles = [];
   document.getElementById('file-list').innerHTML = '';
+  var cbErkl = document.getElementById('cb-erklaerung');
+  if (cbErkl) { cbErkl.checked = false; toggleErklaerung(false); }
   fahrtHinzufuegen();
   updateSummary();
 }
@@ -1624,6 +1628,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (draftId) {
     ladeDraft(draftId);
   } else {
+    toggleErklaerung(false);
     fahrtHinzufuegen();
     updateSummary();
   }
