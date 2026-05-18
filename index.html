@@ -383,10 +383,22 @@ function zeigePendelB(km, datum) {
     abzugEl.textContent = '−' + fmt(km * 2 * getRate());
     abzugEl.style.color = km > 0 ? 'var(--red)' : 'var(--text-muted)';
   }
-  document.getElementById('pendel-info-text').textContent    =
-    'Diese ' + fmtKm(km * 2) + ' werden pro Fahrt (Start von Zuhause) vom ' +
-    'Erstattungsbetrag abgezogen und können als Entfernungspauschale ' +
-    '(Anlage N) in der Steuererklärung angegeben werden.';
+  var deductBlock = document.querySelector('#pendel-b .sum-block.deduct');
+  if (deductBlock) {
+    deductBlock.style.background = km > 0 ? '' : 'var(--gray-50)';
+    deductBlock.style.borderColor = km > 0 ? '' : 'var(--gray-200)';
+  }
+  var infoEl = document.getElementById('pendel-info-text');
+  if (infoEl) {
+    if (km === 0) {
+      infoEl.textContent = 'Kein Pendelabzug — volle Strecke wird erstattet.';
+    } else {
+      infoEl.textContent = 'Diese ' + fmtKm(km * 2) +
+        ' werden pro Fahrt (Start von Zuhause) vom ' +
+        'Erstattungsbetrag abgezogen und können als Entfernungspauschale ' +
+        '(Anlage N) in der Steuererklärung angegeben werden.';
+    }
+  }
 }
 
 // ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
