@@ -324,6 +324,8 @@ const HILFE = {
             und Einreichen</li>
         <li><strong>Entwurf speichern</strong> — Jederzeit
             unterbrechen und weitermachen</li>
+        <li><strong>Digitale Unterschrift</strong> — optional direkt im
+            Browser unterschreiben, wird ins PDF eingebettet</li>
         <li><strong>Admin-Bereich</strong> — Erstattungssatz und
             Buchhaltungs-E-Mail anpassen (Zugang über Topbar)</li>
       </ul>
@@ -512,7 +514,8 @@ const HILFE = {
             PDF-Erstellen: Checkbox „Ich bestätige die obige Erklärung"
             anhaken</li>
         <li><strong>PDF erstellen & herunterladen</strong></li>
-        <li><strong>Ausdrucken & unterschreiben</strong></li>
+        <li><strong>Ausdrucken</strong> — und unterschreiben, falls
+            du nicht schon digital unterschrieben hast</li>
         <li><strong>Vorgesetzte/r genehmigt</strong></li>
         <li><strong>An Buchhaltung weitergeben</strong> — Auszahlung per Überweisung</li>
         <li><strong>Per E-Mail einreichen</strong> — öffnet direkt
