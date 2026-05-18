@@ -528,6 +528,9 @@ const HILFE = {
         Das PDF enthält automatisch einen
         <strong>Steuerhinweis</strong> mit den abzugsfähigen
         Beträgen für die Anlage N.
+        Falls du digital unterschrieben hast, wird deine Unterschrift
+        in das PDF eingebettet — sonst bleibt die Unterschriftslinie
+        leer und du unterschreibst nach dem Druck handschriftlich.
       </div>`
   },
 
