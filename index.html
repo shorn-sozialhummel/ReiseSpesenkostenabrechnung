@@ -1327,6 +1327,14 @@ function updateAllPendelRows() {
 <script>
 'use strict';
 
+function toggleErklaerung(checked) {
+  var btn = document.getElementById('btn-pdf');
+  if (!btn) return;
+  btn.disabled = !checked;
+  btn.style.opacity = checked ? '1' : '.4';
+  btn.style.cursor = checked ? 'pointer' : 'not-allowed';
+}
+
 var uploadedFiles = [];
 
 // ─── updateSummary ────────────────────────────────────────────────────────────
