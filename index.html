@@ -1356,11 +1356,48 @@ function updateAllPendelRows() {
 'use strict';
 
 function toggleErklaerung(checked) {
-  var btn = document.getElementById('btn-pdf');
-  if (!btn) return;
-  btn.disabled = !checked;
-  btn.style.opacity = checked ? '1' : '.4';
-  btn.style.cursor = checked ? 'pointer' : 'not-allowed';
+  var btnPdf  = document.getElementById('btn-pdf');
+  var btnMail = document.getElementById('btn-mail');
+  if (btnPdf) {
+    btnPdf.disabled      = !checked;
+    btnPdf.style.opacity = checked ? '1' : '.4';
+    btnPdf.style.cursor  = checked ? 'pointer' : 'not-allowed';
+  }
+  if (btnMail) {
+    btnMail.disabled      = !checked;
+    btnMail.style.opacity = checked ? '1' : '.4';
+    btnMail.style.cursor  = checked ? 'pointer' : 'not-allowed';
+  }
+}
+
+function antragPerMail() {
+  var ag = getArbeitgeber();
+  var empfaenger = (ag.buchhaltungMail || 'finanzen@sozialhummel.de');
+  var vorname  = gV('ma-vorname')  || '';
+  var nachname = gV('ma-nachname') || '';
+  var zeitraum = gV('zeitraum')    || '';
+  var data     = collectData();
+
+  var betreff = encodeURIComponent(
+    'Reisekostenabrechnung · ' + vorname + ' ' + nachname +
+    (zeitraum ? ' · ' + zeitraum : '') +
+    ' · ' + (data.id || '')
+  );
+
+  var text = encodeURIComponent(
+    'Guten Tag,\n\n' +
+    'anbei meine Reisekostenabrechnung für den Zeitraum ' + (zeitraum || '–') + '.\n\n' +
+    'Antrag-Nr.: ' + (data.id || '–') + '\n' +
+    'Name: ' + vorname + ' ' + nachname + '\n' +
+    'Erstattungsbetrag: ' + fmt(data.gesamt || 0) + '\n\n' +
+    'Bitte das PDF als Anhang beifügen.\n\n' +
+    'Mit freundlichen Grüßen\n' +
+    vorname + ' ' + nachname
+  );
+
+  window.location.href = 'mailto:' + empfaenger +
+    '?subject=' + betreff +
+    '&body=' + text;
 }
 
 var uploadedFiles = [];
