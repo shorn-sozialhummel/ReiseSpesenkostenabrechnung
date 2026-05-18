@@ -100,6 +100,50 @@
       </div>
     </div>
 
+    <div class="card" style="margin-top:1rem;border-left:3px solid #F5A623">
+      <div class="sec-title">📧 Buchhaltung &amp; Einreichung</div>
+
+      <div class="field" style="margin-bottom:10px">
+        <label class="field-label" for="ag-buchhaltung-mail">Buchhaltungs-E-Mail</label>
+        <input type="email" id="ag-buchhaltung-mail"
+               placeholder="finanzen@sozialhummel.de"
+               value="">
+        <span style="font-size:11px;color:var(--text-hint)">
+          Wird als Empfänger beim „Per E-Mail einreichen"-Button verwendet.
+        </span>
+      </div>
+
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn-primary" onclick="saveBuchhaltung()">Speichern</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1rem;border-left:3px solid #F5A623">
+      <div class="sec-title">🚗 Erstattungssatz</div>
+
+      <div class="field" style="margin-bottom:10px">
+        <label class="field-label" for="ag-rate">Kilometerpauschale (€/km)</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="number" id="ag-rate" step="0.01" min="0.10" max="1.00"
+                 placeholder="0.30" style="width:90px">
+          <span style="font-size:13px;color:var(--text-muted)">€ pro km</span>
+        </div>
+        <span style="font-size:11px;color:var(--text-hint)">
+          Gesetzlicher Richtwert 2026: 0,30 €/km. Hier den vom AG festgelegten Satz eintragen.
+        </span>
+      </div>
+
+      <div class="info-box" style="margin-bottom:10px">
+        <span class="box-icon">ℹ️</span>
+        <span>Änderungen gelten sofort für alle neuen Abrechnungen.</span>
+      </div>
+
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn-primary" onclick="saveRate()">Speichern</button>
+        <button class="btn-ghost" onclick="resetRate()">Auf Standard zurücksetzen (0,30 €)</button>
+      </div>
+    </div>
+
     <!-- Section 2: Passwort -->
     <div class="card">
       <div class="sec-title">🔐 Admin-Passwort ändern</div>
