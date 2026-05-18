@@ -463,11 +463,17 @@ function generiereUndLadePDF(data, files) {
     : null;
 
   var sigW = (CW - 12) / 3;
-  // Höhere Box wenn digitale Unterschrift vorhanden (Platz für Bild über der Linie)
-  var sigH = signatureDataURL ? 30 : 24;
+  // Größere Box wenn digitale Unterschrift vorhanden — "Datum:" wandert unter die Linie
+  var sigH = signatureDataURL ? 36 : 24;
   needPage(sigH + 14);
   secTitle('UNTERSCHRIFTEN');
   y += 2;
+
+  // Linie und Datum-Label je nach Fall:
+  //   Unterschrift: Linie bei sigH-8, "Datum:" bei sigH-4 (unter Linie)
+  //   Keine Unterschrift: Linie bei sigH-4, "Datum:" bei sigH-8 (über Linie, traditionell)
+  var yLine  = signatureDataURL ? y + sigH - 8 : y + sigH - 4;
+  var yDatum = signatureDataURL ? y + sigH - 4 : y + sigH - 8;
 
   var sigLbls = ['Mitarbeiter/in', 'Vorgesetzte/r', 'Buchhaltung'];
 
@@ -479,17 +485,17 @@ function generiereUndLadePDF(data, files) {
 
     // Digitale Unterschrift nur im Mitarbeiter-Feld einbetten
     if (i === 0 && signatureDataURL) {
-      var imgH = 12;                   // mm Höhe
-      var imgW = imgH * 3.75;          // 45 mm (Canvas-Ratio 600:160)
-      var imgY = y + sigH - 4 - imgH;  // Unterkante bündig mit Unterschriftslinie
+      var imgW = sigW - 6;                  // passt exakt in Box (links + rechts je 3mm)
+      var imgH = Math.round(imgW / 3.75);   // proportional (Canvas-Ratio 600:160)
+      var imgY = yLine - imgH - 1;          // Unterkante 1mm über der Linie
       try {
-        doc.addImage(signatureDataURL, 'PNG', sx + 1.5, imgY, imgW, imgH);
+        doc.addImage(signatureDataURL, 'PNG', sx + 3, imgY, imgW, imgH);
       } catch (e) { /* Fallback: nur leere Linie */ }
     }
 
     sf('normal', 7); tc(MUTED);
-    txt('Datum:', sx + 3, y + sigH - 8);
-    hline(sx + 3, sx + sigW - 3, y + sigH - 4, GRAY_200);
+    txt('Datum:', sx + 3, yDatum);
+    hline(sx + 3, sx + sigW - 3, yLine, GRAY_200);
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
