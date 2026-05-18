@@ -343,8 +343,12 @@ const HILFE = {
       gespeichert. Bei Teamwechsel oder Umzug einfach aktualisieren.</p>
       <ul class="help-list">
         <li><strong>IBAN</strong> — optional, nur wenn die Erstattung
-            nicht mit dem nächsten Lohn ausgezahlt werden soll.
-            Standard: „Auszahlung mit dem nächsten Lohn" (Checkbox)</li>
+            nicht auf das bereits bekannte Konto erfolgen soll.
+            Checkbox: „IBAN bereits bekannt — Auszahlung auf
+            hinterlegtes Konto"</li>
+        <li><strong>E-Mail Vorgesetzte/r</strong> — Pflichtfeld für
+            den E-Mail-Versand. Die Abrechnung geht an die/den
+            Vorgesetzte/n, Buchhaltung erhält eine CC-Kopie.</li>
         <li><strong>Heimadresse</strong> — Basis für die
             Pendelberechnung</li>
         <li><strong>Arbeitsadresse</strong> — Ihr üblicher Einsatzort
@@ -513,8 +517,9 @@ const HILFE = {
         <li><strong>An Buchhaltung weitergeben</strong> —
             Auszahlung mit nächster Gehaltsabrechnung</li>
         <li><strong>Per E-Mail einreichen</strong> — öffnet direkt
-            Ihr E-Mail-Programm mit vorausgefülltem Empfänger
-            (Buchhaltung) und Betreff. PDF manuell anhängen.</li>
+            Ihr E-Mail-Programm. Empfänger ist die/der Vorgesetzte
+            (aus Profil), Buchhaltung in CC. PDF manuell anhängen.
+            Vorgesetzte/r muss im Profil eingetragen sein.</li>
       </ol>
       <div class="help-tip">
         <strong>"Entwurf speichern"</strong> sichert den Stand
