@@ -228,6 +228,11 @@ function ladeAGDaten() {
   setV('ag-email',    ag.email    || '');
   setV('ag-tel',      ag.tel      || '');
   setV('ag-maps-key', ag.mapsKey  || '');
+  var agData = store.get('ag_data', {});
+  var mailEl = document.getElementById('ag-buchhaltung-mail');
+  if (mailEl) mailEl.value = agData.buchhaltungMail || 'finanzen@sozialhummel.de';
+  var rateEl = document.getElementById('ag-rate');
+  if (rateEl) rateEl.value = agData.rate || '0.30';
 }
 
 function speichernAG() {
@@ -287,6 +292,38 @@ function loeschenDaten() {
   store.del('drafts');
   store.del('profil');
   showToast('Entwürfe und Profil gelöscht.', 'ok');
+}
+
+function saveBuchhaltung() {
+  var mail = document.getElementById('ag-buchhaltung-mail');
+  if (!mail) return;
+  var ag = store.get('ag_data', {});
+  ag.buchhaltungMail = mail.value.trim() || 'finanzen@sozialhummel.de';
+  store.set('ag_data', ag);
+  showToast('Buchhaltungs-E-Mail gespeichert ✓', 'ok');
+}
+
+function saveRate() {
+  var rateEl = document.getElementById('ag-rate');
+  if (!rateEl) return;
+  var val = parseFloat(rateEl.value);
+  if (isNaN(val) || val < 0.10 || val > 1.00) {
+    showToast('Bitte einen gültigen Satz zwischen 0,10 und 1,00 € eingeben.', 'warn');
+    return;
+  }
+  var ag = store.get('ag_data', {});
+  ag.rate = val;
+  store.set('ag_data', ag);
+  showToast('Erstattungssatz gespeichert ✓', 'ok');
+}
+
+function resetRate() {
+  var rateEl = document.getElementById('ag-rate');
+  if (rateEl) rateEl.value = '0.30';
+  var ag = store.get('ag_data', {});
+  ag.rate = 0.30;
+  store.set('ag_data', ag);
+  showToast('Erstattungssatz auf 0,30 € zurückgesetzt ✓', 'ok');
 }
 
 function setV(id, val) { var el = document.getElementById(id); if (el) el.value = val; }
