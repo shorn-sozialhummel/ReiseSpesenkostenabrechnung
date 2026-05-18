@@ -499,5 +499,42 @@ function generiereUndLadePDF(data, files) {
     (m.vorname  || '').replace(/\s+/g, '_') + '_' +
     (data.id    || 'DRAFT') + '.pdf';
 
+  // Belege als extra Seiten anhängen
+  if (files && files.length > 0) {
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      doc.addPage();
+      var pw = doc.internal.pageSize.getWidth();
+      var ph = doc.internal.pageSize.getHeight();
+
+      // Seitenkopf
+      doc.setFillColor(44, 44, 42);
+      doc.rect(0, 0, pw, 12, 'F');
+      sf('bold', 8); tc([255, 253, 247]);
+      doc.text('Beleg ' + (i + 1) + ' / ' + files.length + ': ' + f.name, 10, 8);
+      sf('normal', 7); tc([255, 253, 247]);
+      doc.text('Reisekostenabrechnung · ' + (data.mitarbeiter.vorname || '') + ' ' + (data.mitarbeiter.nachname || ''), pw - 10, 8, { align: 'right' });
+
+      if (f.dataUrl && f.dataUrl.startsWith('data:image/')) {
+        // Bild-Beleg (JPG, PNG)
+        try {
+          var imgType = f.dataUrl.indexOf('data:image/png') === 0 ? 'PNG' : 'JPEG';
+          var imgX = 10, imgY = 18, imgW = pw - 20, imgH = ph - 28;
+          doc.addImage(f.dataUrl, imgType, imgX, imgY, imgW, imgH, undefined, 'FAST');
+        } catch(e) {
+          sf('normal', 9); tc([99, 56, 6]);
+          doc.text('Bild konnte nicht eingebettet werden: ' + f.name, 10, 30);
+        }
+      } else {
+        // PDF oder nicht unterstütztes Format — Dateiname als Hinweis
+        sf('bold', 10); tc([44, 44, 42]);
+        doc.text('Beleg: ' + f.name, 10, 40);
+        sf('normal', 9); tc([99, 56, 6]);
+        doc.text('PDF-Belege können nicht direkt eingebettet werden.', 10, 52);
+        doc.text('Bitte diesen Beleg separat beilegen.', 10, 60);
+      }
+    }
+  }
+
   doc.save(fname);
 }
