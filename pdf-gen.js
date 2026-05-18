@@ -438,6 +438,24 @@ function generiereUndLadePDF(data, files) {
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // Erklärungstext
+  // ─────────────────────────────────────────────────────────────────────────────
+  if (y > 220) { doc.addPage(); y = 20; }
+  box(ML, y, CW, 18, [250, 238, 218], [239, 159, 39]);
+  sf('bold', 7.5); tc([65, 36, 2]);
+  txt('Erklärung des Antragstellers:', ML + 3, y + 5);
+  sf('normal', 7); tc([99, 56, 6]);
+  txt(
+    'Hiermit bestätige ich, dass mir die o.g. Kosten aufgrund des genannten Anlasses unter Beachtung des',
+    ML + 3, y + 10
+  );
+  txt(
+    'Gebots der Wirtschaftlichkeit und Sparsamkeit tatsächlich entstanden sind und von keiner anderen Seite erstattet werden.',
+    ML + 3, y + 14
+  );
+  y += 22;
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // BLOCK 6 — Unterschriften
   // ─────────────────────────────────────────────────────────────────────────────
   needPage(38);
