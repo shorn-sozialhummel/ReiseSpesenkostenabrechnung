@@ -1289,7 +1289,30 @@ function updateAllPendelRows() {
   <div id="hilfe-steuer"></div>
 
   <div class="btn-row">
-    <button class="btn-primary" onclick="antragEinreichen()">
+    <!-- Erklärung & Bestätigung -->
+    <div style="background:#FAEEDA;border:0.5px solid #EF9F27;border-radius:10px;
+                padding:14px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:600;color:#412402;margin-bottom:8px">
+        📋 Erklärung des Antragstellers
+      </div>
+      <div style="font-size:12px;color:#633806;line-height:1.6;margin-bottom:10px">
+        Hiermit bestätige ich, dass mir die o.g. Kosten aufgrund des genannten
+        Anlasses unter Beachtung des Gebots der Wirtschaftlichkeit und Sparsamkeit
+        tatsächlich entstanden sind und von keiner anderen Seite erstattet werden.
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <input type="checkbox" id="cb-erklaerung"
+               style="width:16px;height:16px;accent-color:#F5A623;margin-top:2px;flex-shrink:0"
+               onchange="toggleErklaerung(this.checked)">
+        <label for="cb-erklaerung" style="font-size:12px;color:#633806;cursor:pointer">
+          Ich bestätige die obige Erklärung und beantrage die Erstattung
+          der angegebenen Kosten.
+        </label>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-pdf" onclick="antragEinreichen()"
+            disabled style="opacity:.4;cursor:not-allowed">
       📄 PDF erstellen &amp; herunterladen
     </button>
     <button class="btn-ghost" onclick="entwurfSpeichern()">💾 Entwurf speichern</button>
