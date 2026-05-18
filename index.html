@@ -378,7 +378,11 @@ function zeigePendelB(km, datum) {
   document.getElementById('pendel-datum-label').textContent  = datum || today();
   document.getElementById('pendel-val-einfach').textContent  = fmtKm(km);
   document.getElementById('pendel-val-hr').textContent       = fmtKm(km * 2);
-  document.getElementById('pendel-val-abzug').textContent    = '−' + fmt(km * 2 * getRate());
+  var abzugEl = document.getElementById('pendel-val-abzug');
+  if (abzugEl) {
+    abzugEl.textContent = '−' + fmt(km * 2 * getRate());
+    abzugEl.style.color = km > 0 ? 'var(--red)' : 'var(--text-muted)';
+  }
   document.getElementById('pendel-info-text').textContent    =
     'Diese ' + fmtKm(km * 2) + ' werden pro Fahrt (Start von Zuhause) vom ' +
     'Erstattungsbetrag abgezogen und können als Entfernungspauschale ' +
