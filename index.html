@@ -64,14 +64,15 @@
     <div class="field">
       <label class="field-label" for="ma-iban">IBAN (alternatives Konto)</label>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <input type="checkbox" id="cb-lohnkonto" style="width:16px;height:16px;accent-color:#F5A623"
+        <input type="checkbox" id="cb-lohnkonto" checked style="width:16px;height:16px;accent-color:#F5A623"
                onchange="toggleLohnkonto(this.checked)">
         <label for="cb-lohnkonto" style="font-size:12px;color:var(--text-muted);cursor:pointer">
           Auszahlung mit dem nächsten Lohn (kein separates Konto nötig)
         </label>
       </div>
       <input type="text" id="ma-iban" placeholder="DE00 0000 0000 0000 0000 00"
-             autocomplete="off">
+             autocomplete="off" disabled
+             style="opacity:.4;background:var(--gray-50)">
       <span style="font-size:11px;color:var(--text-hint)" id="iban-hint"></span>
     </div>
   </div>
@@ -213,6 +214,18 @@
 <script>
 'use strict';
 
+function toggleLohnkonto(lohn) {
+  var inp = document.getElementById('ma-iban');
+  if (!inp) return;
+  inp.disabled = lohn;
+  inp.style.opacity = lohn ? '.4' : '1';
+  inp.style.background = lohn ? 'var(--gray-50)' : '';
+  var hint = document.getElementById('iban-hint');
+  if (hint) hint.textContent = lohn
+    ? 'Im PDF: „Auszahlung mit nächster Gehaltsabrechnung"'
+    : '';
+}
+
 // ─── Globaler State ───────────────────────────────────────────────────────────
 
 var currentId = newAntragId();
@@ -244,6 +257,7 @@ function ladeProfilFelder() {
   if (p.pendelKmEinfach > 0) {
     zeigePendelB(p.pendelKmEinfach, p.pendelBerechnetAm);
   }
+  toggleLohnkonto(document.getElementById('cb-lohnkonto').checked);
 }
 
 function onRolleChange() {
