@@ -531,6 +531,18 @@ const HILFE = {
       </div>`
   },
 
+  signature: {
+    titel: 'Unterschrift',
+    html: `
+      <p>Du kannst direkt im Browser mit Maus, Trackpad oder Finger
+      unterschreiben — die Unterschrift wird dann als Bild in das
+      PDF eingebettet. Alternativ kannst du das PDF auch ohne
+      digitale Unterschrift erzeugen, ausdrucken und per Hand
+      unterschreiben. Tippe auf „Löschen", wenn du neu ansetzen
+      möchtest. Die Erklärungs-Checkbox darüber muss in jedem
+      Fall angehakt sein, damit das PDF erzeugt werden kann.</p>`
+  },
+
   steuer: {
     titel: 'Steuererklärung (Anlage N) & häufige Fragen',
     html: `
@@ -669,7 +681,8 @@ document.addEventListener('DOMContentLoaded', function () {
     { id: 'hilfe-maps',    inhalt: HILFE.maps    },
     { id: 'hilfe-spesen',  inhalt: HILFE.spesen  },
     { id: 'hilfe-pdf',     inhalt: HILFE.pdf     },
-    { id: 'hilfe-steuer',  inhalt: HILFE.steuer  },
+    { id: 'hilfe-steuer',    inhalt: HILFE.steuer    },
+    { id: 'hilfe-signature', inhalt: HILFE.signature },
   ];
 
   platzhalter.forEach(function (p) {
@@ -690,4 +703,142 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+  // ─── Unterschriften-Canvas initialisieren ─────────────────────────────────
+  initSignature();
+
 });
+
+// ─── Digitale Unterschrift ────────────────────────────────────────────────────
+
+(function () {
+  var canvas, ctx, isDrawing = false, isSignatureEmpty = true, savedDataURL = null;
+
+  function initSignature() {
+    canvas = document.getElementById('signature-canvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+
+    skaliereCanvas();
+
+    canvas.addEventListener('pointerdown', onPointerDown);
+    canvas.addEventListener('pointermove', onPointerMove);
+    canvas.addEventListener('pointerup',     onPointerEnd);
+    canvas.addEventListener('pointercancel', onPointerEnd);
+    canvas.addEventListener('pointerleave',  onPointerEnd);
+
+    var clearBtn = document.getElementById('signature-clear');
+    if (clearBtn) clearBtn.addEventListener('click', loescheSignatur);
+
+    window.addEventListener('resize', onResize);
+  }
+
+  function skaliereCanvas() {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    var w = rect.width  || canvas.offsetWidth  || 600;
+    var h = rect.height || canvas.offsetHeight || 160;
+    canvas.width  = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    ctx.scale(dpr, dpr);
+    setzeStrichStyle();
+  }
+
+  function setzeStrichStyle() {
+    ctx.strokeStyle = '#2C2C2A';
+    ctx.lineWidth   = 2.5;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+  }
+
+  function onResize() {
+    skaliereCanvas();
+    // Gespeicherte Unterschrift wieder einzeichnen
+    if (savedDataURL) {
+      var img = new Image();
+      img.onload = function () {
+        var dpr  = window.devicePixelRatio || 1;
+        var rect = canvas.getBoundingClientRect();
+        ctx.drawImage(img, 0, 0, rect.width / dpr * dpr, rect.height / dpr * dpr);
+        setzeStrichStyle();
+      };
+      img.src = savedDataURL;
+    }
+  }
+
+  function getPos(e) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  }
+
+  function onPointerDown(e) {
+    e.preventDefault();
+    isDrawing = true;
+    canvas.setPointerCapture(e.pointerId);
+    var p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  }
+
+  function onPointerMove(e) {
+    if (!isDrawing) return;
+    e.preventDefault();
+    var p = getPos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  }
+
+  function onPointerEnd(e) {
+    if (!isDrawing) return;
+    isDrawing = false;
+    if (isSignatureEmpty) {
+      isSignatureEmpty = false;
+      aktualisiereStatus();
+    }
+    // Aktuellen Stand für Resize-Wiederherstellung sichern
+    savedDataURL = canvas.toDataURL('image/png');
+  }
+
+  function loescheSignatur() {
+    var dpr  = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width * dpr, rect.height * dpr);
+    isSignatureEmpty = true;
+    savedDataURL     = null;
+    aktualisiereStatus();
+  }
+
+  function aktualisiereStatus() {
+    var statusEl = document.getElementById('signature-status');
+    var clearBtn = document.getElementById('signature-clear');
+    if (isSignatureEmpty) {
+      if (statusEl) {
+        statusEl.textContent = 'Manuelle Unterschrift nach Druck';
+        statusEl.classList.remove('is-signed');
+      }
+      if (clearBtn) clearBtn.disabled = true;
+    } else {
+      if (statusEl) {
+        statusEl.textContent = '✓ Unterschrift erfasst';
+        statusEl.classList.add('is-signed');
+      }
+      if (clearBtn) clearBtn.disabled = false;
+    }
+  }
+
+  // Öffentliche API für pdf-gen.js
+  window.getSignatureDataURL = function () {
+    if (isSignatureEmpty) return null;
+    return canvas ? canvas.toDataURL('image/png') : null;
+  };
+
+  window.resetSignature = function () {
+    if (canvas) loescheSignatur();
+  };
+
+  // initSignature per DOMContentLoaded-Handler aufrufbar machen
+  window.initSignature = initSignature;
+
+}());

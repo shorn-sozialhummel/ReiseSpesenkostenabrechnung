@@ -1379,15 +1379,17 @@ function updateAllPendelRows() {
 
     <div class="signature-section" id="signature-section">
       <div class="signature-header">
-        <label for="signature-canvas">
-          Unterschrift <span class="required">*</span>
-        </label>
+        <label for="signature-canvas">Unterschrift</label>
         <button type="button" class="hilfe-btn" data-hilfe="hilfe-signature"
                 onclick="toggleHilfe('hilfe-signature', this)"
                 aria-expanded="false" aria-controls="hilfe-signature">? Unterschrift</button>
       </div>
       <div id="hilfe-signature"></div>
-      <p class="signature-hint">Mit Maus, Trackpad oder Finger unterschreiben</p>
+      <p class="signature-hint">
+        Optional — mit Maus, Trackpad oder Finger unterschreiben.
+        Wenn du nicht digital unterschreibst, drucke das PDF aus
+        und unterschreibe es per Hand.
+      </p>
 
       <div class="signature-canvas-wrapper">
         <canvas id="signature-canvas" width="600" height="160"
@@ -1396,10 +1398,10 @@ function updateAllPendelRows() {
       </div>
 
       <div class="signature-footer">
-        <span class="signature-status" id="signature-status" aria-live="polite"></span>
-        <button type="button" id="signature-clear" class="signature-clear-btn">
-          Löschen
-        </button>
+        <span class="signature-status" id="signature-status"
+              aria-live="polite">Manuelle Unterschrift nach Druck</span>
+        <button type="button" id="signature-clear"
+                class="signature-clear-btn" disabled>Löschen</button>
       </div>
     </div>
 
@@ -1630,6 +1632,7 @@ function antragEinreichen() {
 function neuerAntrag() {
   var cbErkl = document.getElementById('cb-erklaerung');
   if (cbErkl) { cbErkl.checked = false; toggleErklaerung(false); }
+  if (window.resetSignature) window.resetSignature();
   currentId = null;
   document.getElementById('draft-bar').style.display = 'none';
   window.history.replaceState({}, '', 'index.html');
@@ -1639,6 +1642,7 @@ function neuerAntrag() {
 function formularLeeren() {
   var cbErkl = document.getElementById('cb-erklaerung');
   if (cbErkl) { cbErkl.checked = false; toggleErklaerung(false); }
+  if (window.resetSignature) window.resetSignature();
   if (!confirm('Formular leeren? Nicht gespeicherte Daten gehen verloren.')) return;
   setV('zeitraum', '');
   ['sp-uebernachtung','sp-opnv','sp-parken','sp-sonstige','sp-sonstige-text','anmerkung']
