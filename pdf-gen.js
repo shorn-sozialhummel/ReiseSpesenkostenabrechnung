@@ -431,7 +431,7 @@ function generiereUndLadePDF(data, files) {
         : (f.size / 1024 / 1024).toFixed(1) + ' MB';
       box(ML, y, CW, 7, i % 2 === 0 ? WHITE : GRAY_50);
       sf('normal', 8); tc(TEXT);
-      txt((i + 1) + '.  ' + clip(f.name, 60) + '  (' + sz + ')', ML + 2, y + 5);
+      txt('Seite ' + (doc.getNumberOfPages() + 1 + i) + ': ' + clip(f.name, 55) + '  (' + sz + ')', ML + 2, y + 5);
       y += 7;
     });
     y += 4;
