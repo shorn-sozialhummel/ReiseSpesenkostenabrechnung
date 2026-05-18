@@ -385,8 +385,20 @@ function zeigePendelB(km, datum) {
   }
   var deductBlock = document.querySelector('#pendel-b .sum-block.deduct');
   if (deductBlock) {
-    deductBlock.style.background = km > 0 ? '' : 'var(--gray-50)';
-    deductBlock.style.borderColor = km > 0 ? '' : 'var(--gray-200)';
+    if (km > 0) {
+      deductBlock.style.background = '';
+      deductBlock.style.border = '';
+      deductBlock.querySelector('.sum-label') &&
+        (deductBlock.querySelector('.sum-label').style.color = '');
+    } else {
+      deductBlock.style.background = 'var(--gray-50)';
+      deductBlock.style.border = '1px solid var(--gray-200)';
+      deductBlock.style.borderRadius = '10px';
+      var lbl = deductBlock.querySelector('.sum-label');
+      var val = deductBlock.querySelector('.sum-value');
+      if (lbl) lbl.style.color = 'var(--text-muted)';
+      if (val) val.style.color = 'var(--text-muted)';
+    }
   }
   var infoEl = document.getElementById('pendel-info-text');
   if (infoEl) {
