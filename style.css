@@ -885,3 +885,58 @@ hr.sep { border: none; border-top: 1px solid var(--gray-200); margin: 16px 0; }
   border-radius: 8px;
   font-size: 13px;
 }
+
+/* ─── Mobile Ansicht (max 640px) ──────────────────────────────────────── */
+@media (max-width: 640px) {
+
+  /* Topbar */
+  .topbar { flex-wrap: wrap; gap: 6px; padding: 10px 12px; }
+  .topbar-nav { width: 100%; display: flex; gap: 4px; flex-wrap: wrap; }
+  .topbar-nav a { font-size: 12px; padding: 4px 8px; }
+
+  /* Cards */
+  .card { padding: 14px 12px; }
+
+  /* Grids → 1-spaltig */
+  .grid-2 { grid-template-columns: 1fr !important; }
+  .grid-3 { grid-template-columns: 1fr !important; }
+  [style*="grid-template-columns:2fr 1fr 1fr"] {
+    display: flex !important; flex-direction: column !important; gap: 8px !important;
+  }
+
+  /* Buttons volle Breite */
+  .btn-row { flex-wrap: wrap; }
+  .btn-row .btn-primary,
+  .btn-row .btn-ghost { width: 100%; text-align: center; }
+  .btn-row .btn-ghost[style*="margin-left:auto"] { margin-left: 0 !important; }
+
+  /* Fahrt-Karte */
+  .fk-grid { grid-template-columns: 1fr !important; }
+  .fk-span2 { grid-column: span 1 !important; }
+  .fk-header { flex-wrap: wrap; gap: 6px; }
+  .fk-datum-row { flex-direction: column; gap: 8px; }
+
+  /* KM-Block */
+  .km-row { flex-wrap: wrap; gap: 8px; }
+  .km-mehrtaegig-grid { grid-template-columns: 1fr !important; }
+
+  /* Modus-Buttons */
+  .modus-btn { font-size: 11px; padding: 5px 8px; }
+
+  /* Zusammenfassung Strip */
+  .sum-strip { flex-direction: column; gap: 8px; }
+  .sum-block { width: 100%; }
+
+  /* Hilfe-Panel */
+  .hilfe-panel { width: 100% !important; left: 0 !important; right: 0 !important; }
+
+  /* Sec-Label */
+  .sec-label { flex-wrap: wrap; gap: 6px; }
+
+  /* Maps-Btn-Group */
+  .maps-btn-group { margin-left: 0 !important; margin-top: 8px; width: 100%; }
+
+  /* Pendelstrecken-Box */
+  .pendel-b .sum-strip { flex-direction: column; }
+
+}
