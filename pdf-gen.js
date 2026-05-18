@@ -501,6 +501,11 @@ function generiereUndLadePDF(data, files) {
 
   // Belege als extra Seiten anhängen
   if (files && files.length > 0) {
+    console.log('Belege zum Einbetten:', files.length, files.map(function(f) { return {
+      name: f.name,
+      hasDataUrl: !!f.dataUrl,
+      dataUrlStart: f.dataUrl ? f.dataUrl.substring(0, 50) : 'FEHLT'
+    }; }));
     for (var i = 0; i < files.length; i++) {
       var f = files[i];
       doc.addPage();
