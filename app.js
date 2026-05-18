@@ -335,7 +335,9 @@ const HILFE = {
       <p>Das Profil wird <strong>einmalig ausgefüllt</strong> und
       gespeichert. Bei Teamwechsel oder Umzug einfach aktualisieren.</p>
       <ul class="help-list">
-        <li><strong>IBAN</strong> — Ihr Bankkonto für die Erstattung</li>
+        <li><strong>IBAN</strong> — optional, nur wenn die Erstattung
+            nicht mit dem nächsten Lohn ausgezahlt werden soll.
+            Standard: „Auszahlung mit dem nächsten Lohn" (Checkbox)</li>
         <li><strong>Heimadresse</strong> — Basis für die
             Pendelberechnung</li>
         <li><strong>Arbeitsadresse</strong> — Ihr üblicher Einsatzort
@@ -464,6 +466,15 @@ const HILFE = {
         <li><strong>Sonstiges</strong> — z. B. Bewirtungsbeleg
             mit Beschreibung</li>
       </ul>
+      <div class="help-info">
+        <span><strong>Belege hochladen:</strong>
+        JPG und PNG werden automatisch als extra Seiten ins PDF
+        eingebettet — alles in einer Datei für die Buchhaltung.
+        PDF-Belege werden im PDF namentlich aufgeführt und müssen
+        separat eingereicht werden.</span>
+      </div>
+      <ul class="help-list" style="display:none">
+      </ul>
       <div class="help-warn">
         <strong>Verpflegungspauschalen</strong> erstattet der AG
         nicht. Diese sind aber steuerlich absetzbar —
@@ -479,6 +490,9 @@ const HILFE = {
       Das PDF enthält alle Daten, eine Rechenübersicht
       und eine Unterschriftenzeile.</p>
       <ol class="help-steps">
+        <li><strong>Erklärung bestätigen</strong> — Pflicht vor dem
+            PDF-Erstellen: Checkbox „Ich bestätige die obige Erklärung"
+            anhaken</li>
         <li><strong>PDF erstellen & herunterladen</strong></li>
         <li><strong>Ausdrucken & unterschreiben</strong></li>
         <li><strong>Vorgesetzte/r genehmigt</strong></li>
