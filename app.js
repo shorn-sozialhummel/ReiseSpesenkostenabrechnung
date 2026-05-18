@@ -1,6 +1,9 @@
 'use strict';
 
-const RATE = 0.30;
+function getRate() {
+  var ag = store.get('ag_data', {});
+  return ag.rate || 0.30;
+}
 
 const REISEARTEN = [
   {v:'',             l:'– Art wählen –'},
@@ -178,7 +181,7 @@ function berechneFahrtErstattung(modus, kmHin, kmRueck, startTyp) {
     gesamtKm:     gesamtKm,
     pendelAbzug:  pendelAbzug,
     erstattungKm: erstattungKm,
-    betrag:       erstattungKm * RATE,
+    betrag:       erstattungKm * getRate(),
     keinAbzug:    keinAbzug,
     pendelEinfach: pendelEinfach,
     keineKm:      false

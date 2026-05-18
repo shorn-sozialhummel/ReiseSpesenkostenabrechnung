@@ -364,7 +364,7 @@ function zeigePendelB(km, datum) {
   document.getElementById('pendel-datum-label').textContent  = datum || today();
   document.getElementById('pendel-val-einfach').textContent  = fmtKm(km);
   document.getElementById('pendel-val-hr').textContent       = fmtKm(km * 2);
-  document.getElementById('pendel-val-abzug').textContent    = '−' + fmt(km * 2 * RATE);
+  document.getElementById('pendel-val-abzug').textContent    = '−' + fmt(km * 2 * getRate());
   document.getElementById('pendel-info-text').textContent    =
     'Diese ' + fmtKm(km * 2) + ' werden pro Fahrt (Start von Zuhause) vom ' +
     'Erstattungsbetrag abgezogen und können als Entfernungspauschale ' +
@@ -979,14 +979,14 @@ function aktualisierePendelFooter(id, r) {
     el.className = 'fk-pendel p-ao';
     el.innerHTML =
       '<span>✓ Start vom Arbeitsort — kein Pendelabzug, volle Strecke erstattet</span>' +
-      '<span class="p-right" style="color:var(--green-dark)">+ ' + fmt(r.gesamtKm * RATE) + '</span>';
+      '<span class="p-right" style="color:var(--green-dark)">+ ' + fmt(r.gesamtKm * getRate()) + '</span>';
     return;
   }
 
   if (!r.pendelEinfach) {
     el.className = 'fk-pendel p-ao';
     el.innerHTML = '<span>✓ Pendelstrecke 0 km — volle Strecke wird erstattet</span>' +
-      '<span class="p-right" style="color:var(--green-dark)">+ ' + fmt(r.gesamtKm * RATE) + '</span>';
+      '<span class="p-right" style="color:var(--green-dark)">+ ' + fmt(r.gesamtKm * getRate()) + '</span>';
     return;
   }
 
@@ -1001,10 +1001,10 @@ function aktualisierePendelFooter(id, r) {
       'in der Steuererklärung angegeben werden.</span>';
   } else {
     el.innerHTML =
-      '<span>− Pendelabzug ' + fmtKm(r.pendelAbzug) + ' × 0,30 €' + hinweis +
+      '<span>− Pendelabzug ' + fmtKm(r.pendelAbzug) + ' × ' + getRate().toFixed(2).replace('.',',') + ' €' + hinweis +
       ' — steuerlich absetzbar (Anlage N)</span>' +
       '<span class="p-right" style="color:var(--red)">' +
-        fmtKm(r.pendelAbzug) + ' · −' + fmt(r.pendelAbzug * RATE) +
+        fmtKm(r.pendelAbzug) + ' · −' + fmt(r.pendelAbzug * getRate()) +
       '</span>';
   }
 }
@@ -1360,7 +1360,7 @@ function updateSummary() {
     erstattungGesamt += r.erstattungKm;
     updateFahrtKarte(parseInt(id));
   });
-  var fahrtBetrag = erstattungGesamt * RATE;
+  var fahrtBetrag = erstattungGesamt * getRate();
   var spesen = ['sp-uebernachtung','sp-opnv','sp-parken','sp-sonstige'].reduce(function (s, sid) {
     return s + (parseFloat((document.getElementById(sid) || {}).value) || 0);
   }, 0);
@@ -1437,7 +1437,7 @@ function collectData() {
   };
   var spesenSum = spesen.uebernachtung + spesen.opnv + spesen.parken + spesen.sonstige;
   var erstattungGesamt = fahrten.reduce(function (s, f) { return s + f.erstattungKm; }, 0);
-  var fahrtBetrag = erstattungGesamt * RATE;
+  var fahrtBetrag = erstattungGesamt * getRate();
   return {
     id:          currentId || newAntragId(),
     arbeitgeber: getArbeitgeber(),
