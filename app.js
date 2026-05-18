@@ -457,6 +457,13 @@ const HILFE = {
       <div class="help-warn">
         Ergebnis ist immer die <strong>einfache Strecke</strong> —
         bei "Hin & Rückfahrt" verdoppelt die App automatisch.
+      </div>
+      <div class="help-warn" style="margin-top:6px">
+        <strong>Wichtig:</strong> Google Maps berechnet die
+        <strong>schnellste</strong>, nicht die kürzeste Route.
+        Laut Reisekostenrichtlinie gilt immer die kürzeste Strecke.
+        KM ggf. manuell anpassen (z. B. via FALK-Routenplaner)
+        und Grund im Zweck-Feld notieren.
       </div>`
   },
 
