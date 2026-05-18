@@ -1494,6 +1494,8 @@ function neuerAntrag() {
 }
 
 function formularLeeren() {
+  var cbErkl = document.getElementById('cb-erklaerung');
+  if (cbErkl) { cbErkl.checked = false; toggleErklaerung(false); }
   if (!confirm('Formular leeren? Nicht gespeicherte Daten gehen verloren.')) return;
   setV('zeitraum', '');
   ['sp-uebernachtung','sp-opnv','sp-parken','sp-sonstige','sp-sonstige-text','anmerkung']
@@ -1503,8 +1505,6 @@ function formularLeeren() {
   tripCounter = 0;
   uploadedFiles = [];
   document.getElementById('file-list').innerHTML = '';
-  var cbErkl = document.getElementById('cb-erklaerung');
-  if (cbErkl) { cbErkl.checked = false; toggleErklaerung(false); }
   fahrtHinzufuegen();
   updateSummary();
 }
