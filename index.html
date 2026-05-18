@@ -67,13 +67,25 @@
         <input type="checkbox" id="cb-lohnkonto" checked style="width:16px;height:16px;accent-color:#F5A623"
                onchange="toggleLohnkonto(this.checked)">
         <label for="cb-lohnkonto" style="font-size:12px;color:var(--text-muted);cursor:pointer">
-          Auszahlung mit dem nächsten Lohn (kein separates Konto nötig)
+          IBAN bereits bekannt — Auszahlung auf hinterlegtes Konto
         </label>
       </div>
       <input type="text" id="ma-iban" placeholder="DE00 0000 0000 0000 0000 00"
              autocomplete="off" disabled
              style="opacity:.4;background:var(--gray-50)">
       <span style="font-size:11px;color:var(--text-hint)" id="iban-hint"></span>
+    </div>
+    <div class="field" style="margin-top:10px">
+      <label class="field-label" for="ma-vg-mail">
+        E-Mail Vorgesetzte/r *
+      </label>
+      <input type="email" id="ma-vg-mail"
+             placeholder="vorname.nachname@sozialhummel.de"
+             autocomplete="off">
+      <span style="font-size:11px;color:var(--text-hint)">
+        Wird beim „Per E-Mail einreichen" als Empfänger verwendet.
+        Buchhaltung erhält die E-Mail in CC.
+      </span>
     </div>
   </div>
 
