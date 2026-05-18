@@ -514,8 +514,7 @@ const HILFE = {
         <li><strong>PDF erstellen & herunterladen</strong></li>
         <li><strong>Ausdrucken & unterschreiben</strong></li>
         <li><strong>Vorgesetzte/r genehmigt</strong></li>
-        <li><strong>An Buchhaltung weitergeben</strong> —
-            Auszahlung mit nächster Gehaltsabrechnung</li>
+        <li><strong>An Buchhaltung weitergeben</strong> — Auszahlung per Überweisung</li>
         <li><strong>Per E-Mail einreichen</strong> — öffnet direkt
             Ihr E-Mail-Programm. Empfänger ist die/der Vorgesetzte
             (aus Profil), Buchhaltung in CC. PDF manuell anhängen.

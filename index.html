@@ -234,7 +234,7 @@ function toggleLohnkonto(lohn) {
   inp.style.background = lohn ? 'var(--gray-50)' : '';
   var hint = document.getElementById('iban-hint');
   if (hint) hint.textContent = lohn
-    ? 'Im PDF: „Auszahlung mit nächster Gehaltsabrechnung"'
+    ? 'Im PDF: „Auszahlung per Überweisung"'
     : '';
 }
 
@@ -1314,7 +1314,7 @@ function updateAllPendelRows() {
     <span class="box-icon">✅</span>
     <span>
       <strong>Genehmigungsweg:</strong>
-      Vorgesetzte/r → Buchhaltung → Auszahlung mit nächster Gehaltsabrechnung
+      Vorgesetzte/r → Buchhaltung → Auszahlung per Überweisung
     </span>
   </div>
 
