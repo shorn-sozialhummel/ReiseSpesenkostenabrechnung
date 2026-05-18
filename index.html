@@ -258,6 +258,7 @@ function ladeProfilFelder() {
   setV('ma-nachname',  p.nachname  || '');
   setV('ma-rolle',     p.rolle     || '');
   setV('ma-iban',      p.iban      || '');
+  setV('ma-vg-mail',  p.vgMail    || '');
   var cbLohn = document.getElementById('cb-lohnkonto');
   if (cbLohn) {
     cbLohn.checked = (p.lohnkonto !== false);
@@ -301,6 +302,7 @@ function profilSpeichern() {
   p.rolleText = gV('ma-rolle-text');
   var lohnkonto = document.getElementById('cb-lohnkonto');
   p.lohnkonto = lohnkonto ? lohnkonto.checked : true;
+  p.vgMail = gV('ma-vg-mail');
   p.iban = p.lohnkonto ? '' : gV('ma-iban');
   p.heimStrasse       = gV('heim-strasse');
   p.heimPlz           = gV('heim-plz');
@@ -1383,8 +1385,16 @@ function toggleErklaerung(checked) {
 }
 
 function antragPerMail() {
+  var p = getProfil();
+  var vgMail = gV('ma-vg-mail') || p.vgMail || '';
+
+  if (!vgMail || vgMail.trim().length < 5) {
+    showToast('Bitte zuerst E-Mail des Vorgesetzten im Profil eintragen.', 'warn');
+    return;
+  }
+
   var ag = getArbeitgeber();
-  var empfaenger = (ag.buchhaltungMail || 'finanzen@sozialhummel.de');
+  var ccMail = ag.buchhaltungMail || 'finanzen@sozialhummel.de';
   var vorname  = gV('ma-vorname')  || '';
   var nachname = gV('ma-nachname') || '';
   var zeitraum = gV('zeitraum')    || '';
@@ -1398,7 +1408,8 @@ function antragPerMail() {
 
   var text = encodeURIComponent(
     'Guten Tag,\n\n' +
-    'anbei meine Reisekostenabrechnung für den Zeitraum ' + (zeitraum || '–') + '.\n\n' +
+    'anbei meine Reisekostenabrechnung für den Zeitraum ' +
+    (zeitraum || '–') + '.\n\n' +
     'Antrag-Nr.: ' + (data.id || '–') + '\n' +
     'Name: ' + vorname + ' ' + nachname + '\n' +
     'Erstattungsbetrag: ' + fmt(data.gesamt || 0) + '\n\n' +
@@ -1407,8 +1418,9 @@ function antragPerMail() {
     vorname + ' ' + nachname
   );
 
-  window.location.href = 'mailto:' + empfaenger +
-    '?subject=' + betreff +
+  window.location.href = 'mailto:' + vgMail +
+    '?cc=' + encodeURIComponent(ccMail) +
+    '&subject=' + betreff +
     '&body=' + text;
 }
 
