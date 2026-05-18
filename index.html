@@ -1441,11 +1441,15 @@ function toggleErklaerung(checked) {
 }
 
 function antragPerMail() {
+  console.time('antragPerMail');
   var p = getProfil();
   var vgMail = gV('ma-vg-mail') || p.vgMail || '';
+  console.log('[antragPerMail] vgMail:', JSON.stringify(vgMail));
 
   if (!vgMail || vgMail.trim().length < 5) {
+    console.log('[antragPerMail] Guard triggered – Toast wird gezeigt');
     showToast('Bitte zuerst E-Mail des Vorgesetzten im Profil eintragen.', 'warn');
+    console.timeEnd('antragPerMail');
     return;
   }
 
@@ -1474,6 +1478,8 @@ function antragPerMail() {
     vorname + ' ' + nachname
   );
 
+  console.log('[antragPerMail] mailto wird gesetzt. ccMail:', ccMail);
+  console.timeEnd('antragPerMail');
   window.location.href = 'mailto:' + vgMail +
     '?cc=' + encodeURIComponent(ccMail) +
     '&subject=' + betreff +
