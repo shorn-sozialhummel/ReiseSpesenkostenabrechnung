@@ -174,7 +174,7 @@ function berechneFahrtErstattung(modus, kmHin, kmRueck, startTyp) {
              keinAbzug: true, pendelEinfach: pendelEinfach, keineKm: true };
   }
 
-  var keinAbzug    = startTyp === 'arbeitsort' || pendelEinfach === 0;
+  var keinAbzug    = startTyp !== 'zuhause' || pendelEinfach === 0;
   var pendelAbzug  = keinAbzug ? 0 : pendelKm;
   var erstattungKm = Math.max(0, gesamtKm - pendelAbzug);
   return {
@@ -369,10 +369,18 @@ const HILFE = {
     html: `
       <p>Der AG erstattet nur die Strecke, die
       <strong>über den normalen Arbeitsweg hinausgeht</strong>.
-      Die Pendelstrecke (Wohnort → Arbeitsort) wird daher
-      pro Fahrt automatisch abgezogen.</p>
+      Der Pendelabzug (Wohnort → Arbeitsort) greift deshalb nur,
+      wenn eine Fahrt nachweislich <strong>von der Wohnung startet</strong>
+      (Startpunkt „Zuhause").</p>
+      <ul class="help-list">
+        <li><strong>Start: Zuhause</strong> — Pendelabzug wird berechnet</li>
+        <li><strong>Start: Arbeitsort</strong> — kein Abzug, volle Strecke erstattet</li>
+        <li><strong>Start: Andere Adresse</strong> — kein Abzug, da die private
+            Strecke Wohnung↔Büro nicht berührt wird (z. B. Kunde→Kunde bei
+            einer Rundfahrt)</li>
+      </ul>
       <div class="help-example">
-        <div class="help-example-title">Beispielrechnung</div>
+        <div class="help-example-title">Beispielrechnung (Start Zuhause, hin & zurück)</div>
         <div class="help-example-row">
           <span>Gefahrene km (hin & zurück)</span><span>104 km</span>
         </div>

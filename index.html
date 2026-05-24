@@ -222,7 +222,7 @@
 
 <div id="toast"></div>
 
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 <script>
 'use strict';
 
@@ -1040,6 +1040,14 @@ function aktualisierePendelFooter(id, r) {
     return;
   }
 
+  if (t.startTyp === 'andere') {
+    el.className = 'fk-pendel p-ao';
+    el.innerHTML =
+      '<span>✓ Kein Pendelabzug — Fahrt berührt nicht die Wohnung</span>' +
+      '<span class="p-right" style="color:var(--green-dark)">+ ' + fmt(r.gesamtKm * getRate()) + '</span>';
+    return;
+  }
+
   if (!r.pendelEinfach) {
     el.className = 'fk-pendel p-ao';
     el.innerHTML = '<span>✓ Pendelstrecke 0 km — volle Strecke wird erstattet</span>' +
@@ -1421,7 +1429,7 @@ function updateAllPendelRows() {
 
 </main>
 
-<script src="pdf-gen.js"></script>
+<script src="pdf-gen.js?v=2"></script>
 <script>
 'use strict';
 

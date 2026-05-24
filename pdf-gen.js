@@ -212,7 +212,7 @@ function generiereUndLadePDF(data, files) {
     var modus    = f.modus || 'hinrueck';
     var kmHin    = parseInt(f.kmHin)   || 0;
     var kmRueck  = parseInt(f.kmRueck) || 0;
-    var keinAbzug = f.startTyp === 'arbeitsort';
+    var keinAbzug = f.startTyp !== 'zuhause';
 
     // Use pre-calculated values, fallback to own calc
     var gesamtKm, pendelAbzug, erstattungKm, betrag;
