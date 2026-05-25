@@ -155,6 +155,7 @@ function getAktuellePendelKm() {
 
 function berechneFahrtErstattung(modus, kmHin, kmRueck, startTyp) {
   var pendelEinfach = getAktuellePendelKm();
+  var status = getProfil().reisekostenStatus;
   // Pendelabzug je nach Modus korrekt berechnen:
   // Einfache Fahrt → nur einfacher Pendelweg
   // Hin & Zurück   → doppelter Pendelweg
@@ -175,7 +176,7 @@ function berechneFahrtErstattung(modus, kmHin, kmRueck, startTyp) {
              keinAbzug: true, pendelEinfach: pendelEinfach, keineKm: true };
   }
 
-  var keinAbzug    = startTyp !== 'zuhause' || pendelEinfach === 0;
+  var keinAbzug    = status === 'auswaerts' || startTyp !== 'zuhause' || pendelEinfach === 0;
   var pendelAbzug  = keinAbzug ? 0 : pendelKm;
   var erstattungKm = Math.max(0, gesamtKm - pendelAbzug);
   return {
@@ -378,11 +379,16 @@ const HILFE = {
   pendel: {
     titel: 'Was ist der Pendelabzug?',
     html: `
-      <p>Der AG erstattet nur die Strecke, die
+      <div class="help-info" style="margin-bottom:8px">
+        Der Pendelabzug greift <strong>nur</strong> bei Reisekostenstatus
+        <strong>„Fester Einsatzort (erste Tätigkeitsstätte)"</strong>.
+        Bei <strong>„Wechselnde Einsatzorte (Außendienst)"</strong> gibt es
+        keinen Pendelabzug — alle dienstlichen Fahrten werden voll erstattet.
+      </div>
+      <p>Bei festem Einsatzort erstattet der AG nur die Strecke, die
       <strong>über den normalen Arbeitsweg hinausgeht</strong>.
-      Der Pendelabzug (Wohnort → Arbeitsort) greift deshalb nur,
-      wenn eine Fahrt nachweislich <strong>von der Wohnung startet</strong>
-      (Startpunkt „Zuhause").</p>
+      Der Abzug greift dabei nur, wenn eine Fahrt nachweislich
+      <strong>von der Wohnung startet</strong> (Startpunkt „Zuhause").</p>
       <ul class="help-list">
         <li><strong>Start: Zuhause</strong> — Pendelabzug wird berechnet</li>
         <li><strong>Start: Arbeitsort</strong> — kein Abzug, volle Strecke erstattet</li>
@@ -429,7 +435,7 @@ const HILFE = {
         <li><strong>Arbeitsort</strong> — kein Abzug, volle Strecke
             erstattet (z. B. Fahrt direkt vom Klienten weiter)</li>
         <li><strong>Andere</strong> — freie Adresse,
-            Pendelabzug trotzdem berechnet</li>
+            kein Pendelabzug (Wohnung wird nicht berührt)</li>
       </ul>
       <div class="help-example">
         <div class="help-example-title">Beispiel: Urlaubsbegleitung Holland (mehrtägig)</div>

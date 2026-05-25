@@ -151,8 +151,8 @@ function generiereUndLadePDF(data, files) {
   tc(TEXT); txt(clip(arbStr || '–', 55), ML + 22, y);
   y += 5;
 
-  // Pendel bar
-  if (m.pendelKmEinfach > 0) {
+  // Pendel bar (nur bei festem Einsatzort — nicht bei Außendienst)
+  if (m.pendelKmEinfach > 0 && m.reisekostenStatus !== 'auswaerts') {
     box(ML, y, CW, 8, ORANGE_BG);
     sf('normal', 7.5); tc(ORANGE_DARK);
     txt(
@@ -324,8 +324,8 @@ function generiereUndLadePDF(data, files) {
   txt(fmtE(totBetrag),  C[8].x + C[8].w - 1.5, y + 5.5, { align: 'right' });
   y += 10;
 
-  // Amber pendel hint
-  if (m.pendelKmEinfach > 0) {
+  // Amber pendel hint (nur bei festem Einsatzort — nicht bei Außendienst)
+  if (m.pendelKmEinfach > 0 && m.reisekostenStatus !== 'auswaerts') {
     var hintTxt =
       'Pendelabzug (Start von Zuhause/anderer Adresse): ' +
       fmtKm(m.pendelKmEinfach * 2) + ' pro Fahrt. ' +
