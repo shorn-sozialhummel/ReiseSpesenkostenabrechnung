@@ -44,7 +44,8 @@ function getProfil() {
     vorname: '', nachname: '', iban: '', rolle: '', rolleText: '',
     heimStrasse: '', heimPlz: '', heimOrt: '',
     arbeitsortName: '', arbeitsortAdresse: '',
-    pendelKmEinfach: 0, pendelBerechnetAm: ''
+    pendelKmEinfach: 0, pendelBerechnetAm: '',
+    reisekostenStatus: ''
   });
   p.pendelKmEinfach = parseInt(p.pendelKmEinfach) || 0;
   return p;
@@ -344,6 +345,16 @@ const HILFE = {
       <p>Das Profil wird <strong>einmalig ausgefüllt</strong> und
       gespeichert. Bei Teamwechsel oder Umzug einfach aktualisieren.</p>
       <ul class="help-list">
+        <li><strong>Reisekostenstatus</strong> — Pflichtfeld.
+            Bestimmt, ob bei deinen Fahrten ein Pendelabzug anfällt:
+            <ul class="help-list" style="margin-top:4px">
+              <li><strong>Wechselnde Einsatzorte (Außendienst)</strong> —
+                  keine feste Tätigkeitsstätte, alle dienstlichen Fahrten
+                  voll erstattet, kein Pendelabzug</li>
+              <li><strong>Fester Einsatzort (erste Tätigkeitsstätte)</strong> —
+                  Pendelabzug für die Strecke Wohnung↔Einsatzort</li>
+            </ul>
+            Welcher Status für dich gilt, klärt im Zweifel die Buchhaltung.</li>
         <li><strong>IBAN</strong> — optional, nur wenn die Erstattung
             nicht auf das bereits bekannte Konto erfolgen soll.
             Checkbox: „IBAN bereits bekannt — Auszahlung auf
@@ -353,7 +364,7 @@ const HILFE = {
             Vorgesetzte/n, Buchhaltung erhält eine CC-Kopie.</li>
         <li><strong>Heimadresse</strong> — Basis für die
             Pendelberechnung</li>
-        <li><strong>Arbeitsadresse</strong> — Ihr üblicher Einsatzort
+        <li><strong>Einsatzort-Adresse</strong> — dein üblicher Einsatzort
             (z. B. WG Sonnenblume, Gartenstr. 8)</li>
       </ul>
       <div class="help-warn">

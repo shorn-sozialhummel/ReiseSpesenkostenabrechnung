@@ -98,6 +98,64 @@
     </div>
   </div>
 
+  <!-- Reisekostenstatus -->
+  <hr class="sep">
+  <div style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <span class="sec-title" style="margin:0">🗺️ Reisekostenstatus</span>
+      <span style="font-size:10px;font-weight:600;background:#FEF3DC;color:#8A5A00;
+                   border:1px solid #F5A623;border-radius:4px;padding:1px 7px">Pflichtangabe</span>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin:0 0 10px 0">
+      Bitte einmalig wählen — bestimmt, ob bei deinen Fahrten ein Pendelabzug anfällt.
+      Im Zweifel mit der Buchhaltung klären.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label id="rks-label-auswaerts"
+             style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;
+                    border:1.5px solid var(--gray-200);border-radius:8px;
+                    cursor:pointer;background:var(--gray-50)">
+        <input type="radio" name="reisekostenstatus" id="rks-auswaerts" value="auswaerts"
+               onchange="onReisekostenStatusChange()"
+               style="margin-top:3px;accent-color:#F5A623;width:16px;height:16px;flex-shrink:0">
+        <div>
+          <div style="font-weight:600;font-size:13px;color:var(--text-dark);margin-bottom:3px">
+            Wechselnde Einsatzorte (Außendienst)
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.45">
+            Ich betreue verschiedene Kunden / Klienten oder bin ständig unterwegs —
+            keine feste Tätigkeitsstätte. Alle dienstlichen Fahrten voll erstattet,
+            kein Pendelabzug.
+          </div>
+        </div>
+      </label>
+      <label id="rks-label-erste_taetigkeit"
+             style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;
+                    border:1.5px solid var(--gray-200);border-radius:8px;
+                    cursor:pointer;background:var(--gray-50)">
+        <input type="radio" name="reisekostenstatus" id="rks-erste_taetigkeit" value="erste_taetigkeit"
+               onchange="onReisekostenStatusChange()"
+               style="margin-top:3px;accent-color:#F5A623;width:16px;height:16px;flex-shrink:0">
+        <div>
+          <div style="font-weight:600;font-size:13px;color:var(--text-dark);margin-bottom:3px">
+            Fester Einsatzort
+            <span style="font-weight:400;color:var(--text-muted);font-size:11px">(erste Tätigkeitsstätte)</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.45">
+            Ich arbeite regelmäßig am selben Ort — fester Kunde / Klient oder Büro.
+            Für die Strecke Wohnung↔Einsatzort gilt der Pendelabzug.
+          </div>
+        </div>
+      </label>
+    </div>
+    <div id="rks-hinweis"
+         style="font-size:11px;color:#8A5A00;background:#FEF3DC;
+                border:1px solid #F5A623;border-radius:6px;
+                padding:7px 11px;margin-top:8px">
+      Solange nicht gewählt, kann keine Abrechnung erstellt werden.
+    </div>
+  </div>
+
   <!-- Heimadresse -->
   <hr class="sep">
   <div class="sec-title" style="margin-bottom:10px">🏠 Heimadresse (Wohnort)</div>
@@ -276,6 +334,12 @@ function ladeProfilFelder() {
     zeigePendelB(p.pendelKmEinfach, p.pendelBerechnetAm);
   }
   toggleLohnkonto(document.getElementById('cb-lohnkonto').checked);
+  var rksStatus = p.reisekostenStatus || '';
+  ['auswaerts', 'erste_taetigkeit'].forEach(function(val) {
+    var el = document.getElementById('rks-' + val);
+    if (el) el.checked = (rksStatus === val);
+  });
+  onReisekostenStatusChange();
 }
 
 function onRolleChange() {
@@ -303,6 +367,8 @@ function profilSpeichern() {
   var lohnkonto = document.getElementById('cb-lohnkonto');
   p.lohnkonto = lohnkonto ? lohnkonto.checked : true;
   p.vgMail = gV('ma-vg-mail');
+  var rksEl = document.querySelector('input[name="reisekostenstatus"]:checked');
+  p.reisekostenStatus = rksEl ? rksEl.value : '';
   p.iban = p.lohnkonto ? '' : gV('ma-iban');
   p.heimStrasse       = gV('heim-strasse');
   p.heimPlz           = gV('heim-plz');
@@ -1433,19 +1499,49 @@ function updateAllPendelRows() {
 <script>
 'use strict';
 
-function toggleErklaerung(checked) {
+function pruefButtonFreigabe() {
+  var cbErkl   = document.getElementById('cb-erklaerung');
+  var erklaert = cbErkl ? cbErkl.checked : false;
+  var rksEl    = document.querySelector('input[name="reisekostenstatus"]:checked');
+  var hatStatus = !!rksEl;
+  var frei = erklaert && hatStatus;
+
   var btnPdf  = document.getElementById('btn-pdf');
   var btnMail = document.getElementById('btn-mail');
   if (btnPdf) {
-    btnPdf.disabled      = !checked;
-    btnPdf.style.opacity = checked ? '1' : '.4';
-    btnPdf.style.cursor  = checked ? 'pointer' : 'not-allowed';
+    btnPdf.disabled      = !frei;
+    btnPdf.style.opacity = frei ? '1' : '.4';
+    btnPdf.style.cursor  = frei ? 'pointer' : 'not-allowed';
   }
   if (btnMail) {
-    btnMail.disabled      = !checked;
-    btnMail.style.opacity = checked ? '1' : '.4';
-    btnMail.style.cursor  = checked ? 'pointer' : 'not-allowed';
+    btnMail.disabled      = !frei;
+    btnMail.style.opacity = frei ? '1' : '.4';
+    btnMail.style.cursor  = frei ? 'pointer' : 'not-allowed';
   }
+
+  var hintEl = document.getElementById('rks-hinweis');
+  if (hintEl) hintEl.style.display = hatStatus ? 'none' : '';
+}
+
+function toggleErklaerung(checked) {
+  pruefButtonFreigabe();
+}
+
+function onReisekostenStatusChange() {
+  var rksEl = document.querySelector('input[name="reisekostenstatus"]:checked');
+  var val   = rksEl ? rksEl.value : '';
+  ['auswaerts', 'erste_taetigkeit'].forEach(function(v) {
+    var lbl = document.getElementById('rks-label-' + v);
+    if (!lbl) return;
+    if (v === val) {
+      lbl.style.border     = '1.5px solid #F5A623';
+      lbl.style.background = '#FEF3DC';
+    } else {
+      lbl.style.border     = '1.5px solid var(--gray-200)';
+      lbl.style.background = 'var(--gray-50)';
+    }
+  });
+  pruefButtonFreigabe();
 }
 
 function antragPerMail() {
