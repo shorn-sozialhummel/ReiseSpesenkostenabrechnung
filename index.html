@@ -281,12 +281,11 @@
     <span style="font-size:20px;line-height:1;flex-shrink:0">🔒</span>
     <div style="flex:1;min-width:0">
       <div style="font-weight:700;font-size:14px;color:#7A4A00;margin-bottom:4px">
-        Reisekostenstatus erforderlich
+        Reisekostenstatus nicht gespeichert
       </div>
       <div style="font-size:12px;color:#8A5A00;line-height:1.5;margin-bottom:10px">
-        Bitte oben unter „Meine Daten" den Reisekostenstatus wählen und auf
-        „Profil speichern" klicken. Erst danach können Fahrten und Spesen
-        erfasst werden.
+        Bitte den gewählten Reisekostenstatus mit „Profil speichern" bestätigen.
+        Erst danach können Fahrten und Spesen bearbeitet werden.
       </div>
       <button onclick="document.getElementById('rks-section').scrollIntoView({behavior:'smooth'})"
               style="background:#F5A623;color:#fff;border:none;border-radius:6px;
@@ -314,7 +313,7 @@
 
 <div id="toast"></div>
 
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 <script>
 'use strict';
 
@@ -1570,9 +1569,10 @@ function pruefButtonFreigabe() {
   var hintEl = document.getElementById('rks-hinweis');
   if (hintEl) hintEl.style.display = hatStatus ? 'none' : '';
 
-  // Abschnitte sperren solange kein Status gespeichert (Bezug: localStorage)
-  var gespeicherterStatus = getProfil().reisekostenStatus;
-  var gesperrt = (gespeicherterStatus === '');
+  // Abschnitte sperren: gespeicherter Status leer ODER Radio != gespeicherter Status
+  var gespeicherterStatus  = getProfil().reisekostenStatus;
+  var aktuellGewaehlter    = rksEl ? rksEl.value : '';
+  var gesperrt = (gespeicherterStatus === '' || gespeicherterStatus !== aktuellGewaehlter);
   ['zeitraum-card', 'fahrten-card', 'spesen-card'].forEach(function(sid) {
     var sec = document.getElementById(sid);
     if (!sec) return;
@@ -1590,6 +1590,23 @@ function toggleErklaerung(checked) {
 function onReisekostenStatusChange() {
   var rksEl = document.querySelector('input[name="reisekostenstatus"]:checked');
   var val   = rksEl ? rksEl.value : '';
+
+  // Warnung wenn Fahrten vorhanden und Wert vom gespeicherten Status abweicht
+  var gespeicherter = getProfil().reisekostenStatus;
+  if (gespeicherter !== '' && val !== gespeicherter && Object.keys(trips).length > 0) {
+    var ok = confirm(
+      'Achtung: Der Wechsel des Reisekostenstatus ändert die Berechnung ALLER ' +
+      'bereits eingetragenen Fahrten (Pendelabzug fällt weg bzw. kommt hinzu). ' +
+      'Fortfahren?'
+    );
+    if (!ok) {
+      // Radio zurücksetzen auf gespeicherten Wert
+      var resetEl = document.getElementById('rks-' + gespeicherter);
+      if (resetEl) resetEl.checked = true;
+      val = gespeicherter;
+    }
+  }
+
   ['auswaerts', 'erste_taetigkeit'].forEach(function(v) {
     var lbl = document.getElementById('rks-label-' + v);
     if (!lbl) return;
