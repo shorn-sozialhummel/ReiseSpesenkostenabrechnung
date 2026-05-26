@@ -313,7 +313,7 @@
 
 <div id="toast"></div>
 
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 <script>
 'use strict';
 
@@ -1180,7 +1180,7 @@ function aktualisierePendelFooter(id, r) {
   } else {
     el.innerHTML =
       '<span>− Pendelabzug ' + fmtKm(r.pendelAbzug) + ' × ' + getRate().toFixed(2).replace('.',',') + ' €' + hinweis +
-      ' — steuerlich absetzbar (Anlage N)</span>' +
+      ' — ggf. in Steuererklärung (Anlage N) berücksichtigbar</span>' +
       '<span class="p-right" style="color:var(--red)">' +
         fmtKm(r.pendelAbzug) + ' · −' + fmt(r.pendelAbzug * getRate()) +
       '</span>';
@@ -1542,7 +1542,7 @@ function updateAllPendelRows() {
 
 </main>
 
-<script src="pdf-gen.js?v=4"></script>
+<script src="pdf-gen.js?v=5"></script>
 <script>
 'use strict';
 

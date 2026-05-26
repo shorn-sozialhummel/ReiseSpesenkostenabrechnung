@@ -329,10 +329,11 @@ function generiereUndLadePDF(data, files) {
   // Amber pendel hint (nur bei festem Einsatzort — nicht bei Außendienst)
   if (m.pendelKmEinfach > 0 && m.reisekostenStatus !== 'auswaerts') {
     var hintTxt =
-      'Pendelabzug (Start von Zuhause/anderer Adresse): ' +
+      'Pendelabzug (Start von Zuhause): ' +
       fmtKm(m.pendelKmEinfach * 2) + ' pro Fahrt. ' +
       'Bei mehrtägigen Reisen: Abzug nur einmal pro Reise. ' +
-      'Abgezogene km als Entfernungspauschale (Anlage N) geltend machen.';
+      'Die abgezogenen Pendel-km können ggf. in der Steuererklärung (Anlage N) ' +
+      'berücksichtigt werden — Details bitte mit dem Finanzamt oder Steuerberater klären.';
     var hLines = doc.splitTextToSize(hintTxt, CW - 6);
     var hH = hLines.length * 4.2 + 5;
     needPage(hH + 4);

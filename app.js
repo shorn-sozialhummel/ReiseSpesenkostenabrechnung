@@ -579,8 +579,11 @@ const HILFE = {
     html: `
       <p><strong>Was kann ich als Werbungskosten angeben?</strong></p>
       <ul class="help-list">
-        <li><strong>Entfernungspauschale</strong> — der Pendelabzug:
-            0,30 €/km (bis 20 km), 0,38 €/km (ab 21 km)</li>
+        <li><strong>Entfernungspauschale</strong> — Wege zwischen Wohnung und
+            erster Tätigkeitsstätte können als Werbungskosten in der Anlage N
+            geltend gemacht werden. Aktuelle Höhe und genaue Abgrenzung legt
+            das Steuerrecht fest — bitte beim Finanzamt oder Steuerberater
+            erfragen.</li>
         <li><strong>Verpflegungspauschale</strong> —
             ab 8 Std.: 14 €, ab 24 Std.: 28 €.
             Bei mehrtägigen Reisen: An- und Abreisetag je 14 €,
@@ -588,7 +591,7 @@ const HILFE = {
         <li><strong>Übernachtungskosten</strong> —
             nicht erstattete Anteile mit Beleg</li>
         <li><strong>Fahrtkosten</strong> —
-            nicht erstattete Anteile (0,30 €/km)</li>
+            nicht erstattete Anteile (gem. aktuellem Steuerrecht)</li>
       </ul>
       <div class="help-warn">
         Verpflegungspauschalen können nur geltend gemacht werden,
