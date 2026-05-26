@@ -39,6 +39,7 @@ function generiereUndLadePDF(data, files) {
   var m       = data.mitarbeiter || {};
   var fahrten = data.fahrten     || [];
   var spesen  = data.spesen      || {};
+  var rate    = data.rate        || 0.30;
 
   // ── Short helpers ─────────────────────────────────────────────────────────────
   function sf(style, size) { doc.setFont('Helvetica', style); doc.setFontSize(size); }
@@ -157,8 +158,9 @@ function generiereUndLadePDF(data, files) {
     sf('normal', 7.5); tc(ORANGE_DARK);
     txt(
       'Pendelstrecke: ' + m.pendelKmEinfach + ' km einfach' +
-      '   |   Abzug pro Fahrt (Start Zuhause): ' + (m.pendelKmEinfach * 2) + ' km × 0,30 €' +
-      ' = −' + fmtE(m.pendelKmEinfach * 2 * 0.30),
+      '   |   Abzug pro Fahrt (Start Zuhause): ' + (m.pendelKmEinfach * 2) + ' km × ' +
+      rate.toFixed(2).replace('.', ',') + ' €' +
+      ' = −' + fmtE(m.pendelKmEinfach * 2 * rate),
       ML + 3, y + 5.5
     );
     y += 10;
@@ -228,7 +230,7 @@ function generiereUndLadePDF(data, files) {
       var pendelRound = (m.pendelKmEinfach || 0) * 2;
       pendelAbzug  = keinAbzug ? 0 : pendelRound;
       erstattungKm = Math.max(0, gesamtKm - pendelAbzug);
-      betrag       = erstattungKm * 0.30;
+      betrag       = erstattungKm * rate;
     }
 
     totGes    += gesamtKm;

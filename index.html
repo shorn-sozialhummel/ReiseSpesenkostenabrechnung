@@ -1542,7 +1542,7 @@ function updateAllPendelRows() {
 
 </main>
 
-<script src="pdf-gen.js?v=3"></script>
+<script src="pdf-gen.js?v=4"></script>
 <script>
 'use strict';
 
@@ -1784,6 +1784,7 @@ function collectData() {
     spesenSum:   spesenSum,
     fahrtBetrag: fahrtBetrag,
     gesamt:      fahrtBetrag + spesenSum,
+    rate:        getRate(),
     anmerkung:   (document.getElementById('anmerkung') || {}).value || ''
   };
 }
