@@ -1636,7 +1636,7 @@ function antragPerMail() {
   }
 
   var ag = getArbeitgeber();
-  var ccMail = ag.buchhaltungMail || 'finanzen@sozialhummel.de';
+  var ccMail = (ag.buchhaltungMail || '').trim();
   var vorname  = gV('ma-vorname')  || '';
   var nachname = gV('ma-nachname') || '';
   var zeitraum = gV('zeitraum')    || '';
@@ -1660,10 +1660,10 @@ function antragPerMail() {
     vorname + ' ' + nachname
   );
 
-  window.location.href = 'mailto:' + vgMail +
-    '?cc=' + encodeURIComponent(ccMail) +
-    '&subject=' + betreff +
-    '&body=' + text;
+  var mailtoHref = 'mailto:' + vgMail + '?';
+  if (ccMail) mailtoHref += 'cc=' + encodeURIComponent(ccMail) + '&';
+  mailtoHref += 'subject=' + betreff + '&body=' + text;
+  window.location.href = mailtoHref;
 }
 
 var uploadedFiles = [];

@@ -298,9 +298,13 @@ function saveBuchhaltung() {
   var mail = document.getElementById('ag-buchhaltung-mail');
   if (!mail) return;
   var ag = store.get('ag_data', {});
-  ag.buchhaltungMail = mail.value.trim() || 'finanzen@sozialhummel.de';
+  ag.buchhaltungMail = mail.value.trim();
   store.set('ag_data', ag);
-  showToast('Buchhaltungs-E-Mail gespeichert ✓', 'ok');
+  if (ag.buchhaltungMail) {
+    showToast('Buchhaltungs-E-Mail gespeichert ✓', 'ok');
+  } else {
+    showToast('Buchhaltungs-E-Mail geleert — kein CC beim E-Mail-Versand.', 'ok');
+  }
 }
 
 function saveRate() {
