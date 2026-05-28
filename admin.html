@@ -230,7 +230,7 @@ function ladeAGDaten() {
   setV('ag-maps-key', ag.mapsKey  || '');
   var agData = store.get('ag_data', {});
   var mailEl = document.getElementById('ag-buchhaltung-mail');
-  if (mailEl) mailEl.value = agData.buchhaltungMail || 'finanzen@sozialhummel.de';
+  if (mailEl) mailEl.value = agData.buchhaltungMail || '';
   var rateEl = document.getElementById('ag-rate');
   if (rateEl) rateEl.value = agData.rate || '0.30';
 }
