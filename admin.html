@@ -178,7 +178,7 @@
 </div>
 
 <div id="toast"></div>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 <script>
 'use strict';
 
@@ -236,15 +236,15 @@ function ladeAGDaten() {
 }
 
 function speichernAG() {
-  store.set('ag_data', {
-    name:    gV('ag-name'),
-    strasse: gV('ag-strasse'),
-    plz:     gV('ag-plz'),
-    ort:     gV('ag-ort'),
-    email:   gV('ag-email'),
-    tel:     gV('ag-tel'),
-    mapsKey: gV('ag-maps-key')
-  });
+  var ag = store.get('ag_data', {});
+  ag.name    = gV('ag-name');
+  ag.strasse = gV('ag-strasse');
+  ag.plz     = gV('ag-plz');
+  ag.ort     = gV('ag-ort');
+  ag.email   = gV('ag-email');
+  ag.tel     = gV('ag-tel');
+  ag.mapsKey = gV('ag-maps-key');
+  store.set('ag_data', ag);
   showToast('Gespeichert ✓', 'ok');
 }
 

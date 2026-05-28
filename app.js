@@ -33,8 +33,14 @@ const store = {
 
 function getArbeitgeber() {
   const stored = store.get('ag_data', null);
-  if (stored && stored.name) return stored;
-  return APP_CONFIG.arbeitgeber;
+  if (!stored) return APP_CONFIG.arbeitgeber;
+  var base = Object.assign({}, APP_CONFIG.arbeitgeber);
+  ['name', 'strasse', 'plz', 'ort', 'email', 'tel', 'mapsKey'].forEach(function(k) {
+    if (stored[k]) base[k] = stored[k];
+  });
+  base.rate            = stored.rate;
+  base.buchhaltungMail = stored.buchhaltungMail;
+  return base;
 }
 
 // ─── Profil ───────────────────────────────────────────────────────────────────
