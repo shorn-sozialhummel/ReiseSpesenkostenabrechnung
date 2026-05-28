@@ -313,7 +313,7 @@
 
 <div id="toast"></div>
 
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 <script>
 'use strict';
 
@@ -698,7 +698,7 @@ function zeigeDraftBar(id) {
 
 // ─── Fahrten State ────────────────────────────────────────────────────────────
 // trips[id] = { modus, startTyp, kmHin, kmRueck, datumHin, datumRueck,
-//               ziel, art, zweck, andereAdresse }
+//               ziel, art, zweck, andereAdresse, endeZuhause }
 
 var tripCounter = 0;
 var trips = {};
@@ -738,7 +738,8 @@ function fahrtHinzufuegen(data) {
     ziel:          data.ziel          || '',
     art:           data.art           || '',
     zweck:         data.zweck         || '',
-    andereAdresse: data.andereAdresse || ''
+    andereAdresse: data.andereAdresse || '',
+    endeZuhause:   data.endeZuhause   || false
   };
   renderFahrtKarte(id);
   var mapsPlEl = document.getElementById('hilfe-maps-' + id);
@@ -834,6 +835,21 @@ function renderFahrtKarte(id) {
         '</div>' +
       '</div>' +
 
+      // D2) Endet die Fahrt zuhause? (nur erste_taetigkeit, konditional sichtbar)
+      '<div id="ende-zuhause-wrap-' + id + '" style="display:none;' +
+        'background:#FCEFD9;border:1.5px solid #F5A623;border-radius:8px;' +
+        'padding:10px 12px;margin-top:4px">' +
+        '<div style="font-size:11px;font-weight:600;color:#854F0B;margin-bottom:6px">' +
+          'Endet die Fahrt zuhause?' +
+        '</div>' +
+        '<div style="display:flex;gap:5px;flex-wrap:wrap">' +
+          '<button class="fsk" id="ez-nein-' + id + '"' +
+          ' onclick="setEndeZuhause(' + id + ',false)">Nein, woanders</button>' +
+          '<button class="fsk" id="ez-ja-' + id + '"' +
+          ' onclick="setEndeZuhause(' + id + ',true)">⌂ Ja, Heimfahrt</button>' +
+        '</div>' +
+      '</div>' +
+
       // E) KM-Block (dynamisch via setModus)
       '<div id="km-block-' + id + '">' +
         buildKmBlock(id, modus) +
@@ -855,6 +871,7 @@ function renderFahrtKarte(id) {
   aktualisiereModusButtons(id);
   aktualisiereStartButtons(id);
   aktualisiereStartAdresszeile(id);
+  aktualisiereEndeZuhause(id);
   onArtChange(id);
 }
 
@@ -1091,11 +1108,12 @@ function setModus(id, modus) {
 function updateFahrtKarte(id) {
   var t = trips[id];
   if (!t) return;
+  aktualisiereEndeZuhause(id);
   var kmHin   = parseInt((document.getElementById('km-hin-'   + id) || {}).value) || 0;
   var kmRueck = parseInt((document.getElementById('km-rueck-' + id) || {}).value) || 0;
   t.kmHin   = kmHin;
   t.kmRueck = kmRueck;
-  var r = berechneFahrtErstattung(t.modus || 'hinrueck', kmHin, kmRueck, t.startTyp);
+  var r = berechneFahrtErstattung(t.modus || 'hinrueck', kmHin, kmRueck, t.startTyp, t.endeZuhause || false);
 
   var erstEl   = document.getElementById('km-erst-'  + id);
   var betragEl = document.getElementById('betrag-'   + id);
@@ -1145,41 +1163,39 @@ function aktualisierePendelFooter(id, r) {
     return;
   }
 
-  if (t.startTyp === 'arbeitsort') {
+  if (r.keinAbzug) {
+    var keinAbzugTxt;
+    if (!r.pendelEinfach) {
+      keinAbzugTxt = '✓ Pendelstrecke 0 km — volle Strecke wird erstattet';
+    } else if (t.startTyp === 'arbeitsort') {
+      keinAbzugTxt = '✓ Start vom Arbeitsort — kein Pendelabzug, volle Strecke erstattet';
+    } else {
+      keinAbzugTxt = '✓ Kein Pendelabzug — Fahrt berührt nicht die Wohnung';
+    }
     el.className = 'fk-pendel p-ao';
     el.innerHTML =
-      '<span>✓ Start vom Arbeitsort — kein Pendelabzug, volle Strecke erstattet</span>' +
+      '<span>' + keinAbzugTxt + '</span>' +
       '<span class="p-right" style="color:var(--green-dark)">+ ' + fmt(r.gesamtKm * getRate()) + '</span>';
     return;
   }
 
-  if (t.startTyp === 'andere') {
-    el.className = 'fk-pendel p-ao';
-    el.innerHTML =
-      '<span>✓ Kein Pendelabzug — Fahrt berührt nicht die Wohnung</span>' +
-      '<span class="p-right" style="color:var(--green-dark)">+ ' + fmt(r.gesamtKm * getRate()) + '</span>';
-    return;
-  }
-
-  if (!r.pendelEinfach) {
-    el.className = 'fk-pendel p-ao';
-    el.innerHTML = '<span>✓ Pendelstrecke 0 km — volle Strecke wird erstattet</span>' +
-      '<span class="p-right" style="color:var(--green-dark)">+ ' + fmt(r.gesamtKm * getRate()) + '</span>';
-    return;
-  }
-
-  var hinweis = t.modus === 'mehrtaegig' ? ' (nur einmal pro Reise)' : '';
+  var eineRichtung = r.pendelAbzug === r.pendelEinfach;
+  var richtungText = eineRichtung
+    ? '(nur eine Richtung zur Wohnung — halbe Entfernungspauschale)'
+    : '(Hin- und Rückweg zur Wohnung)';
+  var hinweis = t.modus === 'mehrtaegig' ? ', nur einmal pro Reise' : '';
   el.className = 'fk-pendel p-warn';
 
   if (r.erstattungKm === 0 && r.gesamtKm > 0) {
     el.innerHTML =
-      '<span>⚠️ Pendelabzug ' + fmtKm(r.pendelAbzug) +
+      '<span>⚠️ Pendelabzug ' + fmtKm(r.pendelAbzug) + ' ' + richtungText +
       ' übersteigt gefahrene Strecke — keine Erstattung.' +
       ' Die ' + fmtKm(r.gesamtKm) + ' können als Entfernungspauschale (Anlage N) ' +
       'in der Steuererklärung angegeben werden.</span>';
   } else {
     el.innerHTML =
-      '<span>− Pendelabzug ' + fmtKm(r.pendelAbzug) + ' × ' + getRate().toFixed(2).replace('.',',') + ' €' + hinweis +
+      '<span>− Pendelabzug ' + fmtKm(r.pendelAbzug) + ' × ' + getRate().toFixed(2).replace('.',',') + ' €' +
+      ' ' + richtungText + hinweis +
       ' — ggf. in Steuererklärung (Anlage N) berücksichtigbar</span>' +
       '<span class="p-right" style="color:var(--red)">' +
         fmtKm(r.pendelAbzug) + ' · −' + fmt(r.pendelAbzug * getRate()) +
@@ -1235,6 +1251,45 @@ function aktualisiereModusButtons(id) {
     if (!btn) return;
     btn.className = 'modus-btn' + (m === modus ? ' on-' + m : '');
   });
+}
+
+// ─── Ende-Zuhause ────────────────────────────────────────────────────────────
+
+function setEndeZuhause(id, val) {
+  if (!trips[id]) return;
+  trips[id].endeZuhause = val;
+  aktualisiereEndeZuhauseButtons(id);
+  updateFahrtKarte(id);
+  updateSummary();
+}
+
+function aktualisiereEndeZuhauseButtons(id) {
+  var t = trips[id];
+  if (!t) return;
+  var ja   = document.getElementById('ez-ja-'   + id);
+  var nein = document.getElementById('ez-nein-' + id);
+  if (ja)   ja.className   = 'fsk' + (t.endeZuhause  ? ' active-zh' : '');
+  if (nein) nein.className = 'fsk' + (!t.endeZuhause ? ' active-an' : '');
+}
+
+function aktualisiereEndeZuhause(id) {
+  var t = trips[id];
+  if (!t) return;
+  var wrap = document.getElementById('ende-zuhause-wrap-' + id);
+  if (!wrap) return;
+  var status = getProfil().reisekostenStatus;
+  var modus  = t.modus    || 'hinrueck';
+  var start  = t.startTyp || 'zuhause';
+  var sichtbar = status === 'erste_taetigkeit' &&
+                 !(modus === 'einfach'  && start === 'zuhause') &&
+                 !(modus === 'hinrueck' && start === 'zuhause');
+  if (sichtbar) {
+    wrap.style.display = '';
+  } else {
+    wrap.style.display = 'none';
+    trips[id].endeZuhause = false;
+  }
+  aktualisiereEndeZuhauseButtons(id);
 }
 
 // ─── Art-Badge ────────────────────────────────────────────────────────────────
@@ -1676,7 +1731,7 @@ function updateSummary() {
     var t      = trips[id];
     var kmHin  = parseInt((document.getElementById('km-hin-'  + id) || {}).value) || 0;
     var kmRueck= parseInt((document.getElementById('km-rueck-'+ id) || {}).value) || 0;
-    var r      = berechneFahrtErstattung(t.modus || 'hinrueck', kmHin, kmRueck, t.startTyp);
+    var r      = berechneFahrtErstattung(t.modus || 'hinrueck', kmHin, kmRueck, t.startTyp, t.endeZuhause || false);
     totalKmGesamt    += r.gesamtKm;
     pendelGesamt     += r.pendelAbzug;
     erstattungGesamt += r.erstattungKm;
@@ -1727,7 +1782,7 @@ function collectData() {
     var artEl  = document.getElementById('art-' + idn);
     var art    = artEl ? artEl.value : '';
     var artLabel = artEl ? artEl.options[artEl.selectedIndex].text : '';
-    var r      = berechneFahrtErstattung(t.modus || 'hinrueck', kmHin, kmRueck, t.startTyp);
+    var r      = berechneFahrtErstattung(t.modus || 'hinrueck', kmHin, kmRueck, t.startTyp, t.endeZuhause || false);
     return {
       modus:        t.modus || 'hinrueck',
       datumHin:     t.datumHin   || '',

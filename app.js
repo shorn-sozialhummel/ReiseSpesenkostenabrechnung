@@ -153,19 +153,10 @@ function getAktuellePendelKm() {
   return parseInt(getProfil().pendelKmEinfach) || 0;
 }
 
-function berechneFahrtErstattung(modus, kmHin, kmRueck, startTyp) {
+function berechneFahrtErstattung(modus, kmHin, kmRueck, startTyp, endeZuhause) {
   var pendelEinfach = getAktuellePendelKm();
   var status = getProfil().reisekostenStatus;
-  // Pendelabzug je nach Modus korrekt berechnen:
-  // Einfache Fahrt → nur einfacher Pendelweg
-  // Hin & Zurück   → doppelter Pendelweg
-  // Mehrtägig      → nur einfacher Pendelweg (einmalig)
-  var pendelKm;
-  if (modus === 'hinrueck') {
-    pendelKm = pendelEinfach * 2;
-  } else {
-    pendelKm = pendelEinfach;
-  }
+
   var gesamtKm = 0;
   if (modus === 'einfach')    gesamtKm = parseInt(kmHin) || 0;
   if (modus === 'hinrueck')   gesamtKm = (parseInt(kmHin) || 0) * 2;
@@ -176,7 +167,30 @@ function berechneFahrtErstattung(modus, kmHin, kmRueck, startTyp) {
              keinAbzug: true, pendelEinfach: pendelEinfach, keineKm: true };
   }
 
-  var keinAbzug    = status === 'auswaerts' || startTyp !== 'zuhause' || pendelEinfach === 0;
+  var keinAbzug, pendelKm;
+
+  if (status === 'auswaerts' || pendelEinfach === 0) {
+    keinAbzug = true;
+    pendelKm  = 0;
+  } else if (modus === 'hinrueck' && startTyp === 'zuhause') {
+    // H&R ab Zuhause: immer voller Abzug (Feld ist ausgeblendet)
+    keinAbzug = false;
+    pendelKm  = pendelEinfach * 2;
+  } else if (startTyp === 'zuhause') {
+    // einfach/mehrtaegig ab Zuhause: Hinweg zur Wohnung, ggf. auch Rückweg
+    keinAbzug = false;
+    pendelKm  = endeZuhause ? pendelEinfach * 2 : pendelEinfach;
+  } else {
+    // Start NICHT von Zuhause (arbeitsort/andere)
+    if (endeZuhause) {
+      keinAbzug = false;
+      pendelKm  = pendelEinfach;
+    } else {
+      keinAbzug = true;
+      pendelKm  = 0;
+    }
+  }
+
   var pendelAbzug  = keinAbzug ? 0 : pendelKm;
   var erstattungKm = Math.max(0, gesamtKm - pendelAbzug);
   return {
@@ -437,6 +451,11 @@ const HILFE = {
         <li><strong>Andere</strong> — freie Adresse,
             kein Pendelabzug (Wohnung wird nicht berührt)</li>
       </ul>
+      <p style="margin-top:8px"><strong>Endet die Fahrt zuhause?</strong><br>
+      Erscheint nur bei festem Einsatzort (erste Tätigkeitsstätte) und wenn
+      der Startpunkt die Wohnungs&shy;berührung nicht bereits eindeutig regelt.
+      Wer auch nach Hause zurückfährt, löst den Pendelabzug für
+      <em>beide</em> Richtungen aus — sonst nur für eine.</p>
       <div class="help-example">
         <div class="help-example-title">Beispiel: Urlaubsbegleitung Holland (mehrtägig)</div>
         <div class="help-example-row">
