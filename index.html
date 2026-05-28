@@ -1509,9 +1509,8 @@ function updateAllPendelRows() {
 
   <div id="sum-calc-line"
        style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
-    0 km × 0,30 € = <strong>0,00 €</strong>
-    = <span id="sum-gesamt-betrag"
-            style="font-size:18px;font-weight:500;color:var(--blue)">0,00 €</span>
+    <span id="sum-gesamt-betrag"
+          style="font-size:18px;font-weight:500;color:var(--blue)">0,00 €</span>
   </div>
 
   <div class="ok-box" style="margin-bottom:14px">
@@ -1763,7 +1762,7 @@ function updateSummary() {
 
   var line = document.getElementById('sum-calc-line');
   if (line) {
-    var parts = fmtKm(erstattungGesamt) + ' × 0,30 € = <strong>' + fmt(fahrtBetrag) + '</strong>';
+    var parts = fmtKm(erstattungGesamt) + ' × ' + getRate().toFixed(2).replace('.', ',') + ' € = <strong>' + fmt(fahrtBetrag) + '</strong>';
     if (spesen > 0) parts += ' + <strong>' + fmt(spesen) + ' Spesen</strong>';
     parts += ' = <span id="sum-gesamt-betrag" style="font-size:18px;font-weight:500;color:var(--blue)">' + fmt(gesamt) + '</span>';
     line.innerHTML = parts;
